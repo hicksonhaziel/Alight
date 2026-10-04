@@ -9,6 +9,8 @@
     "spike:blur": "python3 scripts/spike_blur.py",
     "spike:blur-ws": "node scripts/spike_ws.mjs blur",
     "spike:mirage": "node scripts/spike_ws.mjs mirage",
+    "spike:webhook": "python3 scripts/spike_webhook.py",
+    "spike:webhook-ws": "node scripts/spike_ws.mjs webhook",
     "wallet:init": "node scripts/create_canary_wallet.mjs"
   },
   "dependencies": {

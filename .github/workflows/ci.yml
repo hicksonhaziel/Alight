@@ -17,4 +17,5 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
       - run: python3 scripts/check_repository.py
+      - run: python3 scripts/test_webhook_signature.py
       - run: node --check scripts/spike_grpc.mjs && node --check scripts/spike_ws.mjs && node --check scripts/create_canary_wallet.mjs

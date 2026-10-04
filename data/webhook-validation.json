@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "live",
+  "control_pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+  "http_verified_deliveries": 6,
+  "unique_signatures": 6,
+  "signature_format": "HMAC-SHA256 exact body, lowercase hex, literal provider secret",
+  "websocket_frames": 3,
+  "timing_summary_ms": {
+    "min": 2058.337926864624,
+    "median": 6188.030481338501,
+    "max": 6314.507961273193
+  },
+  "timing_method": "local UTC receive minus provider received_at Unix seconds; includes queue/retry, second rounding, and clock skew; not chain landing latency",
+  "canaries_sent": 0,
+  "cleanup": {
+    "webhook_deleted": true,
+    "receiver_stopped": true,
+    "tunnel_stopped": true,
+    "temporary_env_cleared": true
+  }
+}

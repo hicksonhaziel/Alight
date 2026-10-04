@@ -9,6 +9,10 @@ import { GrpcClient } from "@triton-one/yellowstone-grpc/napi";
 // Slot/block metadata and filtered tip/payer transactions, not a full firehose.
 const directory = `.alight/probes/grpc-${randomUUID()}`;
 const timeoutMs = 20_000;
+const captureTransactions = process.argv.includes("--transactions");
+const includeIndex = process.argv.indexOf("--include");
+const controlAccount = includeIndex >= 0 ? process.argv[includeIndex + 1] : undefined;
+const fixture = captureTransactions ? "data/fixtures/grpc_transactions_sample.jsonl" : "data/fixtures/grpc_sample.jsonl";
 const maxBytes = 512 * 1024;
 const maxFrames = 100;
 let stream;
@@ -32,6 +36,10 @@ try {
     throw new Error("tip response");
   }
   const accounts = [...tips];
+  if (controlAccount) {
+    if (bs58.decode(controlAccount).length !== 32) throw new Error("control account");
+    accounts.push(controlAccount);
+  }
   if (process.env.ALIGHT_CANARY_KEYPAIR?.trim()) {
     const key = bs58.decode(process.env.ALIGHT_CANARY_KEYPAIR.trim());
     if (key.length !== 64) throw new Error("keypair shape");
@@ -72,14 +80,16 @@ try {
       const tx = update.transaction.transaction;
       events.push({ ...common, kind: "transaction", slot: update.transaction.slot,
         signature: tx?.signature ? bs58.encode(tx.signature) : null,
-        index: tx?.index ?? null, failed: Boolean(tx?.meta?.err),
+        index: tx?.index ?? null, failed: tx?.meta ? Boolean(tx.meta.err) : null,
         // Yellowstone transaction updates do not carry a blockhash. Join to block metadata.
         block_id: null });
     }
-    if (events.filter(e => e.kind === "slot").length >= 24 &&
-      events.some(e => e.kind === "block_meta")) break;
+    if (events.filter(e => e.kind === "slot").length >= (captureTransactions ? 12 : 24) &&
+      events.some(e => e.kind === "block_meta") &&
+      (!captureTransactions || events.filter(e => e.kind === "transaction").length >= 3)) break;
   }
-  verdict = events.some(e => e.kind === "slot") && events.some(e => e.kind === "block_meta") ? "PASS" : "INCONCLUSIVE";
+  verdict = events.some(e => e.kind === "slot") && events.some(e => e.kind === "block_meta") &&
+    (!captureTransactions || events.some(e => e.kind === "transaction")) ? "PASS" : "INCONCLUSIVE";
 } catch {
   verdict = "FAIL";
   failure = "Check configuration, authentication, entitlement, or network; upstream details withheld.";
@@ -91,13 +101,14 @@ try {
     verdict, failure, bytes, frames, event_counts: Object.fromEntries(["slot", "block_meta", "transaction"].map(
       kind => [kind, events.filter(e => e.kind === kind).length])),
     request: request ? SubscribeRequest.toJSON(request) : null,
-    transaction_capture_completeness: "not_assessed", canary_sent: false };
+    transaction_capture_completeness: "not_assessed", control_account: controlAccount ?? null,
+    capture_scope: controlAccount ? "payer_tips_and_public_control" : "payer_and_tips", canary_sent: false };
   writeFileSync(`${directory}/summary.json`, JSON.stringify(summary, null, 2) + "\n", { flag: "wx", mode: 0o600 });
   // Only sanitized protocol/chain values reach redistributable schema fixtures.
   mkdirSync("data/fixtures", { recursive: true });
-  writeFileSync("data/fixtures/grpc_sample.jsonl", events.map(e => JSON.stringify(e)).join("\n") +
+  writeFileSync(fixture, events.map(e => JSON.stringify(e)).join("\n") +
     (events.length ? "\n" : ""));
   console.log(JSON.stringify({ verdict, bytes, event_counts: summary.event_counts, evidence: directory,
-    fixture: "data/fixtures/grpc_sample.jsonl", canary_sent: false }, null, 2));
+    fixture, canary_sent: false }, null, 2));
   process.exitCode = verdict === "PASS" ? 0 : verdict === "INCONCLUSIVE" ? 3 : 1;
 }

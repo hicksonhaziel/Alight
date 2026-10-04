@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "source": "live",
+  "capture_scope": "payer_and_public_control_account",
+  "canaries_sent": 0,
+  "deliveries": [
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:09.058338+00:00",
+      "recv_mono_ns": "20617852",
+      "body_sha256": "84b10c3031dd136a3d9af89349130f65e4dbd9906267c50abcd150278a57bc94",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "5sk9mWVLwddZKsTNverFjPoj9GxqZSQY5jPtQUvLcYLHaETTEdy2mZtoEZVgwH1SVc4kRueUnQ175hwNcCV5rQcu",
+        "slot": 453093637,
+        "received_at": 1791073387,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "mixed",
+        "transfers": [],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "6n5iSTd7v95NGUjbLqEnewWDzfLAFTKE5SL2PpckW5MK",
+            "side": "sell",
+            "base_amount": "896852047",
+            "quote_amount": "7472137248",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "pumpswap",
+            "pool": "28fztJSj3puBnFWMaodTUu5Bo5im6dxLeNihg3Mrmhti",
+            "mint": "Geb69EBttATHG9jHZqsZRPJTfoNZRRYNdVciE9KEDD9A",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "6n5iSTd7v95NGUjbLqEnewWDzfLAFTKE5SL2PpckW5MK",
+            "side": "buy",
+            "base_amount": "8543464748713",
+            "quote_amount": "7472137248",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "ROKO'S BASILISK",
+            "symbol": "ROKO",
+            "uri": "https://aliejsbgzjyeuiupbpss.supabase.co/storage/v1/object/public/coin-media/Geb69EBttATHG9jHZqsZRPJTfoNZRRYNdVciE9KEDD9A/metadata.json"
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 2058.337926864624
+    },
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:10.125433+00:00",
+      "recv_mono_ns": "1088437102",
+      "body_sha256": "8a0c6a9a02f02464d8d05587fe77e981907998c0e9d791cefa151e0a9ae2bf0f",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "5CjReQ526ZcA8y1RJPS5iX5eJU1m8LiH3qYFWtavHa75RWixW4n9ykMHcEJA1tpKGK6CF7GD5uf9Fo2Jya73wZJV",
+        "slot": 453093625,
+        "received_at": 1791073384,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "mixed",
+        "transfers": [
+          {
+            "mint": "So11111111111111111111111111111111111111112",
+            "native": true,
+            "decimals": 9,
+            "amount": "10437",
+            "from_owner": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "to_owner": "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY",
+            "from_account": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "to_account": "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY"
+          }
+        ],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "side": "sell",
+            "base_amount": "450000000",
+            "quote_amount": "3749452951",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "bisonfi",
+            "pool": "8FnX3xo2yYw3EUE6w3nQA4GfXGS9wpK6oj3veJpbFzLo",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "side": "buy",
+            "base_amount": "450003509",
+            "quote_amount": "3749452951",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 6125.432968139648
+    },
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:10.140796+00:00",
+      "recv_mono_ns": "1103204397",
+      "body_sha256": "d1eb8b42883321456245aaa69d496b0f12b380a1f1484547ca31ec3af933a6b7",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "59kfw5d6vVwStMTk2spxL9zU3nVWc42JeS9vFeTMWXerLiwZhppWfExn2k4uhwA1rqGBsYJP7xj9bXNY56V5pFfZ",
+        "slot": 453093625,
+        "received_at": 1791073384,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "orca_whirlpool",
+        "transfers": [
+          {
+            "mint": "So11111111111111111111111111111111111111112",
+            "native": true,
+            "decimals": 9,
+            "amount": "13692",
+            "from_owner": "6iYV4wJPHm5EwDpqzp2XUdnPW669XHDn2cEJceaGQgBk",
+            "to_owner": "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt",
+            "from_account": "6iYV4wJPHm5EwDpqzp2XUdnPW669XHDn2cEJceaGQgBk",
+            "to_account": "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt"
+          }
+        ],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "6iYV4wJPHm5EwDpqzp2XUdnPW669XHDn2cEJceaGQgBk",
+            "side": "sell",
+            "base_amount": "257023831",
+            "quote_amount": "2141538177",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 6140.795946121216
+    },
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:10.235265+00:00",
+      "recv_mono_ns": "1197503441",
+      "body_sha256": "87aefb951e83dca6b5bb6e0edabc19a5ab73aa8cf2de558e1a7ffdd643dada5e",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "2V7yPoKug8VfnscRr3HaMb7xYuXFFVZ2mpJtnZ5rPAhwvDc2MJaD7XmGJyeKycB5vQj85FmYQjXBRQzstNSc9gfa",
+        "slot": 453093625,
+        "received_at": 1791073384,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "mixed",
+        "transfers": [
+          {
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "native": false,
+            "decimals": 6,
+            "amount": "860293",
+            "from_owner": "BHpku1iH6T2aYzWX7kCyQUiXWaGpNoAUBxaFqsi8jGxN",
+            "to_owner": "82waJRyAcxDDJJnDGbd24pLwr9Z1BbwdGANaUkGu832G",
+            "from_account": "2rr1UnEz4fPr1REGZFL7VzPo6a5gcfhYqC8TZvG7Sc9F",
+            "to_account": "E8cZMUKtenknGet7guunm5Byq14K4pNELq7VGESyqFou"
+          },
+          {
+            "mint": "So11111111111111111111111111111111111111112",
+            "native": true,
+            "decimals": 9,
+            "amount": "0",
+            "from_owner": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51",
+            "to_owner": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51",
+            "from_account": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51",
+            "to_account": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51"
+          }
+        ],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "BHpku1iH6T2aYzWX7kCyQUiXWaGpNoAUBxaFqsi8jGxN",
+            "side": "sell",
+            "base_amount": "307173921",
+            "quote_amount": "2559369776",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "raydium_clmm",
+            "pool": "3ucNos4NbumPLZNWztqGHNFFgkHeRMBQAVemeeomsUxv",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "BHpku1iH6T2aYzWX7kCyQUiXWaGpNoAUBxaFqsi8jGxN",
+            "side": "sell",
+            "base_amount": "120824807",
+            "quote_amount": "1006727363",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "meteora_damm2",
+            "pool": "BKH29Cr5mZf8eahp7vD28jaBqU9HavY9v6SAbphbSA2D",
+            "mint": "2AVjqmGbMqg7rSyHVv2deVdggsBgBtu1Bi69BUvE5WRv",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "BHpku1iH6T2aYzWX7kCyQUiXWaGpNoAUBxaFqsi8jGxN",
+            "side": "buy",
+            "base_amount": "230048993009",
+            "quote_amount": "2559425862",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "Spec",
+            "symbol": "SPEC",
+            "uri": "https://spec-fun-production.up.railway.app/api/meta/7djzce5f.json"
+          },
+          {
+            "type": "swap",
+            "dex": "meteora_dlmm",
+            "pool": "8aYZGYeeXkFBiFJFo6fSxeRg6jfedLFnfNU27sXkv8qH",
+            "mint": "2AVjqmGbMqg7rSyHVv2deVdggsBgBtu1Bi69BUvE5WRv",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "BHpku1iH6T2aYzWX7kCyQUiXWaGpNoAUBxaFqsi8jGxN",
+            "side": "buy",
+            "base_amount": "90213500278",
+            "quote_amount": "1006671277",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "Spec",
+            "symbol": "SPEC",
+            "uri": "https://spec-fun-production.up.railway.app/api/meta/7djzce5f.json"
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 6235.265016555786
+    },
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:10.305841+00:00",
+      "recv_mono_ns": "1268181302",
+      "body_sha256": "72ea9a9060838000fb312637fbb9ff192783942bb8b03fc2d4c1bf9598ee5ed9",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "5XWFKrrrmUeiPquR8FvBuA6K9erN6ggLSyCsQHjaqJzLf1XKixXMfjpY2mJNqHJh44YoLyFXcqL71mKDNwY4Si4e",
+        "slot": 453093625,
+        "received_at": 1791073384,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "mixed",
+        "transfers": [
+          {
+            "mint": "So11111111111111111111111111111111111111112",
+            "native": true,
+            "decimals": 9,
+            "amount": "18129",
+            "from_owner": "C6FoDh43VuGYXPLLoW1XRrerbaasHFiXAEnNcmXbhWPn",
+            "to_owner": "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49",
+            "from_account": "C6FoDh43VuGYXPLLoW1XRrerbaasHFiXAEnNcmXbhWPn",
+            "to_account": "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49"
+          }
+        ],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "bisonfi",
+            "pool": "8FnX3xo2yYw3EUE6w3nQA4GfXGS9wpK6oj3veJpbFzLo",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "side": "buy",
+            "base_amount": "240039632",
+            "quote_amount": "2000000000",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "8FnX3xo2yYw3EUE6w3nQA4GfXGS9wpK6oj3veJpbFzLo",
+            "side": "sell",
+            "base_amount": "240039632",
+            "quote_amount": "2000027464",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 6305.840969085693
+    },
+    {
+      "source": "live",
+      "observer": "webhook",
+      "received_at": "2026-10-04T00:23:10.314508+00:00",
+      "recv_mono_ns": "1276770924",
+      "body_sha256": "53ca8fd571f7b600190252791300389535d45a3b072eb23c07caba63168ed3ae",
+      "signature_verified": true,
+      "signature_encoding": "hex",
+      "data": {
+        "webhook_id": "kuq0D45wo-tO22sv",
+        "signature": "2hNvcu9LdfJ6hkcAC8SiutvmzXFhrxwTcNN3BKcZohcPF9mvRf8pBbfcyqv3UwCsthZWwKZpLJa5YZENvaUKLKpU",
+        "slot": 453093625,
+        "received_at": 1791073384,
+        "status": "succeeded",
+        "payload_kind": "enriched",
+        "type": "swap",
+        "source": "mixed",
+        "transfers": [
+          {
+            "mint": "So11111111111111111111111111111111111111112",
+            "native": true,
+            "decimals": 9,
+            "amount": "9728",
+            "from_owner": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "to_owner": "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh",
+            "from_account": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "to_account": "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh"
+          }
+        ],
+        "events": [
+          {
+            "type": "swap",
+            "dex": "orca_whirlpool",
+            "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "side": "sell",
+            "base_amount": "225000000",
+            "quote_amount": "1874718505",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          },
+          {
+            "type": "swap",
+            "dex": "bisonfi",
+            "pool": "8FnX3xo2yYw3EUE6w3nQA4GfXGS9wpK6oj3veJpbFzLo",
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "quote_mint": "So11111111111111111111111111111111111111112",
+            "trader": "HYEuFrEshx2rVhLj3trU7WsCnw3y3zb3Ns4bXoFjFcb",
+            "side": "buy",
+            "base_amount": "225003370",
+            "quote_amount": "1874718505",
+            "base_decimals": 6,
+            "quote_decimals": 9,
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "uri": ""
+          }
+        ]
+      },
+      "provider_received_to_local_ms": 6314.507961273193
+    }
+  ],
+  "timing_method": "local UTC receive minus provider received_at Unix seconds; includes queue/retry, second rounding, and clock skew; not chain landing latency",
+  "timing_summary_ms": {
+    "min": 2058.337926864624,
+    "median": 6188.030481338501,
+    "max": 6314.507961273193
+  },
+  "unique_signatures": 6
+}

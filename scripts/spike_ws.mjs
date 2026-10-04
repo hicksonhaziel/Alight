@@ -5,6 +5,7 @@ import { SubscribeUpdate } from "@triton-one/yellowstone-grpc";
 // Bounded read-only transport/schema probe. Never logs an authenticated URL.
 if (existsSync(".env")) loadEnvFile(".env");
 const product = process.argv[2] ?? "blur";
+const captureTransactions = process.argv.includes("--transactions");
 const events = [];
 const secrets = Object.entries(process.env).filter(([key, value]) => value?.length >= 8 &&
   /^(SOLAMI_|ALIGHT_)/.test(key) && /TOKEN|KEY|SECRET/.test(key)).map(([, value]) => value);
@@ -22,11 +23,12 @@ function scrub(value) {
 }
 
 try {
-  if (!["blur", "mirage"].includes(product)) throw new Error("unsupported product");
-  const token = process.env[product === "blur" ? "SOLAMI_BLUR_TOKEN" : "SOLAMI_MIRAGE_TOKEN"]?.trim();
+  if (!["blur", "mirage", "webhook"].includes(product)) throw new Error("unsupported product");
+  const prefix = {blur: "SOLAMI_BLUR", mirage: "SOLAMI_MIRAGE", webhook: "SOLAMI_WEBHOOK"}[product];
+  const token = process.env[`${prefix}_TOKEN`]?.trim();
   const id = process.env.SOLAMI_MIRAGE_SUBSCRIPTION_ID?.trim();
-  const configuredUrl = process.env[product === "blur" ? "SOLAMI_BLUR_WS_URL" : "SOLAMI_MIRAGE_URL"]?.trim();
-  if (token && (product === "blur" || id || configuredUrl)) {
+  const configuredUrl = process.env[product === "mirage" ? `${prefix}_URL` : `${prefix}_WS_URL`]?.trim();
+  if (token && (product === "blur" || (product === "mirage" && id) || configuredUrl)) {
     const url = new URL(configuredUrl || `wss://ws.solami.dev/mirage/stream/${encodeURIComponent(id)}`);
     if (url.protocol !== "wss:") throw new Error("invalid scheme");
     url.searchParams.set("api_key", token);
@@ -46,7 +48,8 @@ try {
         clearTimeout(timer);
         try { socket?.close(); } catch { /* No upstream error text is exposed. */ }
         if (result === "PASS" && product === "mirage" &&
-          !(events.some(e => e.data.slot) && events.some(e => e.data.blockMeta))) result = "INCONCLUSIVE";
+          !(events.some(e => e.data.slot) && events.some(e => e.data.blockMeta) &&
+            (!captureTransactions || events.some(e => e.data.transaction)))) result = "INCONCLUSIVE";
         resolve(result);
       };
       const timer = setTimeout(() => finish(events.length ? "PASS" : "INCONCLUSIVE"), 20_000);
@@ -63,13 +66,16 @@ try {
           const raw = typeof event.data === "string" ? Buffer.from(event.data) : Buffer.from(event.data);
           if (bytes + raw.length > 256 * 1024) { finish(events.length ? "PASS" : "INCONCLUSIVE"); return; }
           bytes += raw.length;
-          const data = product === "blur" ? JSON.parse(raw.toString()) : SubscribeUpdate.toJSON(SubscribeUpdate.decode(raw));
+          const data = product !== "mirage" ? JSON.parse(raw.toString()) : SubscribeUpdate.toJSON(SubscribeUpdate.decode(raw));
           events.push({ source: "live", received_at: new Date().toISOString(),
             recv_mono_ns: (process.hrtime.bigint() - start).toString(),
             // Keep exact JSON integers for the Rust adapter; JS numbers are previews only.
-            raw_json: product === "blur" ? scrub(raw.toString()) : undefined,
+            raw_json: product !== "mirage" ? scrub(raw.toString()) : undefined,
             data: scrub(data) });
-          if (events.length >= 12) finish("PASS");
+          const limit = product === "webhook" ? 3 : captureTransactions ? 100 : 12;
+          if (events.length >= limit || (product === "mirage" && captureTransactions &&
+            events.filter(e => e.data.transaction).length >= 3 && events.some(e => e.data.slot) &&
+            events.some(e => e.data.blockMeta))) finish("PASS");
         } catch { errorCategory = "unexpected_frame_schema"; finish("FAIL"); }
       });
     });
@@ -82,7 +88,8 @@ const summary = { schema_version: 1, product, source: "live", verdict, bytes, fr
 writeFileSync(`.alight/probes/${product}-ws.json`, JSON.stringify(summary, null, 2) + "\n");
 if (events.length) {
   mkdirSync("data/fixtures", { recursive: true });
-  const filename = product === "mirage" ? "mirage_sample.jsonl" : "blur_ws_sample.jsonl";
+  const filename = {mirage: captureTransactions ? "mirage_transactions_sample.jsonl" : "mirage_sample.jsonl", blur: "blur_ws_sample.jsonl",
+    webhook: "webhook_ws_sample.jsonl"}[product];
   writeFileSync(`data/fixtures/${filename}`, events.map(e => JSON.stringify(e)).join("\n") + "\n");
 }
 console.log(JSON.stringify(summary, null, 2));
