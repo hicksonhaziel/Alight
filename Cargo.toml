@@ -17,6 +17,7 @@ dotenvy = "=0.15.7"
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"] }
 tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread"] }
 bs58 = "=0.5.1"
+solami = { version = "=0.1.58", default-features = false, features = ["beam"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

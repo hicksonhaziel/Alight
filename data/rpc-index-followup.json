@@ -1,0 +1,58 @@
+{
+  "source": "live",
+  "requested_at": "2026-10-04T00:48:32.041060+00:00",
+  "purpose": "index-order-followup",
+  "canaries_sent": 0,
+  "checks": [
+    {
+      "slot": "453096590",
+      "transaction_details": "full",
+      "encoding": "json",
+      "verdict": "FAIL",
+      "rpc_error_code": -32015,
+      "elapsed_ms": 601
+    },
+    {
+      "slot": "453096591",
+      "transaction_details": "full",
+      "encoding": "json",
+      "verdict": "FAIL",
+      "rpc_error_code": -32015,
+      "elapsed_ms": 604
+    },
+    {
+      "slot": "453096590",
+      "transaction_details": "full",
+      "encoding": "json",
+      "max_supported_transaction_version": 1,
+      "verdict": "FAIL",
+      "error_category": "URLError",
+      "elapsed_ms": 6343
+    },
+    {
+      "slot": "453096591",
+      "transaction_details": "full",
+      "encoding": "json",
+      "max_supported_transaction_version": 1,
+      "verdict": "PASS",
+      "block_id": "4ZFzb15HtGRYjFf3Gs8daC1Jr8szYHzvgeHCuSYUKeRB",
+      "transaction_count": 598,
+      "bytes": 4090522,
+      "versions": {
+        "0": 169,
+        "legacy": 272,
+        "1": 157
+      },
+      "matches": [
+        {
+          "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+          "grpc_index": "887",
+          "rpc_signatures_index": 401,
+          "rpc_full_index": 401,
+          "agrees_with_grpc": false
+        }
+      ],
+      "elapsed_ms": 4671
+    }
+  ]
+}

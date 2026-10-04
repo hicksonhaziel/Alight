@@ -5,6 +5,17 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+solami = { workspace = true, optional = true }
+# Versions from Solami 0.1.58's published lockfile: newer semver-compatible
+# Solana patches require Rust 1.97.1 and mix incompatible pubkey generations.
+solana-instruction = { version = "=3.4.1", optional = true }
+solana-pubkey = { version = "=4.2.1", optional = true }
+solana-tls-utils = { version = "=4.2.2", optional = true, features = ["agave-unstable-api"] }
+solana-message = { version = "=4.4.1", optional = true }
+solana-transaction = { version = "=4.1.6", optional = true, features = ["serde"] }
+solana-system-interface = { version = "=3.2.0", optional = true }
+solana-signature = { version = "=3.4.1", optional = true }
+solana-hash = { version = "=4.5.0", optional = true }
 alight-types.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -12,6 +23,13 @@ thiserror.workspace = true
 dotenvy.workspace = true
 reqwest.workspace = true
 bs58.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true
+[features]
+beam = ["dep:solami", "dep:solana-instruction", "dep:solana-pubkey", "dep:solana-tls-utils", "dep:solana-message", "dep:solana-transaction", "dep:solana-system-interface", "dep:solana-signature", "dep:solana-hash"]
+
+[[example]]
+name = "beam_connect"
+required-features = ["beam"]

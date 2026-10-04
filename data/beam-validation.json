@@ -1,0 +1,16 @@
+{
+  "canaries_sent": 0,
+  "canaries_signed": 0,
+  "elapsed_ms": 5397,
+  "error_category": null,
+  "landing_proven": false,
+  "purpose": "beam-quic-connect-only",
+  "schema_version": 1,
+  "source": "live",
+  "verdict": "PASS",
+  "endpoint": "beam.solami.dev:11000",
+  "sdk_version": "0.1.58",
+  "public_identity": "88XWfp4ct9UkWt6nm15Zi56A4a15pKvQ8uU9YsVoDwUD",
+  "credential_name": "alight-phase0-beam",
+  "credential_expiry_days": 30
+}

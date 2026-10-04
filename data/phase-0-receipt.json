@@ -1,17 +1,15 @@
 {
   "schema_version": 1,
   "phase": 0,
-  "recorded_at_utc": "2026-10-03T22:38:58.213401+00:00",
-  "status": "PARTIAL",
+  "status": "PARTIAL_PENDING_FUNDED_AND_DEPLOYMENT_ACCEPTANCE",
   "source": "live",
-  "read_only": true,
   "canaries_signed": 0,
   "canaries_sent": 0,
   "spend_lamports": 0,
   "canary_wallet_funded": false,
   "gates": {
     "G0": "PENDING_UNFUNDED",
-    "G1": "PENDING_TRANSACTION_AND_WEBHOOK_FIXTURES_AND_CONTRACT_FREEZE"
+    "G1": "PASS_CONTRACTS_AND_OBSERVER_SCHEMA_FIXTURES"
   },
   "rpc_checks": [
     {
@@ -668,17 +666,45 @@
       "close_code": null,
       "error_category": null,
       "canaries_sent": 0
+    },
+    "grpc_public_control": {
+      "verdict": "PASS",
+      "frames": 29,
+      "event_counts": {
+        "slot": 12,
+        "transaction": 13,
+        "block_meta": 4
+      },
+      "capture_scope": "payer_tips_and_public_control",
+      "canaries_sent": 0,
+      "capture_completeness": "not_assessed"
+    },
+    "mirage_public_control": {
+      "verdict": "PASS",
+      "frames": 13,
+      "event_counts": {
+        "ping": 1,
+        "slot": 7,
+        "blockMeta": 2,
+        "transaction": 3
+      },
+      "capture_scope": "payer_tips_and_public_control",
+      "canaries_sent": 0,
+      "capture_completeness": "not_assessed"
     }
   },
   "fixtures": [
     {
+      "path": "data/beam-validation.json",
+      "sha256": "5a64495c3a7f1fc1a6d0a3c0dbf4f1398447360e580752e926dcb4a8692e944f",
+      "bytes": 437,
+      "source": "live"
+    },
+    {
       "path": "data/fixtures/blur_sample.json",
       "sha256": "80431b52689ee9ea82c85d2fa01d8dfcc1f1874c11a56438cbd14f654da28aa1",
       "bytes": 16327,
-      "source": "live",
-      "records": null,
-      "captured_from": null,
-      "captured_to": null
+      "source": "live"
     },
     {
       "path": "data/fixtures/blur_ws_sample.jsonl",
@@ -699,6 +725,15 @@
       "captured_to": "2026-10-03T22:05:55.695Z"
     },
     {
+      "path": "data/fixtures/grpc_transactions_sample.jsonl",
+      "sha256": "128e2eb8b7abe3372d8accf4233da167eff528c59cf7b076e4ce206c29fb740f",
+      "bytes": 10304,
+      "source": "live",
+      "records": 29,
+      "captured_from": "2026-10-04T00:36:18.322Z",
+      "captured_to": "2026-10-04T00:36:19.336Z"
+    },
+    {
       "path": "data/fixtures/mirage_sample.jsonl",
       "sha256": "aed94946ddb0ae11a0646eebe50efe982fcb1cfc24e994dc4283dfe7b37a9ba6",
       "bytes": 3787,
@@ -706,19 +741,336 @@
       "records": 12,
       "captured_from": "2026-10-03T22:29:41.113Z",
       "captured_to": "2026-10-03T22:29:41.612Z"
+    },
+    {
+      "path": "data/fixtures/mirage_transactions_sample.jsonl",
+      "sha256": "3574f4cc72cfef745ce0839ff75094cee2d8a372658303b45bf6b02221bf73ef",
+      "bytes": 47119,
+      "source": "live",
+      "records": 13,
+      "captured_from": "2026-10-04T00:40:41.632Z",
+      "captured_to": "2026-10-04T00:40:42.175Z"
+    },
+    {
+      "path": "data/fixtures/webhook_sample.json",
+      "sha256": "d43ab0e60cea3c4994fcdb1387788b19e223278cbe9ade8675e2cb25f9fd1248",
+      "bytes": 16457,
+      "source": "live"
+    },
+    {
+      "path": "data/fixtures/webhook_ws_sample.jsonl",
+      "sha256": "7cb346de0909af2304ba90883ea6e3c71bc756dc71908619a51d58a27cdfd0cc",
+      "bytes": 7497,
+      "source": "live",
+      "records": 3,
+      "captured_from": "2026-10-04T00:23:54.836Z",
+      "captured_to": "2026-10-04T00:24:03.683Z"
+    },
+    {
+      "path": "data/rpc-index-followup.json",
+      "sha256": "d08ba7c9231b6596821a89a97678378acc7445cea74ae7079ea7b797dafa47f2",
+      "bytes": 1466,
+      "source": "live"
+    },
+    {
+      "path": "data/rpc-observer-validation.json",
+      "sha256": "9561aae2b8149c4653c5e9f195a22cb004a15afac34aa78f69421d4d004819e1",
+      "bytes": 4905,
+      "source": "live"
+    },
+    {
+      "path": "data/webhook-validation.json",
+      "sha256": "ab4954b628a75b76d6637d14f74b811a03925d58dd505f74019af6cfc9694a71",
+      "bytes": 731,
+      "source": "live"
     }
   ],
   "pending": [
-    "SWQoS key: final browser credential confirmation",
-    "Funded Beam/RPC canaries and pilot",
-    "Webhook callback and signed delivery",
-    "Full observer/canary/quote contracts",
-    "Deployment region measurement"
+    "G0 funded Beam landing observed by gRPC",
+    "Funded Beam HTTP/plain RPC route checks and 50\u2013100-canary pilot",
+    "Verified current Beam HTTP endpoint/authentication/request contract",
+    "Deployment-host RTT and region choice",
+    "Provider transaction-index semantics; keep cross-source positions separate",
+    "Historical full-block retention/reliability",
+    "Explicit authorization to send support draft; credits/judge/trial arrangements unconfirmed"
   ],
   "validation": {
     "cargo_fmt": "PASS",
-    "cargo_clippy": "PASS",
-    "cargo_test": "PASS: 5 tests",
-    "remote_ci": "NOT_RUN"
+    "cargo_clippy": "PASS including optional Beam example",
+    "cargo_test": "PASS: 8 Rust tests, optional Beam enabled",
+    "webhook_signature_test": "PASS: authentic/tampered/wrong/missing/non-ASCII cases",
+    "node_syntax": "PASS",
+    "credential_and_private_path_check": "PASS",
+    "capture_hash_check": "PASS",
+    "remote_ci": {
+      "status": "PASS",
+      "commit": "d1065389784b3f7ba3fadd73eb9ac2b1a58da05e",
+      "covers": "preceding observer/webhook batch",
+      "url": "https://github.com/hicksonhaziel/Alight/actions/runs/37166155897"
+    }
+  },
+  "initial_recorded_at_utc": "2026-10-03T22:38:58.213401+00:00",
+  "updated_at_utc": "2026-10-04T00:57:24.762645+00:00",
+  "chain_read_only": true,
+  "provider_configuration_changed": true,
+  "contract_version": 1,
+  "beam": {
+    "canaries_sent": 0,
+    "canaries_signed": 0,
+    "elapsed_ms": 5397,
+    "error_category": null,
+    "landing_proven": false,
+    "purpose": "beam-quic-connect-only",
+    "schema_version": 1,
+    "source": "live",
+    "verdict": "PASS",
+    "endpoint": "beam.solami.dev:11000",
+    "sdk_version": "0.1.58",
+    "public_identity": "88XWfp4ct9UkWt6nm15Zi56A4a15pKvQ8uU9YsVoDwUD",
+    "credential_name": "alight-phase0-beam",
+    "credential_expiry_days": 30
+  },
+  "webhook": {
+    "schema_version": 1,
+    "source": "live",
+    "control_pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+    "http_verified_deliveries": 6,
+    "unique_signatures": 6,
+    "signature_format": "HMAC-SHA256 exact body, lowercase hex, literal provider secret",
+    "websocket_frames": 3,
+    "timing_summary_ms": {
+      "min": 2058.337926864624,
+      "median": 6188.030481338501,
+      "max": 6314.507961273193
+    },
+    "timing_method": "local UTC receive minus provider received_at Unix seconds; includes queue/retry, second rounding, and clock skew; not chain landing latency",
+    "canaries_sent": 0,
+    "cleanup": {
+      "webhook_deleted": true,
+      "receiver_stopped": true,
+      "tunnel_stopped": true,
+      "temporary_env_cleared": true
+    }
+  },
+  "rpc_observer_validation": {
+    "schema_version": 1,
+    "source": "live",
+    "canaries_sent": 0,
+    "requested_at": "2026-10-04T00:44:21.708278+00:00",
+    "checks": [
+      {
+        "method": "getSignatureStatuses",
+        "verdict": "PASS",
+        "elapsed_ms": 5822,
+        "observations": [
+          {
+            "signature": "2EMfvphDtkPkPPmx2Eu3WJomikcVWK9hQttuRinvrpXRaWkwgGWrp8VYi97wN93Fw2KAi7ty5yRQyWW4ybuWwS2F",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453096590,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453096591,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "5kp92ZJyJH7mM5uRu2ks5ySnzLSBPGCnkKuunHFnAt5kNeuwYUJhiZJyEzB3sKUW9DpXpepvJk2Y5EPLZdS5oLrv",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453096593,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "5sk9mWVLwddZKsTNverFjPoj9GxqZSQY5jPtQUvLcYLHaETTEdy2mZtoEZVgwH1SVc4kRueUnQ175hwNcCV5rQcu",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093637,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "5CjReQ526ZcA8y1RJPS5iX5eJU1m8LiH3qYFWtavHa75RWixW4n9ykMHcEJA1tpKGK6CF7GD5uf9Fo2Jya73wZJV",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093625,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "59kfw5d6vVwStMTk2spxL9zU3nVWc42JeS9vFeTMWXerLiwZhppWfExn2k4uhwA1rqGBsYJP7xj9bXNY56V5pFfZ",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093625,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "2V7yPoKug8VfnscRr3HaMb7xYuXFFVZ2mpJtnZ5rPAhwvDc2MJaD7XmGJyeKycB5vQj85FmYQjXBRQzstNSc9gfa",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093625,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "5XWFKrrrmUeiPquR8FvBuA6K9erN6ggLSyCsQHjaqJzLf1XKixXMfjpY2mJNqHJh44YoLyFXcqL71mKDNwY4Si4e",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093625,
+              "status": {
+                "Ok": null
+              }
+            }
+          },
+          {
+            "signature": "2hNvcu9LdfJ6hkcAC8SiutvmzXFhrxwTcNN3BKcZohcPF9mvRf8pBbfcyqv3UwCsthZWwKZpLJa5YZENvaUKLKpU",
+            "status": {
+              "confirmationStatus": "finalized",
+              "confirmations": null,
+              "err": null,
+              "slot": 453093625,
+              "status": {
+                "Ok": null
+              }
+            }
+          }
+        ]
+      },
+      {
+        "method": "getBlock",
+        "verdict": "PASS",
+        "elapsed_ms": 922,
+        "slot": "453096590",
+        "matches": [
+          {
+            "signature": "2EMfvphDtkPkPPmx2Eu3WJomikcVWK9hQttuRinvrpXRaWkwgGWrp8VYi97wN93Fw2KAi7ty5yRQyWW4ybuWwS2F",
+            "grpc_index": "205",
+            "rpc_index": 167,
+            "agrees": false
+          }
+        ],
+        "block_id": "9DL3L8oxTsLbeUFXUWy9fZ6Ds6TPPqxZQLX8Km49bja",
+        "parent_slot": "453096589"
+      },
+      {
+        "method": "getBlock",
+        "verdict": "PASS",
+        "elapsed_ms": 833,
+        "slot": "453096591",
+        "matches": [
+          {
+            "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+            "grpc_index": "887",
+            "rpc_index": 401,
+            "agrees": false
+          }
+        ],
+        "block_id": "4ZFzb15HtGRYjFf3Gs8daC1Jr8szYHzvgeHCuSYUKeRB",
+        "parent_slot": "453096590"
+      }
+    ],
+    "grpc_indices_corroborated": 0,
+    "verdict": "INCONCLUSIVE",
+    "grpc_transactions_considered": 3,
+    "grpc_transaction_slots_sampled": 2,
+    "grpc_transactions_compared": 2,
+    "index_verdict": "DISAGREEMENT",
+    "finalized_signatures": 9,
+    "limitation": "Only two of the three distinct gRPC slots were sampled; reported indexes disagree with RPC list positions."
+  },
+  "rpc_index_followup": {
+    "source": "live",
+    "requested_at": "2026-10-04T00:48:32.041060+00:00",
+    "purpose": "index-order-followup",
+    "canaries_sent": 0,
+    "checks": [
+      {
+        "slot": "453096590",
+        "transaction_details": "full",
+        "encoding": "json",
+        "verdict": "FAIL",
+        "rpc_error_code": -32015,
+        "elapsed_ms": 601
+      },
+      {
+        "slot": "453096591",
+        "transaction_details": "full",
+        "encoding": "json",
+        "verdict": "FAIL",
+        "rpc_error_code": -32015,
+        "elapsed_ms": 604
+      },
+      {
+        "slot": "453096590",
+        "transaction_details": "full",
+        "encoding": "json",
+        "max_supported_transaction_version": 1,
+        "verdict": "FAIL",
+        "error_category": "URLError",
+        "elapsed_ms": 6343
+      },
+      {
+        "slot": "453096591",
+        "transaction_details": "full",
+        "encoding": "json",
+        "max_supported_transaction_version": 1,
+        "verdict": "PASS",
+        "block_id": "4ZFzb15HtGRYjFf3Gs8daC1Jr8szYHzvgeHCuSYUKeRB",
+        "transaction_count": 598,
+        "bytes": 4090522,
+        "versions": {
+          "0": 169,
+          "legacy": 272,
+          "1": 157
+        },
+        "matches": [
+          {
+            "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+            "grpc_index": "887",
+            "rpc_signatures_index": 401,
+            "rpc_full_index": 401,
+            "agrees_with_grpc": false
+          }
+        ],
+        "elapsed_ms": 4671
+      }
+    ]
   }
 }

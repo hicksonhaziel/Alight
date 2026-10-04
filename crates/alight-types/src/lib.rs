@@ -1,4 +1,6 @@
-//! Initial Phase 0 contracts. Full canary and quote schemas are not frozen yet.
+//! Version 1 wire contracts established during Phase 0; implementations follow later.
+mod contracts;
+pub use contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "source": "live",
+  "canaries_sent": 0,
+  "requested_at": "2026-10-04T00:44:21.708278+00:00",
+  "checks": [
+    {
+      "method": "getSignatureStatuses",
+      "verdict": "PASS",
+      "elapsed_ms": 5822,
+      "observations": [
+        {
+          "signature": "2EMfvphDtkPkPPmx2Eu3WJomikcVWK9hQttuRinvrpXRaWkwgGWrp8VYi97wN93Fw2KAi7ty5yRQyWW4ybuWwS2F",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453096590,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453096591,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "5kp92ZJyJH7mM5uRu2ks5ySnzLSBPGCnkKuunHFnAt5kNeuwYUJhiZJyEzB3sKUW9DpXpepvJk2Y5EPLZdS5oLrv",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453096593,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "5sk9mWVLwddZKsTNverFjPoj9GxqZSQY5jPtQUvLcYLHaETTEdy2mZtoEZVgwH1SVc4kRueUnQ175hwNcCV5rQcu",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093637,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "5CjReQ526ZcA8y1RJPS5iX5eJU1m8LiH3qYFWtavHa75RWixW4n9ykMHcEJA1tpKGK6CF7GD5uf9Fo2Jya73wZJV",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093625,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "59kfw5d6vVwStMTk2spxL9zU3nVWc42JeS9vFeTMWXerLiwZhppWfExn2k4uhwA1rqGBsYJP7xj9bXNY56V5pFfZ",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093625,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "2V7yPoKug8VfnscRr3HaMb7xYuXFFVZ2mpJtnZ5rPAhwvDc2MJaD7XmGJyeKycB5vQj85FmYQjXBRQzstNSc9gfa",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093625,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "5XWFKrrrmUeiPquR8FvBuA6K9erN6ggLSyCsQHjaqJzLf1XKixXMfjpY2mJNqHJh44YoLyFXcqL71mKDNwY4Si4e",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093625,
+            "status": {
+              "Ok": null
+            }
+          }
+        },
+        {
+          "signature": "2hNvcu9LdfJ6hkcAC8SiutvmzXFhrxwTcNN3BKcZohcPF9mvRf8pBbfcyqv3UwCsthZWwKZpLJa5YZENvaUKLKpU",
+          "status": {
+            "confirmationStatus": "finalized",
+            "confirmations": null,
+            "err": null,
+            "slot": 453093625,
+            "status": {
+              "Ok": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "method": "getBlock",
+      "verdict": "PASS",
+      "elapsed_ms": 922,
+      "slot": "453096590",
+      "matches": [
+        {
+          "signature": "2EMfvphDtkPkPPmx2Eu3WJomikcVWK9hQttuRinvrpXRaWkwgGWrp8VYi97wN93Fw2KAi7ty5yRQyWW4ybuWwS2F",
+          "grpc_index": "205",
+          "rpc_index": 167,
+          "agrees": false
+        }
+      ],
+      "block_id": "9DL3L8oxTsLbeUFXUWy9fZ6Ds6TPPqxZQLX8Km49bja",
+      "parent_slot": "453096589"
+    },
+    {
+      "method": "getBlock",
+      "verdict": "PASS",
+      "elapsed_ms": 833,
+      "slot": "453096591",
+      "matches": [
+        {
+          "signature": "m5XMLpmEyS2594meYdYigJFKvGgFBTGfq4f7g2ZWCPnwXUeEsNzLCrDyDZrqpMTrxafDxcyHP9kYd88Cdr2JUe7",
+          "grpc_index": "887",
+          "rpc_index": 401,
+          "agrees": false
+        }
+      ],
+      "block_id": "4ZFzb15HtGRYjFf3Gs8daC1Jr8szYHzvgeHCuSYUKeRB",
+      "parent_slot": "453096590"
+    }
+  ],
+  "grpc_indices_corroborated": 0,
+  "verdict": "INCONCLUSIVE",
+  "grpc_transactions_considered": 3,
+  "grpc_transaction_slots_sampled": 2,
+  "grpc_transactions_compared": 2,
+  "index_verdict": "DISAGREEMENT",
+  "finalized_signatures": 9,
+  "limitation": "Only two of the three distinct gRPC slots were sampled; reported indexes disagree with RPC list positions."
+}

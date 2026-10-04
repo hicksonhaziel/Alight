@@ -40,6 +40,8 @@ for name in files:
     data = path.read_bytes()
     if any(value.encode() in data for value in secrets):
         failures.append((name, "known credential present"))
+    if re.search(rb"(?:secret_key_|whsec_)[A-Za-z0-9_-]{20,}", data):
+        failures.append((name, "provider credential pattern present"))
 
 for name in forbidden:
     result = subprocess.run(["git", "check-ignore", "--no-index", "-q", name], cwd=root)
