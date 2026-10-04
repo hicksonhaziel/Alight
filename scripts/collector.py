@@ -1,61 +1,50 @@
 #!/usr/bin/env python3
-"""Start/stop a detached local observe collector. No keys or endpoints are printed."""
+"""Manage the local observe collector through systemd's user service manager."""
 import json
 import os
 from pathlib import Path
 import shutil
-import signal
 import subprocess
 import sys
-import time
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / ".alight"
-PIDFILE = STATE / "collector.pid"
 BINARY = STATE / "bin" / "alightd"
+UNIT = "alight-observe.service"
 
 
-def running_pid():
-    try:
-        pid = int(PIDFILE.read_text().strip())
-        args = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
-        if args[0].decode() == str(BINARY):
-            os.kill(pid, 0)
-            return pid
-    except (OSError, ValueError):
-        pass
-    return None
+def service(*args, required=True):
+    result = subprocess.run(["systemctl", "--user", *args], capture_output=True, text=True)
+    if required and result.returncode:
+        raise SystemExit("user service operation failed; run this in the local host terminal")
+    return result
 
 
 def main():
     action = sys.argv[1] if len(sys.argv) == 2 else ""
     if action not in {"start", "stop", "status"}:
         raise SystemExit("usage: python3 scripts/collector.py start|stop|status")
-    pid = running_pid()
-    if action == "start" and pid is None:
+    current = service("is-active", UNIT, required=False)
+    if current.returncode not in {0, 3, 4}:
+        raise SystemExit("user service manager unavailable; run this in the local host terminal")
+    active = current.returncode == 0
+    if action == "start" and not active:
         BINARY.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / "target" / "debug" / "alightd", BINARY)
+        replacement = BINARY.with_name("alightd.next")
+        shutil.copy2(ROOT / "target" / "debug" / "alightd", replacement)
+        replacement.replace(BINARY)
         # Keep the executable separate from subsequent cargo builds.
-        with open(STATE / "collector.log", "ab") as log:
-            os.chmod(STATE / "collector.log", 0o600)
-            child = subprocess.Popen([str(BINARY), "--mode", "observe"], cwd=ROOT,
-                                     stdin=subprocess.DEVNULL, stdout=log, stderr=log,
-                                     start_new_session=True)
-        PIDFILE.write_text(str(child.pid) + "\n")
-        os.chmod(PIDFILE, 0o600)
-        print(json.dumps({"mode": "observe", "status": "STARTING", "pid": child.pid}))
-        return
-    if action == "stop" and pid is not None:
-        os.kill(pid, signal.SIGTERM)
-        for _ in range(100):
-            if running_pid() is None:
-                break
-            time.sleep(0.1)
-        else:
-            raise SystemExit("collector is still draining; inspect local log")
-        PIDFILE.unlink(missing_ok=True)
-        pid = None
-    print(json.dumps({"mode": "observe", "status": "RUNNING" if pid else "STOPPED", "pid": pid}))
+        (STATE / "collector.log").touch(exist_ok=True)
+        os.chmod(STATE / "collector.log", 0o600)
+        service("link", str(ROOT / "deploy" / UNIT))
+        service("daemon-reload")
+        service("reset-failed", UNIT, required=False)
+        service("enable", "--now", UNIT)
+    if action == "stop":
+        service("disable", "--now", UNIT)
+    active = service("is-active", UNIT, required=False).returncode == 0
+    pid = service("show", UNIT, "--property=MainPID", "--value", required=False).stdout.strip()
+    print(json.dumps({"mode": "observe", "manager": "systemd_user", "status": "RUNNING" if active else "STOPPED", "pid": int(pid) if pid.isdigit() and pid != "0" else None}))
 
 
 if __name__ == "__main__":

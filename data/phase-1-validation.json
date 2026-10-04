@@ -164,5 +164,53 @@
     "funded route smoke tests and pilot",
     "leader schedule, builder, policy, senders",
     "live mode, continuous one-hour gate, deployment"
-  ]
+  ],
+  "local_service": {
+    "unit": "alight-observe.service",
+    "manager": "systemd_user",
+    "enabled": true,
+    "captured_at_utc": "2026-10-04T10:15:30.335211+00:00",
+    "state": {
+      "ActiveState": "active",
+      "MainPID": "713287",
+      "NRestarts": "1"
+    },
+    "automatic_crash_recovery_passed": true,
+    "health": {
+      "canaries_sent": 0,
+      "counts": {
+        "blocks": 18241,
+        "budget_reserved_lamports": 0,
+        "canaries": 0,
+        "gaps": 24,
+        "observations": 106,
+        "open_gaps": 0,
+        "slot_events": 81855
+      },
+      "mode": "observe",
+      "observers": {
+        "grpc": {
+          "age_ms": "30",
+          "cursor_slot": "453226656",
+          "last_receive_utc": "2026-10-04T10:15:30.108Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        },
+        "mirage": {
+          "age_ms": "19",
+          "cursor_slot": "453226656",
+          "last_receive_utc": "2026-10-04T10:15:30.120Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        }
+      },
+      "run_id": "1cdef1ec-628b-4944-ae12-c83503423db0",
+      "schema_version": 1,
+      "signing_enabled": false,
+      "source": "live",
+      "status": "PASS",
+      "uptime_s": "71"
+    },
+    "linger": false
+  }
 }

@@ -19,6 +19,9 @@ def main():
     assert receipt["restart"]["new_run_started"]
     assert receipt["rate_limit"]["passed"]
     assert receipt["grpc_connection_clocks"] >= 2
+    assert receipt["local_service"]["automatic_crash_recovery_passed"]
+    assert receipt["local_service"]["health"]["signing_enabled"] is False
+    assert receipt["local_service"]["health"]["canaries_sent"] == 0
     for name, expected in receipt["fixtures"].items():
         assert sha256((ROOT / name).read_bytes()).hexdigest() == expected, name
     clock = json.loads((ROOT / "data/fixtures/clock_rpc_validation.json").read_text())

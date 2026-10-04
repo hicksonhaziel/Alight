@@ -26,17 +26,25 @@ Alight canaries or route performance measurements.
 The initial test collector ran approximately 21 minutes before the intentional
 kill. A later attached development process stopped gracefully after about three
 minutes; its exact signal was not captured. The binary now records its shutdown
-reason. The current collector runs detached with its own process session and a
-pinned executable under ignored `.alight/`; it remains local to this computer.
+reason. The current collector runs under a systemd user service with automatic failure
+restart and a pinned executable under ignored `.alight/`. Host service checks
+are required: sandbox process visibility can incorrectly make a detached host
+process appear absent. The user service remains local to this computer.
 Continuous one-hour validation and host deployment are still pending.
 
 Use `python3 scripts/collector.py status`, `stop`, or `start` to manage the local
 observe collector. Build `cargo build -p alightd --locked` before starting a new
-version. The helper never starts live mode. Logs and PID stay under `.alight/`.
+version. The helper never starts live mode. Logs stay under `.alight/`; systemd tracks the PID. The enabled user service
+starts with the login session and retries failures after five seconds, at most
+three starts in five minutes. A real SIGKILL test produced one automatic restart,
+preserved the database, and restored PASS health on both readers. `stop` disables
+the user unit until the next explicit `start`. This host
+has user lingering disabled, so collection depends on the computer staying awake
+and the user session remaining active.
 Health is at `http://127.0.0.1:8080/v1/health`; runtime evidence is in the ignored
 `data/alight.db`. The default main database cap is 512 MiB; writes fail and the
 daemon stops when the cap is reached. This is bounded local collection, not a
-deployed service with automated storage retention or reboot recovery.
+deployed service with automated storage retention or an always-on host.
 
 Acceptance commands:
 

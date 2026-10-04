@@ -1,0 +1,19 @@
+[Unit]
+Description=Alight local read-only Solami collector
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Alight
+ExecStart=%h/Alight/.alight/bin/alightd --mode observe
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=true
+StandardOutput=append:%h/Alight/.alight/collector.log
+StandardError=inherit
+
+[Install]
+WantedBy=default.target
