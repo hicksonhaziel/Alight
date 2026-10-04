@@ -236,6 +236,8 @@ impl HttpProbe {
         }
         // Complete epoch schedules exceed the normal proof-response cap.
         let limit = if method == "getLeaderSchedule" {
+            // A complete epoch is roughly 3 MiB; retain a bounded large-response deadline.
+            request = request.timeout(Duration::from_secs(45));
             8 * 1024 * 1024
         } else {
             MAX_RESPONSE_BYTES

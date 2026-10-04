@@ -7,10 +7,25 @@ starts the governed live engine by default. An unfunded wallet waits without
 signing; observe mode excludes the signing identities entirely.
 
 ```sh
-docker compose --env-file .env -f deploy/compose.yaml build collector
+docker compose --env-file .env -f deploy/compose.yaml build --build-arg GIT_REVISION="$(git rev-parse HEAD)" collector
 docker compose --env-file .env -f deploy/compose.yaml up -d --wait
 docker compose --env-file .env -f deploy/compose.yaml ps
 curl -fsS http://127.0.0.1:8080/v1/health
+```
+
+On this computer, the image was also built using its installed Rust toolchain
+and cached public Cargo registry. This avoids downloading a second compiler;
+the ordinary Compose build above remains the portable path. Named contexts
+contain only the compiler and public dependency cache, never `.env` or local
+briefs. The resulting runtime still uses Debian and the same locked Rust sources.
+
+```sh
+docker build --build-arg BUILD_IMAGE=node:22.22.0-bookworm-slim \
+  --build-arg GIT_REVISION="$(git rev-parse HEAD)" --build-arg BUILD_JOBS=4 \
+  --build-context local_toolchain="$HOME/.rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu" \
+  --build-context local_registry="$HOME/.cargo/registry" \
+  --tag alight-collector:phase1 -f deploy/Dockerfile .
+docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
 ```
 
 The previous systemd observe collector must be stopped before starting Compose,
@@ -24,7 +39,24 @@ Caddy exposes only read-only health, clock, and leader endpoints on
 removed from its access logs. The backend shares a 10-request/s limiter. This
 local deployment uses HTTP; a public hostname and TLS belong to a later VPS
 configuration. The collector uses a private container network, an unprivileged
-UID, a read-only root filesystem, and no additional Linux capabilities.
+UID, a read-only root filesystem, and no additional Linux capabilities. Caddy
+retains only NET_BIND_SERVICE, required by its official binary's file capability.
+The collector has a bounded 256 MiB temporary workspace for SQLite index creation.
+Full epoch schedule responses have a separate bounded 45-second deadline.
+
+Hickson requested that collection be paused after deployment verification to
+save internet data. Both containers are explicitly stopped; the prior systemd
+observe service is disabled. Local data and the verified image are preserved.
+To resume using cached images, then inspect health:
+
+```sh
+docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
+curl -fsS http://127.0.0.1:8080/v1/health
+```
+
+The observer streams consume internet data whenever the collector runs, even
+with an empty wallet or in observe mode. Compilation and cached-image startup
+are local. Public route checks can use the network; they never imply funding.
 
 To restart or stop the deployment:
 
