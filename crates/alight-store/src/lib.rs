@@ -257,6 +257,15 @@ impl Store {
         }
         sqlx::query("INSERT INTO observer_state VALUES(?,?,?,?) ON CONFLICT(source,observer) DO UPDATE SET cursor_slot=CASE WHEN excluded.cursor_slot IS NULL THEN observer_state.cursor_slot WHEN observer_state.cursor_slot IS NULL THEN excluded.cursor_slot ELSE MAX(observer_state.cursor_slot,excluded.cursor_slot) END,last_receive_utc=excluded.last_receive_utc")
             .bind(&source).bind(&observer).bind(slot.map(slot_key)).bind(&receive.wall_utc).execute(&mut *tx).await?;
+        // A gap closes only once a normalized frame and cursor are durably saved.
+        sqlx::query(
+            "UPDATE gaps SET ended_utc=? WHERE source=? AND observer=? AND ended_utc IS NULL",
+        )
+        .bind(&receive.wall_utc)
+        .bind(&source)
+        .bind(&observer)
+        .execute(&mut *tx)
+        .await?;
         tx.commit().await?;
         Ok(affected > 0)
     }
@@ -412,6 +421,30 @@ impl Store {
             .await?;
         tx.commit().await?;
         Ok(())
+    }
+
+    pub async fn observer_health(
+        &self,
+        observer: ObserverKind,
+        source: Source,
+    ) -> Result<Value, StoreError> {
+        let last: Option<String> = sqlx::query_scalar(
+            "SELECT last_receive_utc FROM observer_state WHERE source=? AND observer=?",
+        )
+        .bind(label(source)?)
+        .bind(label(observer)?)
+        .fetch_optional(&self.pool)
+        .await?;
+        let open: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM gaps WHERE source=? AND observer=? AND ended_utc IS NULL",
+        )
+        .bind(label(source)?)
+        .bind(label(observer)?)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(
+            serde_json::json!({"last_receive_utc":last,"open_gaps":open,"cursor_slot":self.cursor(observer,source).await?.map(|s|s.to_string())}),
+        )
     }
 
     pub async fn last_receive(&self, source: Source) -> Result<Option<String>, StoreError> {

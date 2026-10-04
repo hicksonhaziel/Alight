@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "bin/alight"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -24,6 +24,12 @@ chrono = { version = "=0.4.44", default-features = false, features = ["clock", "
 uuid = { version = "=1.23.0", features = ["v4"] }
 sha2 = "=0.10.9"
 tempfile = "=3.27.0"
+futures-util = "=0.3.34"
+prost = "=0.14.4"
+base64 = "=0.22.1"
+rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std"] }
+tokio-tungstenite = { version = "=0.28.0", default-features = false, features = ["connect", "rustls-tls-native-roots"] }
+axum = { version = "=0.8.6", default-features = false, features = ["http1", "json", "tokio"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

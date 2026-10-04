@@ -9,6 +9,11 @@ use std::{
 };
 use thiserror::Error;
 
+pub mod adapter;
+pub mod clock;
+#[cfg(feature = "stream")]
+pub mod stream;
+
 pub const MAINNET_GENESIS: &str = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
 const MAX_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
 
@@ -39,15 +44,29 @@ pub struct Config {
 impl Config {
     /// Reads the ignored .env; process variables take precedence without mutating the process.
     pub fn load() -> Result<Self, ProbeError> {
+        Self::load_filtered(false)
+    }
+
+    /// Observer configuration deliberately excludes both signing identities.
+    pub fn load_observer() -> Result<Self, ProbeError> {
+        Self::load_filtered(true)
+    }
+
+    fn load_filtered(observer_only: bool) -> Result<Self, ProbeError> {
+        let allowed = |key: &str| {
+            !observer_only || !["ALIGHT_CANARY_KEYPAIR", "SOLAMI_SWQOS_KEY"].contains(&key)
+        };
         let mut values = BTreeMap::new();
         if std::path::Path::new(".env").exists() {
             for entry in dotenvy::from_path_iter(".env").map_err(|_| ProbeError::Configuration)? {
                 let (key, value) = entry.map_err(|_| ProbeError::Configuration)?;
-                values.insert(key, value);
+                if allowed(&key) {
+                    values.insert(key, value);
+                }
             }
         }
         for (key, value) in std::env::vars() {
-            if key.starts_with("SOLAMI_") || key.starts_with("ALIGHT_") {
+            if (key.starts_with("SOLAMI_") || key.starts_with("ALIGHT_")) && allowed(&key) {
                 values.insert(key, value);
             }
         }

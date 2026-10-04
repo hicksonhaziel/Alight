@@ -29,8 +29,8 @@
 - Credentials, private keys, and authenticated URLs may be stored in the ignored
   local `.env`, as authorized by Hickson. Never expose them in context, chat,
   versioned files, logs, fixtures, or exports. Runtime code uses environment values.
-- Use `codex/` branches for implementation tasks unless the user specifies another
-  naming scheme. Keep changes reviewable and respect the user's Git instructions.
+- Hickson requests all work on `main`, with no extra project branches. Commit and
+  push coherent verified batches directly to `main`.
 - Hickson authorizes regular commits and pushes to this repository. Save coherent
   verified batches as work progresses; avoid tiny noisy commits and large unsaved
   change piles. Inspect the staged file set and check for credentials before each push.

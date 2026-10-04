@@ -158,3 +158,31 @@ can be retained inside that subset. The store rejects mismatched references.
 Restart gaps are recorded from previous observer receive times. A missing or
 ambiguous block identity stays unknown; raw observations are never overwritten
 when a unique same-observer candidate is used during resolution.
+
+## Phase 1 persistence and observer daemon
+
+Migration `0001_observe.sql` adds SQLite WAL runs, evidence, slot events, candidate
+blocks, observations, observer cursors, gaps, canaries, resolution history, and
+budget reservations. Unsigned slots remain padded decimal TEXT inside SQLite;
+JSON contracts retain decimal strings. Events and cursors commit atomically.
+Duplicates preserve the first receive timestamp; forks and index scopes remain
+separate. A disconnect gap closes only when a normalized frame is committed.
+
+`BlockMetaEvent` records provider candidate identity, parent identity, block height,
+Unix-second chain time, and the observer receive clock. Missing transaction block
+identity stays unknown; queries can associate a single same-observer candidate
+without changing the raw stored observation. Multiple candidates forbid that
+association. `raw_ref` hashes the selected canonical JSON provider fields, not the
+original protobuf bytes.
+
+Example normalized event (replay):
+
+```json
+{"kind":"block_meta","data":{"slot":"453062837","block_id":"AtrHDcMBCCaWf91ZzMRg1JPoBzD34nfGx3aKKoA7FLvu","parent_slot":"453062836","parent_block_id":null,"block_time_unix_s":1791065153,"block_height":"431101321","executed_transactions":"1045","received":{"clock_id":"fixture","mono_ns":"252072361","wall_utc":"2026-10-03T22:05:53.951Z"},"source":"replay","raw_ref":"sha256:captured-subset-hash"}}
+```
+
+The daemon currently accepts `observe` and offline `replay`. Observe never loads
+a signing identity. Its loopback-only `/v1/health` and `/v1/clock` endpoints share
+a 10-request/s limit. Health distinguishes durable data freshness from merely
+having an open connection. Provider slot replay is disabled unless explicitly
+configured; unsupported replay falls back to a durable gap and live subscription.

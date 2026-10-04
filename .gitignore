@@ -20,3 +20,5 @@
 /sdk/ts/dist/
 /data/*.db
 /data/*.db-*
+
+/data/*.db.lock

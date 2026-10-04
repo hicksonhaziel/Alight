@@ -1,0 +1,22 @@
+[package]
+name = "alightd"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alight-ingest = { workspace = true, features = ["stream"] }
+alight-store.workspace = true
+alight-types.workspace = true
+tokio.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+axum.workspace = true
+rustls.workspace = true
+bs58.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
