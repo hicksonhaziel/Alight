@@ -1,0 +1,18 @@
+{
+  "name": "alight-phase0-probes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.22.0" },
+  "scripts": {
+    "spike:grpc": "node scripts/spike_grpc.mjs",
+    "spike:blur": "python3 scripts/spike_blur.py",
+    "spike:blur-ws": "node scripts/spike_ws.mjs blur",
+    "spike:mirage": "node scripts/spike_ws.mjs mirage",
+    "wallet:init": "node scripts/create_canary_wallet.mjs"
+  },
+  "dependencies": {
+    "@triton-one/yellowstone-grpc": "7.0.1",
+    "bs58": "6.0.0"
+  }
+}

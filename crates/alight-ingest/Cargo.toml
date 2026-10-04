@@ -1,0 +1,17 @@
+[package]
+name = "alight-ingest"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alight-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+dotenvy.workspace = true
+reqwest.workspace = true
+bs58.workspace = true
+
+[lints]
+workspace = true

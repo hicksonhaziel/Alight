@@ -1,0 +1,22 @@
+# Local planning documents: never stage, commit, or push these files.
+/ALIGHT_PLAN.md
+/ALIGHT_BUILD.md
+
+# Local conversation handoff notes.
+/context.txt
+
+# Environment values stay local; only a placeholder template is public.
+.env
+.env.*
+!.env.example
+
+# Runtime evidence, dependency installations, and build output.
+/.alight/
+/target/
+**/node_modules/
+**/__pycache__/
+*.pyc
+/web/dist/
+/sdk/ts/dist/
+/data/*.db
+/data/*.db-*

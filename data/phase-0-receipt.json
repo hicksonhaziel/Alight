@@ -1,0 +1,724 @@
+{
+  "schema_version": 1,
+  "phase": 0,
+  "recorded_at_utc": "2026-10-03T22:38:58.213401+00:00",
+  "status": "PARTIAL",
+  "source": "live",
+  "read_only": true,
+  "canaries_signed": 0,
+  "canaries_sent": 0,
+  "spend_lamports": 0,
+  "canary_wallet_funded": false,
+  "gates": {
+    "G0": "PENDING_UNFUNDED",
+    "G1": "PENDING_TRANSACTION_AND_WEBHOOK_FIXTURES_AND_CONTRACT_FREEZE"
+  },
+  "rpc_checks": [
+    {
+      "name": "rpc_genesis",
+      "verdict": "PASS",
+      "elapsed_ms": 5889,
+      "data": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d"
+    },
+    {
+      "name": "rpc_version",
+      "verdict": "PASS",
+      "elapsed_ms": 189,
+      "data": {
+        "feature-set": 565236538,
+        "solana-core": "4.2.2"
+      }
+    },
+    {
+      "name": "finalized_slot",
+      "verdict": "PASS",
+      "elapsed_ms": 261,
+      "data": 453063114
+    },
+    {
+      "name": "latest_blockhash",
+      "verdict": "PASS",
+      "elapsed_ms": 192,
+      "data": {
+        "context": {
+          "apiVersion": "4.2.2",
+          "slot": 453063146
+        },
+        "value": {
+          "blockhash": "EsUnZow57qo1NAXAeEPDMzEvb9u3SKVnpavF2cUkZT7s",
+          "lastValidBlockHeight": 431101780
+        }
+      }
+    },
+    {
+      "name": "block_height",
+      "verdict": "PASS",
+      "elapsed_ms": 167,
+      "data": 431101631
+    },
+    {
+      "name": "epoch_info",
+      "verdict": "PASS",
+      "elapsed_ms": 182,
+      "data": {
+        "absoluteSlot": 453063116,
+        "blockHeight": 431101600,
+        "epoch": 1048,
+        "slotIndex": 327116,
+        "slotsInEpoch": 432000,
+        "transactionCount": null
+      }
+    },
+    {
+      "name": "retention_floor",
+      "verdict": "PASS",
+      "elapsed_ms": 194,
+      "data": 452948388
+    },
+    {
+      "name": "signature_status_shape",
+      "verdict": "PASS",
+      "elapsed_ms": 182,
+      "data": {
+        "context": {
+          "apiVersion": "2.3.0",
+          "slot": 453063149
+        },
+        "value": []
+      }
+    },
+    {
+      "name": "clock_end",
+      "verdict": "PASS",
+      "elapsed_ms": 180,
+      "data": 1791065226
+    },
+    {
+      "name": "slot_time_64",
+      "verdict": "PASS",
+      "elapsed_ms": 204,
+      "data": {
+        "end_slot": "453063114",
+        "end_unix_s": 1791065226,
+        "mean_slot_ms": 265.625,
+        "method": "block_timestamp_delta_over_slot_delta",
+        "precision": "coarse_window_mean",
+        "start_slot": "453063050",
+        "start_unix_s": 1791065209
+      }
+    },
+    {
+      "name": "slot_time_256",
+      "verdict": "PASS",
+      "elapsed_ms": 249,
+      "data": {
+        "end_slot": "453063114",
+        "end_unix_s": 1791065226,
+        "mean_slot_ms": 265.625,
+        "method": "block_timestamp_delta_over_slot_delta",
+        "precision": "coarse_window_mean",
+        "start_slot": "453062858",
+        "start_unix_s": 1791065158
+      }
+    },
+    {
+      "name": "slot_time_1024",
+      "verdict": "PASS",
+      "elapsed_ms": 283,
+      "data": {
+        "end_slot": "453063114",
+        "end_unix_s": 1791065226,
+        "mean_slot_ms": 266.6015625,
+        "method": "block_timestamp_delta_over_slot_delta",
+        "precision": "coarse_window_mean",
+        "start_slot": "453062090",
+        "start_unix_s": 1791064953
+      }
+    },
+    {
+      "name": "leader_schedule",
+      "verdict": "FAIL",
+      "elapsed_ms": 12002,
+      "data": {
+        "error": "network request failed or timed out"
+      }
+    },
+    {
+      "name": "block_identity",
+      "verdict": "PASS",
+      "elapsed_ms": 646,
+      "data": {
+        "blockHeight": 431101598,
+        "blockTime": 1791065226,
+        "blockhash": "D66bk5B545fiixdUU8BBcMSne2DfRLSEKT8j8cGFTfKH",
+        "parentSlot": 453063113,
+        "previousBlockhash": "5e6qQNsTvqENZk4eHdiP6jUgMgSRTp1fUtDcnY1RnAKn"
+      }
+    },
+    {
+      "name": "historical_block_time_1000000",
+      "verdict": "PASS",
+      "elapsed_ms": 501,
+      "data": 1790797698
+    },
+    {
+      "name": "historical_block_time_4000000",
+      "verdict": "PASS",
+      "elapsed_ms": 2628,
+      "data": 1789995753
+    },
+    {
+      "name": "historical_block_time_16000000",
+      "verdict": "PASS",
+      "elapsed_ms": 7669,
+      "data": 1785799262
+    },
+    {
+      "name": "canary_balance",
+      "verdict": "PASS",
+      "elapsed_ms": 187,
+      "data": {
+        "context": {
+          "apiVersion": "2.3.0",
+          "slot": 453063235
+        },
+        "value": 0
+      }
+    },
+    {
+      "name": "tip_addresses",
+      "verdict": "PASS",
+      "elapsed_ms": 728,
+      "data": [
+        "15qWd4huAkoxvhDsHMfpUn27TW1YBYMMJJ2jkAkbeam",
+        "9XuGciSwr5wb7dLTQm91JhuBTvj3GG8WjuRDc3obeam",
+        "kiQioJNyFG7pU36ELLsRKXkeT48kFbk3b6rSgrWbeam",
+        "kjmVhW1UzJrW2sU5bY5NtZ79jpvjSStsj37Pzmabeam",
+        "kREnjPWFpt4AHeY5pijPmyXaCrMnbatUQJo7d3Xbeam",
+        "praRZG6N6MdbsT4EFpKgZJWReZGXQhAMFcH68oCbeam",
+        "SqoKQKU5uwBxovq3R7yEBxFwptc4z7vwoghU3M9beam",
+        "sV72TY66T1RfmDSeHPPbwX6wwJ3bBv5hd4ehJ8tbeam",
+        "swf8MyEeLo7gtRUo27UuJj6naCASUrypU7dbteSbeam",
+        "uiuaQsxA47JybQAVN4FTfYuoEDkMiXV1r591Aewbeam",
+        "6993ZufwyEDNdB94kciDTGB17ANXguiNH22VmMQU1ami",
+        "E1BkG293HQocKfCkfPS7tEvs8Enh6FK8pUKi17EH1ami",
+        "2Ga87xvZwpP9WRsSdiPiWre21cQbDcFhGLmT5EMo1ami",
+        "CGzT5jzT68vGUWVagQAQqESfrCEHSKYe9DAjfgfC1ami",
+        "148HEjLv8JFZYZzduhSitV1VtQHRKLc5auX1RzdyGtxx"
+      ]
+    },
+    {
+      "name": "public_pricing",
+      "verdict": "PASS",
+      "elapsed_ms": 187,
+      "data": {
+        "currency": "USD",
+        "decoded_shreds": {
+          "daily": 3900000000,
+          "monthly": 49900000000,
+          "weekly": 17500000000
+        },
+        "geyser_yellowstone": {
+          "daily": 1000000000,
+          "monthly": 9900000000,
+          "weekly": null
+        },
+        "payg": {
+          "blur": {
+            "bandwidth_weight": 2.0,
+            "units_per_byte": 0.01862645149230957,
+            "usd_per_gb": 0.2
+          },
+          "grpc": {
+            "units_per_byte": 0.007450580596923828,
+            "usd_per_gb": 0.08
+          },
+          "min_balance_units": 6000000,
+          "rpc": {
+            "units_per_byte": 0.007450580596923828,
+            "units_per_call": 800,
+            "usd_per_gb": 0.08,
+            "usd_per_million_calls": 8.0
+          },
+          "shred": {
+            "units_per_byte": 0.007450580596923828,
+            "usd_per_gb": 0.08
+          }
+        },
+        "scale": 8,
+        "shred_stream": {
+          "daily": 3200000000,
+          "monthly": 39900000000,
+          "weekly": 13900000000
+        },
+        "tiers": [
+          {
+            "features": {
+              "grpc_access": false,
+              "ws_access": false
+            },
+            "limits": {
+              "grpc_streams": 0,
+              "included_decoded_shred_connections": 0,
+              "included_shred_streams": 0,
+              "max_webhooks": 1,
+              "method_limits": {
+                "sendTransaction": 1
+              },
+              "rpc_rps": 5,
+              "snapsets": 0,
+              "ws_connections": 0
+            },
+            "price": 0,
+            "tier": "Free"
+          },
+          {
+            "features": {
+              "grpc_access": false,
+              "ws_access": true
+            },
+            "limits": {
+              "grpc_streams": 0,
+              "included_decoded_shred_connections": 0,
+              "included_shred_streams": 0,
+              "max_webhooks": 3,
+              "method_limits": {
+                "sendTransaction": 2
+              },
+              "rpc_rps": 50,
+              "snapsets": 0,
+              "ws_connections": 2
+            },
+            "price": 4900000000,
+            "tier": "Dev"
+          },
+          {
+            "features": {
+              "grpc_access": true,
+              "ws_access": true
+            },
+            "limits": {
+              "grpc_streams": 2,
+              "included_decoded_shred_connections": 0,
+              "included_shred_streams": 0,
+              "max_webhooks": 10,
+              "method_limits": {
+                "sendTransaction": 5
+              },
+              "rpc_rps": 200,
+              "snapsets": 0,
+              "ws_connections": 5
+            },
+            "price": 9900000000,
+            "tier": "Pro"
+          },
+          {
+            "features": {
+              "grpc_access": true,
+              "ws_access": true
+            },
+            "limits": {
+              "grpc_streams": 5,
+              "included_decoded_shred_connections": 0,
+              "included_shred_streams": 0,
+              "max_webhooks": 20,
+              "method_limits": {
+                "sendTransaction": 10
+              },
+              "rpc_rps": 500,
+              "snapsets": 0,
+              "ws_connections": 10
+            },
+            "price": 19900000000,
+            "tier": "Ultra"
+          },
+          {
+            "features": {
+              "grpc_access": true,
+              "ws_access": true
+            },
+            "limits": {
+              "grpc_streams": 10,
+              "included_decoded_shred_connections": 1,
+              "included_shred_streams": 1,
+              "max_webhooks": 50,
+              "method_limits": {
+                "sendTransaction": 15
+              },
+              "rpc_rps": 2000,
+              "snapsets": 0,
+              "ws_connections": 30
+            },
+            "price": 49900000000,
+            "tier": "SharedMetal"
+          },
+          {
+            "features": {
+              "grpc_access": true,
+              "ws_access": true
+            },
+            "limits": {
+              "grpc_streams": 30,
+              "included_decoded_shred_connections": 2,
+              "included_shred_streams": 2,
+              "max_webhooks": 100,
+              "method_limits": {
+                "sendTransaction": 20
+              },
+              "rpc_rps": 5000,
+              "snapsets": 20,
+              "ws_connections": 60
+            },
+            "price": 99900000000,
+            "tier": "Titan"
+          }
+        ]
+      }
+    },
+    {
+      "name": "blur_pools",
+      "verdict": "PASS",
+      "elapsed_ms": 1683,
+      "data": [
+        {
+          "adds": 0,
+          "base_usd": "68688836.2965317",
+          "deposit_usd": "0",
+          "dex": "juplend_amm",
+          "fee_tvl_pct": "0",
+          "fees_per_min_usd": "0",
+          "fees_usd": "0",
+          "image": "https://meta.huma.finance/pst.svg",
+          "mint": "59obFNBzyTBGowrkif5uK7ojS58vsuWz3ZCvg6tfZAGw",
+          "name": "PayFi Strategy Token",
+          "net_deposit_usd": "0",
+          "new_providers": 0,
+          "pool": "BdhXJHhhveU8WSk8Bzemnarsh87xR5GBwaZAmmwENt7m",
+          "price_change_pct": "0.018560948841601418",
+          "price_usd": "1.136360595628602",
+          "providers": 0,
+          "quote_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "quote_usd": "79327661.483822",
+          "removes": 0,
+          "symbol": "PST",
+          "traders": 27,
+          "traders_change_pct": "8",
+          "trades": 44,
+          "trades_change_pct": "-4.3478260869565215",
+          "tvl_change_pct": "6.573893412667382",
+          "tvl_usd": "148016497.78035372",
+          "volume_change_pct": "-29.955275295263117",
+          "volume_per_min_usd": "169.0010512645833",
+          "volume_tvl_pct": "0.16441512768538252",
+          "volume_usd": "243361.51382099997",
+          "window": 86400,
+          "withdraw_usd": "0"
+        },
+        {
+          "adds": 0,
+          "base_usd": "31783339.784019753",
+          "deposit_usd": "0",
+          "dex": "juplend_amm",
+          "fee_tvl_pct": "0",
+          "fees_per_min_usd": "0",
+          "fees_usd": "0",
+          "image": "https://usd.ai/metadata/solana/susdai.png",
+          "mint": "sUSDai6Y3GxysDEtA9BVcEFTaog6UZpYUVxJiMhAKYE",
+          "name": "Staked USDai",
+          "net_deposit_usd": "0",
+          "new_providers": 0,
+          "pool": "G41Dqz9A1v39TT2MryR5BkZU2a7UzfUkiRHyJGuRfeyF",
+          "price_change_pct": "0.014173650738478078",
+          "price_usd": "1.1164609117468312",
+          "providers": 0,
+          "quote_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "quote_usd": "79318180.924759",
+          "removes": 0,
+          "symbol": "sUSDai",
+          "traders": 43,
+          "traders_change_pct": "104.76190476190477",
+          "trades": 84,
+          "trades_change_pct": "61.53846153846154",
+          "tvl_change_pct": "11.554560199921838",
+          "tvl_usd": "111101520.70877875",
+          "volume_change_pct": "29.246862865103207",
+          "volume_per_min_usd": "1462.1847156027777",
+          "volume_tvl_pct": "1.8951549691089233",
+          "volume_usd": "2105545.990468",
+          "window": 86400,
+          "withdraw_usd": "0"
+        },
+        {
+          "adds": 0,
+          "base_usd": "48908711.544190556",
+          "deposit_usd": "0",
+          "dex": "orca_whirlpool",
+          "fee_tvl_pct": "0",
+          "fees_per_min_usd": "0",
+          "fees_usd": "0",
+          "image": "",
+          "mint": "Dzf1z7MpUfQVtvoFudcyCYaNGphLmrZXYnbB69J8WAk5",
+          "name": "US coin",
+          "net_deposit_usd": "0",
+          "new_providers": 0,
+          "pool": "HLjZqLjzoujTyu1tX5z2AafQyh7S9hmiipBqLg9uZMT8",
+          "price_change_pct": "-6.6689039055427894",
+          "price_usd": "0.0028935533203329764",
+          "providers": 0,
+          "quote_mint": "3eTsP4FhGmRnu4DABjEotPi5GdkhnjGwSY3DtMJHFftu",
+          "quote_usd": "49402748.8481817",
+          "removes": 0,
+          "symbol": "USC",
+          "traders": 9,
+          "traders_change_pct": "350",
+          "trades": 104,
+          "trades_change_pct": "1633.3333333333333",
+          "tvl_change_pct": "-6.182933813937645",
+          "tvl_usd": "98311460.39237225",
+          "volume_change_pct": "690.3553546952276",
+          "volume_per_min_usd": "0.06454100651004513",
+          "volume_tvl_pct": "0.0000945353156219373",
+          "volume_usd": "92.93904937446499",
+          "window": 86400,
+          "withdraw_usd": "0"
+        }
+      ]
+    },
+    {
+      "name": "blur_trades",
+      "verdict": "PASS",
+      "elapsed_ms": 275,
+      "data": [
+        {
+          "base_amount": 389793123,
+          "base_decimals": 9,
+          "base_reserve": 0,
+          "block_time": 1791065257,
+          "dex": "tesserav",
+          "fee_amount": 0,
+          "fee_mint": "So11111111111111111111111111111111111111112",
+          "fee_pct": "0",
+          "ix_index": 2,
+          "pool": "FLckHLGMJy5gEoXWwcE68Nprde1D4araK4TGLw4pQq2n",
+          "price": "119.69924620758381",
+          "price_impact_pct": "0",
+          "price_usd": "119.69924620758381",
+          "quote_amount": 46657943,
+          "quote_decimals": 6,
+          "quote_reserve": 0,
+          "side": "sell",
+          "signature": "2HLmnv1Phy89ZYyqAfXTwkMCZUrs9kqAm8Uf92Gk6sqdGMG9CR6kCvyrAazP4aPbGe91TD7Xwdr1LJpmNtGdxZ1E",
+          "slot": 453063231,
+          "trader": "8ekCy2jHHUbW2yeNGFWYJT9Hm9FW7SvZcZK66dSZCDiF",
+          "tx_index": 1182,
+          "volume_usd": "46.657943"
+        },
+        {
+          "base_amount": 106113874,
+          "base_decimals": 9,
+          "base_reserve": 4351519581108,
+          "block_time": 1791065257,
+          "dex": "raydium_clmm",
+          "fee_amount": 0,
+          "fee_mint": "So11111111111111111111111111111111111111112",
+          "fee_pct": "0",
+          "ix_index": 0,
+          "pool": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",
+          "price": "119.72893384327858",
+          "price_impact_pct": "0",
+          "price_usd": "119.72893384327858",
+          "quote_amount": 12704901,
+          "quote_decimals": 6,
+          "quote_reserve": 60123648472,
+          "side": "buy",
+          "signature": "5UZnfQr7ivC5ERVWvmNdLZvHLsdVeFrES8agnhGM882At4dNsP7wRaGMqt342ajuQmECVTkP6eGT9QJ5Kftw6iSN",
+          "slot": 453063229,
+          "trader": "5pBPt7q4yJho67pHKjMdJZb6j9Ph7HRhuxa43y4s2BJb",
+          "tx_index": 1074,
+          "volume_usd": "12.704901"
+        },
+        {
+          "base_amount": 221545315,
+          "base_decimals": 9,
+          "base_reserve": 20467704073910,
+          "block_time": 1791065257,
+          "dex": "bisonfi",
+          "fee_amount": 0,
+          "fee_mint": "So11111111111111111111111111111111111111112",
+          "fee_pct": "0",
+          "ix_index": 2,
+          "pool": "8FnX3xo2yYw3EUE6w3nQA4GfXGS9wpK6oj3veJpbFzLo",
+          "price": "119.69066012522089",
+          "price_impact_pct": "1.5096615454441946",
+          "price_usd": "119.69066012522089",
+          "quote_amount": 26516905,
+          "quote_decimals": 6,
+          "quote_reserve": 2413359452250,
+          "side": "sell",
+          "signature": "55gh3HZTb6tL1YTN14MwXkRth1ea45r4HqnHDnRUapX7j16YU78oiDaYkVmQ6Xs34yqiA3spPWG9yEFHmnSsLNKE",
+          "slot": 453063229,
+          "trader": "BWhVpA4CugXpLY17Ase5cAUs4ess86TCbFrtuNMh5BRi",
+          "tx_index": 1051,
+          "volume_usd": "26.516905"
+        }
+      ]
+    },
+    {
+      "name": "blur_candles",
+      "verdict": "PASS",
+      "elapsed_ms": 383,
+      "data": [
+        {
+          "close": "119.6509309863365",
+          "high": "119.76256410443683",
+          "low": "119.63461702135078",
+          "open": "119.65188625831385",
+          "time": 1791065040,
+          "trades": 9202,
+          "volume": "737155.7936399038"
+        },
+        {
+          "close": "119.68621549918853",
+          "high": "119.73328270680085",
+          "low": "119.55900060629742",
+          "open": "119.62444953833021",
+          "time": 1791065100,
+          "trades": 28711,
+          "volume": "2248914.3845774704"
+        },
+        {
+          "close": "119.65235369743635",
+          "high": "119.83726205860232",
+          "low": "119.63247375686655",
+          "open": "119.69005757751674",
+          "time": 1791065160,
+          "trades": 25146,
+          "volume": "1917840.4731063468"
+        },
+        {
+          "close": "119.69400668797797",
+          "high": "119.75164334927655",
+          "low": "119.62557059688235",
+          "open": "119.63398147442402",
+          "time": 1791065220,
+          "trades": 15372,
+          "volume": "1260512.7177957993"
+        }
+      ]
+    }
+  ],
+  "rpc_followup": [
+    {
+      "method": "getLeaderSchedule",
+      "source": "live",
+      "requested_at": "2026-10-03T22:11:51.576518+00:00",
+      "verdict": "PASS",
+      "leader_count": 667,
+      "elapsed_ms": 4503
+    },
+    {
+      "method": "getSlotLeaders",
+      "source": "live",
+      "requested_at": "2026-10-03T22:11:56.079297+00:00",
+      "verdict": "PASS",
+      "leaders": [
+        "A1vqhA2fS6K7CvHsJKX1ACcHJFEmyRg4KuR5pctHANy4",
+        "A1vqhA2fS6K7CvHsJKX1ACcHJFEmyRg4KuR5pctHANy4",
+        "GGX3BEoZDqjxcw4AbCdu62ZTMrkpSgmPt81oP2mVuZNS",
+        "GGX3BEoZDqjxcw4AbCdu62ZTMrkpSgmPt81oP2mVuZNS",
+        "GGX3BEoZDqjxcw4AbCdu62ZTMrkpSgmPt81oP2mVuZNS",
+        "GGX3BEoZDqjxcw4AbCdu62ZTMrkpSgmPt81oP2mVuZNS",
+        "BSVckjdW2f8kcXPGcrPPtV9kUDBZ8w8PjrrGVnxgEdwq",
+        "BSVckjdW2f8kcXPGcrPPtV9kUDBZ8w8PjrrGVnxgEdwq"
+      ],
+      "elapsed_ms": 20348
+    },
+    {
+      "method": "getBlock",
+      "source": "live",
+      "requested_at": "2026-10-03T22:12:16.427130+00:00",
+      "verdict": "FAIL",
+      "error_category": "TimeoutError",
+      "elapsed_ms": 27241
+    }
+  ],
+  "transports": {
+    "grpc": {
+      "verdict": "PASS",
+      "slot_events": 24,
+      "block_meta_events": 8,
+      "transaction_events": 0,
+      "capture_completeness": "not_assessed"
+    },
+    "mirage": {
+      "verdict": "PASS",
+      "frames": 12,
+      "slot_events": 8,
+      "block_meta_events": 3,
+      "ping_frames": 1,
+      "transaction_events": 0
+    },
+    "blur_ws": {
+      "schema_version": 1,
+      "product": "blur",
+      "source": "live",
+      "verdict": "PASS",
+      "bytes": 10729,
+      "frames": 12,
+      "close_code": null,
+      "error_category": null,
+      "canaries_sent": 0
+    }
+  },
+  "fixtures": [
+    {
+      "path": "data/fixtures/blur_sample.json",
+      "sha256": "80431b52689ee9ea82c85d2fa01d8dfcc1f1874c11a56438cbd14f654da28aa1",
+      "bytes": 16327,
+      "source": "live",
+      "records": null,
+      "captured_from": null,
+      "captured_to": null
+    },
+    {
+      "path": "data/fixtures/blur_ws_sample.jsonl",
+      "sha256": "b5a5ff6fc7fe9fb9aa1473d64c0a795cd6cd7184a5eb07f158b453bbeb44aac2",
+      "bytes": 23832,
+      "source": "live",
+      "records": 12,
+      "captured_from": "2026-10-03T22:29:44.976Z",
+      "captured_to": "2026-10-03T22:29:47.112Z"
+    },
+    {
+      "path": "data/fixtures/grpc_sample.jsonl",
+      "sha256": "03ff101a4bd74f1110885118c3a5c06d496ccf625588668ef7838fb438c89f04",
+      "bytes": 11446,
+      "source": "live",
+      "records": 32,
+      "captured_from": "2026-10-03T22:05:53.819Z",
+      "captured_to": "2026-10-03T22:05:55.695Z"
+    },
+    {
+      "path": "data/fixtures/mirage_sample.jsonl",
+      "sha256": "aed94946ddb0ae11a0646eebe50efe982fcb1cfc24e994dc4283dfe7b37a9ba6",
+      "bytes": 3787,
+      "source": "live",
+      "records": 12,
+      "captured_from": "2026-10-03T22:29:41.113Z",
+      "captured_to": "2026-10-03T22:29:41.612Z"
+    }
+  ],
+  "pending": [
+    "SWQoS key: final browser credential confirmation",
+    "Funded Beam/RPC canaries and pilot",
+    "Webhook callback and signed delivery",
+    "Full observer/canary/quote contracts",
+    "Deployment region measurement"
+  ],
+  "validation": {
+    "cargo_fmt": "PASS",
+    "cargo_clippy": "PASS",
+    "cargo_test": "PASS: 5 tests",
+    "remote_ci": "NOT_RUN"
+  }
+}
