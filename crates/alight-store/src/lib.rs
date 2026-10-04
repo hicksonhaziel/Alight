@@ -390,10 +390,10 @@ impl Store {
         if now_ms < 0 || amount <= 0 || daily < amount || burst < amount || window_ms <= 0 {
             return Ok(false);
         }
-        let result = sqlx::query("INSERT INTO budget_reservations SELECT ?,?,?,?,?,? WHERE ? >= COALESCE((SELECT MAX(created_ms) FROM budget_reservations WHERE source=?),0) AND COALESCE((SELECT SUM(lamports) FROM budget_reservations WHERE source=? AND day=?),0) <= ? AND COALESCE((SELECT SUM(lamports) FROM budget_reservations WHERE source=? AND created_ms>=?),0) <= ? ON CONFLICT(id) DO NOTHING")
+        let result = sqlx::query("INSERT INTO budget_reservations SELECT ?,?,?,?,?,? WHERE ? >= COALESCE((SELECT MAX(created_ms) FROM budget_reservations WHERE source=?),0) AND COALESCE((SELECT SUM(lamports) FROM budget_reservations WHERE source=? AND day=?),0) <= ? AND COALESCE((SELECT SUM(lamports) FROM budget_reservations WHERE source=? AND created_ms>=?),0) <= ? AND ?=strftime('%Y-%m-%d',?/1000,'unixepoch') ON CONFLICT(id) DO NOTHING")
             .bind(id).bind(label(source)?).bind(route).bind(day).bind(now_ms).bind(amount)
             .bind(now_ms).bind(label(source)?).bind(label(source)?).bind(day).bind(daily-amount)
-            .bind(label(source)?).bind(now_ms.saturating_sub(window_ms)).bind(burst-amount).execute(&self.pool).await?;
+            .bind(label(source)?).bind(now_ms.saturating_sub(window_ms)).bind(burst-amount).bind(day).bind(now_ms).execute(&self.pool).await?;
         Ok(result.rows_affected() == 1)
     }
 
@@ -445,6 +445,34 @@ impl Store {
         Ok(
             serde_json::json!({"last_receive_utc":last,"open_gaps":open,"cursor_slot":self.cursor(observer,source).await?.map(|s|s.to_string())}),
         )
+    }
+
+    /// Bounded candidate metadata for clock warm-up and independent timestamp checks.
+    pub async fn block_samples(
+        &self,
+        observer: ObserverKind,
+        source: Source,
+    ) -> Result<Vec<alight_types::BlockMetaEvent>, StoreError> {
+        let rows:Vec<String>=sqlx::query_scalar("SELECT payload_json FROM blocks WHERE source=? AND observer=? ORDER BY slot DESC LIMIT 2048")
+            .bind(label(source)?).bind(label(observer)?).fetch_all(&self.pool).await?;
+        rows.into_iter()
+            .map(|s| match serde_json::from_str(&s)? {
+                IngestEvent::BlockMeta(e) => Ok(e),
+                _ => Err(StoreError::Invalid),
+            })
+            .collect()
+    }
+
+    pub async fn budget_by_route(&self, source: Source, day: &str) -> Result<Value, StoreError> {
+        let rows=sqlx::query("SELECT route,SUM(lamports) AS total FROM budget_reservations WHERE source=? AND day=? GROUP BY route")
+            .bind(label(source)?).bind(day).fetch_all(&self.pool).await?;
+        let mut result = serde_json::Map::new();
+        for row in rows {
+            let route: String = row.try_get("route")?;
+            let total: i64 = row.try_get("total")?;
+            result.insert(route, Value::String(total.to_string()));
+        }
+        Ok(Value::Object(result))
     }
 
     pub async fn last_receive(&self, source: Source) -> Result<Option<String>, StoreError> {

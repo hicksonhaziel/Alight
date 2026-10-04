@@ -186,3 +186,24 @@ a signing identity. Its loopback-only `/v1/health` and `/v1/clock` endpoints sha
 a 10-request/s limit. Health distinguishes durable data freshness from merely
 having an open connection. Provider slot replay is disabled unless explicitly
 configured; unsupported replay falls back to a durable gap and live subscription.
+
+## Budget and resolution evidence
+
+`BudgetLimits` and `BudgetReservation` use decimal lamport strings. Defaults are
+200,000,000 lamports/day and 50,000,000 lamports per rolling 60 seconds. The
+reservation includes UTC epoch milliseconds, UTC day, source, route, and unique
+ID. SQLite checks the day against the timestamp, aggregates every route, rejects
+backward clocks and duplicate IDs, and retains uncertain spend across restarts.
+Example: `{"id":"simulated-reservation","source":"sim","route":"rpc","day":"2026-10-04","created_ms":"1791108000000","lamports":"5000"}`.
+Observe/replay cannot receive a governor permit. No signer or sender exists yet.
+
+`ResolutionEvidence` contains observations, optional `RpcCheck`, canonical block
+membership, and a typed explicit route rejection. RPC proof names the exact
+signature and source, required/checked commitment, checked block height, history
+search flag, timestamp, optional landing candidate, and captured evidence hash.
+Example absence proof: `{"signature":"simulation-signature","source":"sim","required_commitment":"confirmed","checked_commitment":"confirmed","checked_block_height":"201","searched_history":true,"checked_at_utc":"2026-10-04T10:00:00Z","landing":null,"raw_ref":"sha256:simulation-evidence"}`.
+A proof predating the send is rejected. A sighting blocks expiry even when block
+identity is incomplete. Confirmed outcomes remain provisional; only explicit
+finalized evidence retires pending records. Dropping requires canonical block
+exclusion plus history absence. Transport disagreement remains UNRESOLVED.
+These are additive v1 types; `0001_observe.sql` already supplies their storage.

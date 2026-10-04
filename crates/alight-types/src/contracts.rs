@@ -59,6 +59,57 @@ contract_enum!(
 );
 
 contract_enum!(RunMode, "snake_case", Observe, Live, Sim, Replay);
+contract_enum!(Commitment, "snake_case", Processed, Confirmed, Finalized);
+contract_enum!(
+    RouteRejection,
+    "SCREAMING_SNAKE_CASE",
+    InvalidTransaction,
+    Authentication,
+    LocalPolicy,
+    InsufficientFunds
+);
+
+/// RPC evidence is checked against this exact signature, source, and commitment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RpcCheck {
+    pub signature: String,
+    pub source: Source,
+    pub required_commitment: Commitment,
+    pub checked_commitment: Commitment,
+    #[serde(with = "decimal_u64")]
+    pub checked_block_height: u64,
+    pub searched_history: bool,
+    pub checked_at_utc: String,
+    pub landing: Option<RpcLanding>,
+    pub raw_ref: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RpcLanding {
+    #[serde(with = "decimal_u64")]
+    pub slot: u64,
+    pub block_id: String,
+    pub success: bool,
+    pub commitment: Commitment,
+}
+/// Canonical RPC block membership, required before classifying a provisional landing as dropped.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CanonicalBlock {
+    pub source: Source,
+    #[serde(with = "decimal_u64")]
+    pub slot: u64,
+    pub block_id: String,
+    pub commitment: Commitment,
+    pub signature: String,
+    pub signature_present: bool,
+    pub raw_ref: String,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ResolutionEvidence {
+    pub observations: Vec<ObserverEvent>,
+    pub rpc: Option<RpcCheck>,
+    pub canonical_blocks: Vec<CanonicalBlock>,
+    pub route_rejection: Option<RouteRejection>,
+}
 
 /// Worst-case lamports reserved before signing; window_ms is a rolling burst window.
 #[derive(Debug, Clone, Serialize, Deserialize)]

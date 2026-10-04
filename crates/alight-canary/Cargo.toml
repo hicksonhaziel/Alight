@@ -1,0 +1,19 @@
+[package]
+name = "alight-canary"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alight-types.workspace = true
+alight-store.workspace = true
+chrono.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true
