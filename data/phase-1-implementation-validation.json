@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "phase": "1-implementation-and-local-deployment",
+  "phase_complete": false,
+  "source": "live",
+  "source_commit": "34c1f71a93d7825b538e0c428ea9175719cf83c3",
+  "captured_at_utc": "2026-10-04T18:30:18.111186+00:00",
+  "canaries_sent": 0,
+  "deployment": {
+    "health": {
+      "budget_reserved_today_by_route": {},
+      "canaries_sent": 0,
+      "canary_engine": {
+        "balance_lamports": "0",
+        "reserve_lamports": "1000000",
+        "status": "WAITING_FUNDS"
+      },
+      "collector_status": "PASS",
+      "counts": {
+        "blocks": 52730,
+        "budget_reserved_lamports": 0,
+        "canaries": 0,
+        "gaps": 82,
+        "observations": 353,
+        "open_gaps": 0,
+        "slot_events": 235971
+      },
+      "leaders": {
+        "at_slot": "453337391",
+        "classification": "epoch snapshot; fewer than 16 assigned slots means unknown skip rate",
+        "epoch": "1049",
+        "next_leaders": [
+          {
+            "leader": "AicQr2zCWBLiBwt2r6o7iTemmtyE7q5pTKyuuupbXEQA",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "5pPRHniefFjkiaArbGX3Y8NUysJmQ9tMZg3FrFGwHzSm",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "EkvdKhULbMFqjKBKotAzGi3kwMvMpYNDKJXXQQmi6C1f",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          }
+        ],
+        "source": "live",
+        "status": "PASS"
+      },
+      "mode": "live",
+      "observers": {
+        "grpc": {
+          "age_ms": "64",
+          "cursor_slot": "453337471",
+          "last_receive_utc": "2026-10-04T18:30:18.096Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        },
+        "mirage": {
+          "age_ms": "112",
+          "cursor_slot": "453337470",
+          "last_receive_utc": "2026-10-04T18:30:18.049Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        }
+      },
+      "run_id": "f6f00809-4ac2-428a-afb2-7589006ad02d",
+      "schema_version": 1,
+      "send_attempts": {},
+      "signing_enabled": true,
+      "source": "live",
+      "status": "PASS",
+      "uptime_s": "20"
+    },
+    "clock": {
+      "mean_slot_ms": 268.1071083273782,
+      "method": "gRPC candidate-block Unix seconds over rolling slot distance",
+      "minimum_chain_seconds": "10",
+      "minimum_slot_distance": "64",
+      "source": "live",
+      "window": {
+        "ambiguous_candidate_slots": 0,
+        "candidate_parent_skipped_slots": 0,
+        "dead_slots": 0,
+        "sampled_slots": 2048
+      }
+    },
+    "leaders": {
+      "at_slot": "453337391",
+      "classification": "epoch snapshot; fewer than 16 assigned slots means unknown skip rate",
+      "epoch": "1049",
+      "next_leaders": [
+        {
+          "leader": "AicQr2zCWBLiBwt2r6o7iTemmtyE7q5pTKyuuupbXEQA",
+          "skip_rate_tercile": "low",
+          "stake_tercile": "high"
+        },
+        {
+          "leader": "5pPRHniefFjkiaArbGX3Y8NUysJmQ9tMZg3FrFGwHzSm",
+          "skip_rate_tercile": "low",
+          "stake_tercile": "high"
+        },
+        {
+          "leader": "EkvdKhULbMFqjKBKotAzGi3kwMvMpYNDKJXXQQmi6C1f",
+          "skip_rate_tercile": "low",
+          "stake_tercile": "high"
+        }
+      ],
+      "source": "live",
+      "status": "PASS"
+    },
+    "healthcheck": "healthy",
+    "port_binding": "127.0.0.1:8080",
+    "image_revision": "34c1f71",
+    "image_id": "sha256:d81c399cfc53e60e42cfc3b756f1c6d2d34d949df629b41b25718970f17fd82c",
+    "legacy_user_service_disabled": true,
+    "private_consistent_backup": true,
+    "migration_note": "Production metadata migration succeeded with the current host binary before container startup; container scratch space increased to 256 MiB.",
+    "caddy_capabilities": [
+      "CAP_NET_BIND_SERVICE"
+    ]
+  },
+  "container_restart": {
+    "action": "SIGKILL daemon child (not Docker manual stop)",
+    "before": {
+      "budget_reserved_today_by_route": {},
+      "canaries_sent": 0,
+      "canary_engine": {
+        "balance_lamports": "0",
+        "reserve_lamports": "1000000",
+        "status": "WAITING_FUNDS"
+      },
+      "collector_status": "PASS",
+      "counts": {
+        "blocks": 52590,
+        "budget_reserved_lamports": 0,
+        "canaries": 0,
+        "gaps": 78,
+        "observations": 353,
+        "open_gaps": 0,
+        "slot_events": 235338
+      },
+      "leaders": {
+        "at_slot": "453336610",
+        "classification": "epoch snapshot; fewer than 16 assigned slots means unknown skip rate",
+        "epoch": "1049",
+        "next_leaders": [
+          {
+            "leader": "E1r4Psq84tHfQ6aPTvvDka4U3u8zPVD7gEUrH25RdxHL",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "9W3QTgBhkU4Bwg6cwnDJo6eGZ9BtZafSdu1Lo9JmWws7",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "5ZqveVffQPiUbkjBg4KD9kib1MKHLqiFno4ke9jSq9qk",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          }
+        ],
+        "source": "live",
+        "status": "PASS"
+      },
+      "mode": "live",
+      "observers": {
+        "grpc": {
+          "age_ms": "147",
+          "cursor_slot": "453337390",
+          "last_receive_utc": "2026-10-04T18:29:55.046Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        },
+        "mirage": {
+          "age_ms": "149",
+          "cursor_slot": "453337389",
+          "last_receive_utc": "2026-10-04T18:29:55.045Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        }
+      },
+      "run_id": "dccd37d5-7f44-44b2-8046-0fc4ee206bdb",
+      "schema_version": 1,
+      "send_attempts": {},
+      "signing_enabled": true,
+      "source": "live",
+      "status": "PASS",
+      "uptime_s": "26"
+    },
+    "after": {
+      "budget_reserved_today_by_route": {},
+      "canaries_sent": 0,
+      "canary_engine": {
+        "balance_lamports": "0",
+        "reserve_lamports": "1000000",
+        "status": "WAITING_FUNDS"
+      },
+      "collector_status": "PASS",
+      "counts": {
+        "blocks": 52730,
+        "budget_reserved_lamports": 0,
+        "canaries": 0,
+        "gaps": 82,
+        "observations": 353,
+        "open_gaps": 0,
+        "slot_events": 235969
+      },
+      "leaders": {
+        "at_slot": "453337391",
+        "classification": "epoch snapshot; fewer than 16 assigned slots means unknown skip rate",
+        "epoch": "1049",
+        "next_leaders": [
+          {
+            "leader": "AicQr2zCWBLiBwt2r6o7iTemmtyE7q5pTKyuuupbXEQA",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "5pPRHniefFjkiaArbGX3Y8NUysJmQ9tMZg3FrFGwHzSm",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          },
+          {
+            "leader": "EkvdKhULbMFqjKBKotAzGi3kwMvMpYNDKJXXQQmi6C1f",
+            "skip_rate_tercile": "low",
+            "stake_tercile": "high"
+          }
+        ],
+        "source": "live",
+        "status": "PASS"
+      },
+      "mode": "live",
+      "observers": {
+        "grpc": {
+          "age_ms": "10",
+          "cursor_slot": "453337471",
+          "last_receive_utc": "2026-10-04T18:30:18.096Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        },
+        "mirage": {
+          "age_ms": "57",
+          "cursor_slot": "453337470",
+          "last_receive_utc": "2026-10-04T18:30:18.049Z",
+          "open_gaps": 0,
+          "status": "PASS"
+        }
+      },
+      "run_id": "f6f00809-4ac2-428a-afb2-7589006ad02d",
+      "schema_version": 1,
+      "send_attempts": {},
+      "signing_enabled": true,
+      "source": "live",
+      "status": "PASS",
+      "uptime_s": "20"
+    },
+    "previous_run_status": "interrupted",
+    "automatic_restarts": 1,
+    "funded_midflight_test": false
+  },
+  "log_redaction": {
+    "synthetic_marker_absent": true,
+    "request_fields_removed": true,
+    "health_request_status": 200,
+    "unlisted_path_status": 404,
+    "write_method_status": 405,
+    "access_records_checked": 5,
+    "upstream_error_status": 502
+  },
+  "checks": {
+    "workspace_tests": "32 PASS before deployment fixes; 4 store tests and affected daemon Clippy PASS after retention correction",
+    "affected_crate_clippy": "PASS after deadline adjustment",
+    "container_image_build": "PASS using cached compiler and public registry",
+    "core_ci": "https://github.com/hicksonhaziel/Alight/actions/runs/37197827754"
+  },
+  "fixtures": {
+    "data/fixtures/phase1_one_hour_observe.json": "d390a697bcb9aaa6a4bf90ba2c5269ac90526cdfdb1fb3f554193e89a17993c2",
+    "data/fixtures/phase1_provider_endpoint_check.json": "3b1690852cf8bd3d2b9feb17af03874a5f3ce8ff17db5a07fe85b8d43322177a",
+    "data/fixtures/leader_schedule.json.gz": "a2af1dc08dbf46b8f3adaa0799d64e30109959bb8805ba6338921f8d9c9b0994",
+    "data/fixtures/canary_wire_goldens.json": "35336183ef5e82d38b580df405194678e689dc27dba1865c00e178f1f776d83b",
+    "data/fixtures/phase1_retention_query_plan.json": "e7726fd532219412b3a43ee2a907ff2cf0c709bb7e3c444d6c59f564879c1abc"
+  },
+  "blocked_acceptance": [
+    "Funded landed canary for each route (wallet balance is zero).",
+    "Funded live mid-flight crash/recovery; simulation and unfunded process restart passed.",
+    "Beam HTTP documented hostname returns NXDOMAIN; provider send contract and landing unverified."
+  ],
+  "paused_after_checks": true,
+  "pause_reason": "Owner requested pause to save internet data."
+}

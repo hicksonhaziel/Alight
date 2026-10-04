@@ -1,0 +1,52 @@
+{
+  "captured_at": "2026-10-04T11:20:05.766130+00:00",
+  "health": {
+    "canaries_sent": 0,
+    "counts": {
+      "blocks": 46294,
+      "budget_reserved_lamports": 0,
+      "canaries": 0,
+      "gaps": 35,
+      "observations": 313,
+      "open_gaps": 0,
+      "slot_events": 207123
+    },
+    "mode": "observe",
+    "observers": {
+      "grpc": {
+        "age_ms": "756",
+        "cursor_slot": "453241183",
+        "last_receive_utc": "2026-10-04T11:20:04.977Z",
+        "open_gaps": 0,
+        "status": "PASS"
+      },
+      "mirage": {
+        "age_ms": "767",
+        "cursor_slot": "453241182",
+        "last_receive_utc": "2026-10-04T11:20:04.976Z",
+        "open_gaps": 0,
+        "status": "PASS"
+      }
+    },
+    "run_id": "ce080519-1c1c-4f38-acc9-15c2fbd04e89",
+    "schema_version": 1,
+    "signing_enabled": false,
+    "source": "live",
+    "status": "PASS",
+    "uptime_s": "3829"
+  },
+  "clock": {
+    "mean_slot_ms": 267.5131348511384,
+    "method": "gRPC candidate-block Unix seconds over rolling slot distance",
+    "minimum_chain_seconds": "10",
+    "minimum_slot_distance": "64",
+    "source": "live",
+    "window": {
+      "ambiguous_candidate_slots": 0,
+      "candidate_parent_skipped_slots": 0,
+      "dead_slots": 0,
+      "sampled_slots": 2048
+    }
+  },
+  "scope": "Continuous observe-mode collection with real endpoints; no funded canaries."
+}

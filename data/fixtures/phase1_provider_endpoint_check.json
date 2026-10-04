@@ -1,0 +1,15 @@
+{
+  "captured_at_utc": "2026-10-04T11:29:14.788885+00:00",
+  "document_url": "https://solami.dev/llms.txt",
+  "documented_endpoint": "https://beam-http.solami.dev",
+  "canaries_sent": 0,
+  "local_dns": {
+    "status": "UNAVAILABLE",
+    "error_code": -2
+  },
+  "public_dns": {
+    "resolver": "Google Public DNS",
+    "status_code": 3,
+    "answer_count": 0
+  }
+}

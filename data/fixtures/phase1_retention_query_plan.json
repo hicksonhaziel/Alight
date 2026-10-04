@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "plan": [
+    "SEARCH r USING INDEX sqlite_autoindex_raw_evidence_1 (ref=?)",
+    "CORRELATED SCALAR SUBQUERY 1",
+    "SEARCH slot_events USING COVERING INDEX slots_raw (<expr>=?)",
+    "CORRELATED SCALAR SUBQUERY 2",
+    "SEARCH blocks USING COVERING INDEX blocks_raw (<expr>=?)",
+    "CORRELATED SCALAR SUBQUERY 3",
+    "SEARCH observations USING COVERING INDEX observations_raw (<expr>=?)"
+  ],
+  "scope": "Python SQLite EXPLAIN QUERY PLAN on the accumulated private database; query bounded to batch references."
+}
