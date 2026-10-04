@@ -14,9 +14,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum StoreError {
-    #[error("database operation failed")]
+    #[error("database operation failed: {0}")]
     Database(#[from] sqlx::Error),
-    #[error("database migration failed")]
+    #[error("database migration failed: {0}")]
     Migration(#[from] sqlx::migrate::MigrateError),
     #[error("record JSON is invalid")]
     Json(#[from] serde_json::Error),
@@ -447,12 +447,29 @@ impl Store {
             .with_timezone(&chrono::Utc)
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         let mut tx = self.pool.begin().await?;
-        let slots=sqlx::query("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 5000)").bind(&cutoff).execute(&mut *tx).await?.rows_affected();
-        let blocks=sqlx::query("DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000)").bind(&cutoff).execute(&mut *tx).await?.rows_affected();
-        sqlx::query("DELETE FROM raw_evidence WHERE rowid IN (SELECT r.rowid FROM raw_evidence r WHERE r.transient=1 AND NOT EXISTS(SELECT 1 FROM slot_events WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) AND NOT EXISTS(SELECT 1 FROM blocks WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) AND NOT EXISTS(SELECT 1 FROM observations WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) LIMIT 10000)").execute(&mut *tx).await?;
+        let slots: Vec<String> = sqlx::query_scalar("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
+        let blocks: Vec<String> = sqlx::query_scalar("DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
+        let deleted = (slots.len() + blocks.len()) as u64;
+        if deleted > 0 {
+            // Inspect only evidence touched by this batch. Unary + removes the outer
+            // TEXT affinity so SQLite seeks the JSON expression indexes instead of
+            // scanning each complete metadata table for every evidence reference.
+            let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(
+                "DELETE FROM raw_evidence WHERE transient=1 AND ref IN (",
+            );
+            {
+                let mut ids = query.separated(",");
+                for reference in slots.iter().chain(blocks.iter()) {
+                    ids.push_bind(reference);
+                }
+            }
+            query.push(") AND NOT EXISTS(SELECT 1 FROM slot_events WHERE json_extract(payload_json,'$.data.raw_ref')=+raw_evidence.ref) AND NOT EXISTS(SELECT 1 FROM blocks WHERE json_extract(payload_json,'$.data.raw_ref')=+raw_evidence.ref) AND NOT EXISTS(SELECT 1 FROM observations WHERE json_extract(payload_json,'$.data.raw_ref')=+raw_evidence.ref)");
+            query.build().execute(&mut *tx).await?;
+        }
         tx.commit().await?;
-        Ok(slots + blocks)
+        Ok(deleted)
     }
+
     /// Conservative balance hold for prepared, uncertain, or provisional live sends.
     pub async fn pending_reserved_lamports(&self) -> Result<u64, StoreError> {
         let sum:i64=sqlx::query_scalar("SELECT COALESCE(SUM(b.lamports),0) FROM budget_reservations b JOIN canaries c ON c.id=b.id WHERE c.source='live' AND c.finalized=0")

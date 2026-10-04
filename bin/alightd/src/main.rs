@@ -27,8 +27,10 @@ enum Error {
     Locked,
     #[error("local filesystem or listener operation failed")]
     Io(#[from] std::io::Error),
-    #[error("observer startup failed; upstream values withheld")]
-    Observer,
+    #[error("observer startup failed: {0}")]
+    Observer(alight_ingest::ProbeError),
+    #[error("observer configuration failed: {0}")]
+    ObserverSetup(&'static str),
     #[error(transparent)]
     Store(#[from] StoreError),
     #[error("background task failed")]
@@ -227,7 +229,10 @@ async fn canary_loop(
         .ok_or(StoreError::Invalid)?;
     let mut engine = alight_canary::engine::Engine::new(&config, store)
         .await
-        .map_err(|_| StoreError::Invalid)?;
+        .map_err(|error| {
+            eprintln!("live engine startup failed: {error}");
+            StoreError::Invalid
+        })?;
     loop {
         let result = tokio::select! {_=stop.changed()=>return Ok(()),r=engine.step(&config)=>r};
         let value = match result {
@@ -479,16 +484,16 @@ async fn run() -> Result<(), Error> {
         .map_err(|_| Error::Configuration)?;
     let _lock = lock(&db)?;
     let genesis = HttpProbe::new()
-        .map_err(|_| Error::Observer)?
+        .map_err(Error::Observer)?
         .rpc(&config, "getGenesisHash", json!([]))
         .await
-        .map_err(|_| Error::Observer)?;
+        .map_err(Error::Observer)?;
     if genesis.as_str() != Some(MAINNET_GENESIS) {
-        return Err(Error::Observer);
+        return Err(Error::Observer(alight_ingest::ProbeError::WrongCluster));
     }
     let (mut grpc, mirage) = stream::options(&config)
         .await
-        .map_err(|_| Error::Observer)?;
+        .map_err(Error::ObserverSetup)?;
     grpc.force_disconnect_after = args.disconnect.map(Duration::from_secs);
     let listener = tokio::net::TcpListener::bind(bind).await?;
     let store = Store::open(&db, max_bytes).await?;
