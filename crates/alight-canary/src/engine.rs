@@ -310,7 +310,7 @@ impl Engine {
                 &format!("sha256:{:x}", Sha256::digest(wire)),
             )
             .await?;
-        self.store.save_evidence(&json!({"canary_id":id,"fee_samples":fees,"fee_for_message":fee_check,"blockhash_context":block["context"],"leader_epoch":leaders.epoch.to_string()})).await?;
+        self.store.save_evidence(&json!({"canary_id":id,"fee_samples":fees,"fee_for_message":fee_check,"blockhash_context":block["context"],"leader_epoch":leaders.epoch.to_string(),"tip_accounts":tip_addresses,"tip_recipient":chosen_tip.map(|p|p.to_string())})).await?;
         self.policy = next;
         let result = self.routes.send(config, assignment.config.route, &tx).await;
         let utc = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);

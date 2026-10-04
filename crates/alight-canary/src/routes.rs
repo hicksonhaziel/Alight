@@ -63,6 +63,9 @@ impl Routes {
                     Duration::from_secs(15),
                     solami::builder()
                         .with_beam(key)
+                        // The live tip list has 15 entries; this SDK embeds only 10.
+                        // The engine already validated the recipient against the fetched list.
+                        .skip_precheck()
                         .beam_endpoint(endpoint)
                         .build(),
                 )

@@ -1,0 +1,13 @@
+ALTER TABLE slot_events ADD COLUMN received_utc TEXT NOT NULL DEFAULT '';
+ALTER TABLE blocks ADD COLUMN received_utc TEXT NOT NULL DEFAULT '';
+UPDATE slot_events SET received_utc=json_extract(payload_json,'$.data.received.wall_utc');
+UPDATE blocks SET received_utc=json_extract(payload_json,'$.data.received.wall_utc');
+CREATE INDEX slot_retention ON slot_events(source,received_utc);
+CREATE INDEX block_retention ON blocks(source,received_utc);
+CREATE INDEX slots_raw ON slot_events(json_extract(payload_json,'$.data.raw_ref'));
+CREATE INDEX blocks_raw ON blocks(json_extract(payload_json,'$.data.raw_ref'));
+CREATE INDEX observations_raw ON observations(json_extract(payload_json,'$.data.raw_ref'));
+CREATE INDEX observations_slot ON observations(source,slot_key);
+CREATE INDEX canaries_signature ON canaries(source,signature);
+ALTER TABLE raw_evidence ADD COLUMN transient INTEGER NOT NULL DEFAULT 0 CHECK(transient IN (0,1));
+CREATE INDEX transient_raw ON raw_evidence(transient);

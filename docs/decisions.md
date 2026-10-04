@@ -180,3 +180,24 @@ local elapsed times must not be relabeled as deployment measurements. A support
 request is prepared in `docs/support-request.md` but has not been sent: sending
 a message requires explicit owner authorization. No credit, rebate, judge-key
 arrangement, renewal or reply has been assumed.
+
+## Phase 1 route and local deployment checks — 4 October 2026
+
+The public tip-address API returned 15 accounts during Phase 1; Solami Rust
+0.1.58 embeds 10. The engine fetches and validates the current recipient list,
+then uses the SDK's documented `skip_precheck` option to avoid rejecting newer
+published accounts. Integer transfers and the 100,000-lamport floor remain
+unchanged. The exact tip list and recipient are retained with each prepared send.
+The public Beam HTTP hostname did not resolve (DNS name not found). Dashboard
+instructions exposed QUIC; no funded HTTP send contract has been established.
+Its implementation and observed availability must remain separate in reports.
+See the [published tip route](https://api.solami.dev/onchain/tip-addresses) and
+[pinned SDK](https://docs.rs/crate/solami/0.1.58).
+
+Hickson selected this computer as the initial deployment host. Compose/Caddy
+binds only localhost, preserves the existing SQLite database, and uses bounded
+metadata/log retention. Laptop uptime determines collection availability; this
+choice does not establish endpoint-region latency or uninterrupted VPS hosting.
+The dedicated wallet's confirmed balance was zero. All funded route and real
+mid-flight canary gates remain pending; simulated recovery and ambient observer
+traffic are identified as such.

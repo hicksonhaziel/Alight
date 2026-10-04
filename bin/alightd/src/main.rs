@@ -1,7 +1,8 @@
-//! Local observe daemon. Signing and sending are not exposed by this binary.
+//! Persistent observe/live collector. Signing is confined to the governed canary engine.
 use alight_ingest::{
     Config, HttpProbe, MAINNET_GENESIS, adapter,
     clock::SlotClock,
+    leaders::LeaderSchedule,
     stream::{self, Frame},
 };
 use alight_store::{Store, StoreError};
@@ -54,7 +55,7 @@ impl Args {
             match key.as_str() {
                 "--db" => result.db = Some(value.into()),
                 "--bind" => result.bind = Some(value.parse().map_err(|_| Error::Configuration)?),
-                "--mode" if ["observe", "replay"].contains(&value.as_str()) => {
+                "--mode" if ["observe", "live", "replay"].contains(&value.as_str()) => {
                     result.mode = Some(value)
                 }
                 "--replay" => result.replay = Some(value.into()),
@@ -95,6 +96,9 @@ struct Health {
     started: Instant,
     run_id: String,
     mirage: bool,
+    mode: RunMode,
+    engine: Arc<RwLock<Value>>,
+    leaders: Arc<RwLock<Value>>,
     limiter: Arc<Mutex<(Instant, u32)>>,
 }
 impl Health {
@@ -150,11 +154,125 @@ async fn health(State(state): State<Health>) -> Result<Json<Value>, StatusCode> 
             value,
         );
     }
+    let sends = state
+        .store
+        .send_summary(Source::Live)
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let sent = sends["ACCEPTED"].as_u64().unwrap_or(0);
+    let budget = state
+        .store
+        .budget_by_route(
+            Source::Live,
+            &chrono::Utc::now().format("%Y-%m-%d").to_string(),
+        )
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     Ok(Json(
-        json!({"schema_version":1,"mode":"observe","source":"live","run_id":state.run_id,
-        "status":if ready{"PASS"}else{"DEGRADED"},"uptime_s":state.started.elapsed().as_secs().to_string(),
-        "signing_enabled":false,"canaries_sent":0,"counts":counts,"observers":observers}),
+        json!({"schema_version":1,"mode":state.mode,"source":"live","run_id":state.run_id,
+        "status":if ready{"PASS"}else{"DEGRADED"},"collector_status":if ready{"PASS"}else{"DEGRADED"},"uptime_s":state.started.elapsed().as_secs().to_string(),
+        "signing_enabled":state.mode==RunMode::Live,"canaries_sent":sent,"send_attempts":sends,"budget_reserved_today_by_route":budget,
+        "canary_engine":state.engine.read().await.clone(),"leaders":state.leaders.read().await.clone(),"counts":counts,"observers":observers}),
     ))
+}
+async fn leaders(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
+    state.allow()?;
+    Ok(Json(state.leaders.read().await.clone()))
+}
+
+async fn leader_loop(
+    config: Arc<Config>,
+    store: Store,
+    state: Arc<RwLock<Value>>,
+    mut stop: watch::Receiver<bool>,
+) -> Result<(), StoreError> {
+    let mut schedule: Option<LeaderSchedule> = None;
+    loop {
+        let slot = store.cursor(ObserverKind::Grpc, Source::Live).await?;
+        if let Some(slot) = slot {
+            if schedule.as_ref().is_none_or(|s| !s.covers(slot)) {
+                match tokio::select! { _=stop.changed()=>return Ok(()),value=LeaderSchedule::fetch(&config)=>value }
+                {
+                    Ok(next) => {
+                        if let Ok(evidence) = next.evidence() {
+                            store.save_evidence(&evidence).await?;
+                        }
+                        schedule = Some(next);
+                    }
+                    Err(_) => {
+                        *state.write().await = json!({"status":"UNAVAILABLE","source":"live"});
+                    }
+                }
+            }
+            if let Some(schedule) = &schedule {
+                *state.write().await = json!({"status":if schedule.covers(slot){"PASS"}else{"STALE"},"source":"live","epoch":schedule.epoch.to_string(),"at_slot":slot.to_string(),"next_leaders":schedule.next_leaders(slot,3),"classification":"epoch snapshot; fewer than 16 assigned slots means unknown skip rate"});
+            }
+        }
+        tokio::select! { _=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(15))=>{} }
+    }
+}
+
+async fn canary_loop(
+    config: Arc<Config>,
+    store: Store,
+    state: Arc<RwLock<Value>>,
+    mut stop: watch::Receiver<bool>,
+) -> Result<(), StoreError> {
+    let interval = config
+        .get("ALIGHT_CANARY_INTERVAL_S")
+        .unwrap_or("120")
+        .parse::<u64>()
+        .ok()
+        .filter(|s| (30..=3600).contains(s))
+        .ok_or(StoreError::Invalid)?;
+    let mut engine = alight_canary::engine::Engine::new(&config, store)
+        .await
+        .map_err(|_| StoreError::Invalid)?;
+    loop {
+        let result = tokio::select! {_=stop.changed()=>return Ok(()),r=engine.step(&config)=>r};
+        let value = match result {
+            Ok(status) => status,
+            // Database errors terminate the daemon; stale/no-response preflight never signs.
+            Err(alight_canary::engine::EngineError::Store(e)) => return Err(e),
+            Err(alight_canary::engine::EngineError::Budget(
+                alight_canary::governor::BudgetError::Store(e),
+            )) => return Err(e),
+            Err(e) => json!({"status":"PREFLIGHT_UNAVAILABLE","error_category":e.to_string()}),
+        };
+        let delay = if value["canary_id"].is_string() {
+            interval
+        } else {
+            interval.min(15)
+        };
+        *state.write().await = value;
+        tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(delay))=>{}}
+    }
+}
+
+async fn retention_loop(
+    config: Arc<Config>,
+    store: Store,
+    mut stop: watch::Receiver<bool>,
+) -> Result<(), StoreError> {
+    let hours = config
+        .get("ALIGHT_METADATA_RETENTION_HOURS")
+        .unwrap_or("24")
+        .parse::<i64>()
+        .ok()
+        .filter(|h| (1..=168).contains(h))
+        .ok_or(StoreError::Invalid)?;
+    loop {
+        let cutoff = (chrono::Utc::now() - chrono::Duration::hours(hours))
+            .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        for _ in 0..20 {
+            let pruned = tokio::select! {_=stop.changed()=>return Ok(()),r=store.prune_metadata(&cutoff)=>r}?;
+            if pruned == 0 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(300))=>{}}
+    }
 }
 async fn clock(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
     state.allow()?;
@@ -331,9 +449,16 @@ async fn run() -> Result<(), Error> {
     }
     let _ = rustls::crypto::ring::default_provider().install_default();
     let config = Config::load_observer().map_err(|_| Error::Configuration)?;
-    if args.mode.is_none() && config.get("ALIGHT_MODE").is_some_and(|s| s != "observe") {
-        return Err(Error::Configuration);
-    }
+    let mode = match args
+        .mode
+        .as_deref()
+        .or(config.get("ALIGHT_MODE"))
+        .unwrap_or("observe")
+    {
+        "observe" => RunMode::Observe,
+        "live" => RunMode::Live,
+        _ => return Err(Error::Configuration),
+    };
     let bind = args.bind.unwrap_or(
         config
             .get("ALIGHT_BIND")
@@ -341,7 +466,7 @@ async fn run() -> Result<(), Error> {
             .parse()
             .map_err(|_| Error::Configuration)?,
     );
-    if !bind.ip().is_loopback() {
+    if !bind.ip().is_loopback() && config.get("ALIGHT_ALLOW_REMOTE_BIND") != Some("true") {
         return Err(Error::Configuration);
     }
     let db = args
@@ -368,7 +493,17 @@ async fn run() -> Result<(), Error> {
     let listener = tokio::net::TcpListener::bind(bind).await?;
     let store = Store::open(&db, max_bytes).await?;
     let id = uuid::Uuid::new_v4().to_string();
-    store.start_run(&id, "observe", &stream::utc_now()).await?;
+    store
+        .start_run(
+            &id,
+            if mode == RunMode::Live {
+                "live"
+            } else {
+                "observe"
+            },
+            &stream::utc_now(),
+        )
+        .await?;
     let clock = Arc::new(RwLock::new(SlotClock::default()));
     for block in store
         .block_samples(ObserverKind::Grpc, Source::Live)
@@ -376,17 +511,25 @@ async fn run() -> Result<(), Error> {
     {
         clock.write().await.push(&block);
     }
+    let engine_state = Arc::new(RwLock::new(
+        json!({"status":if mode==RunMode::Live{"STARTING"}else{"DISABLED"}}),
+    ));
+    let leader_state = Arc::new(RwLock::new(json!({"status":"STARTING","source":"live"})));
     let state = Health {
         store: store.clone(),
         clock: clock.clone(),
         started: Instant::now(),
         run_id: id.clone(),
         mirage: mirage.is_some(),
+        mode,
+        engine: engine_state.clone(),
+        leaders: leader_state.clone(),
         limiter: Arc::new(Mutex::new((Instant::now(), 10))),
     };
     let app = Router::new()
         .route("/v1/health", get(health))
         .route("/v1/clock", get(self::clock))
+        .route("/v1/leaders", get(leaders))
         .with_state(state);
     let (stop, rx) = watch::channel(false);
     let mut server_rx = rx.clone();
@@ -405,7 +548,25 @@ async fn run() -> Result<(), Error> {
         tx.clone(),
         rx.clone(),
     ));
-    workers.spawn(resolve_loop(Arc::new(config), store.clone(), rx.clone()));
+    let config = Arc::new(config);
+    workers.spawn(resolve_loop(config.clone(), store.clone(), rx.clone()));
+    workers.spawn(leader_loop(
+        config.clone(),
+        store.clone(),
+        leader_state,
+        rx.clone(),
+    ));
+    workers.spawn(retention_loop(config.clone(), store.clone(), rx.clone()));
+    if mode == RunMode::Live {
+        // Load keys only in this worker's private configuration, never in observer state.
+        let signing = Arc::new(Config::load().map_err(|_| Error::Configuration)?);
+        workers.spawn(canary_loop(
+            signing,
+            store.clone(),
+            engine_state,
+            rx.clone(),
+        ));
+    }
     if let Some(mirage) = mirage {
         workers.spawn(stream::mirage_worker(mirage, store.clone(), tx.clone(), rx));
     }
@@ -413,7 +574,7 @@ async fn run() -> Result<(), Error> {
     let mut writer = tokio::spawn(write_frames(store.clone(), clock, frames));
     println!(
         "{}",
-        json!({"mode":"observe","source":"live","status":"STARTING","signing_enabled":false,"run_id":id})
+        json!({"mode":mode,"source":"live","status":"STARTING","signing_enabled":mode==RunMode::Live,"run_id":id})
     );
     let mut worker_failed = false;
     let mut stop_reason = "writer_closed";
@@ -437,7 +598,7 @@ async fn run() -> Result<(), Error> {
     store.end_run(&id, &stream::utc_now()).await?;
     println!(
         "{}",
-        json!({"mode":"observe","status":"STOPPED","stop_reason":stop_reason,"canaries_sent":0,"counts":store.counts(Source::Live).await?})
+        json!({"mode":mode,"status":"STOPPED","stop_reason":stop_reason,"send_attempts":store.send_summary(Source::Live).await?,"counts":store.counts(Source::Live).await?})
     );
     store.close().await;
     Ok(())

@@ -123,7 +123,7 @@ impl Store {
             return Err(StoreError::Invalid);
         }
         let reference = raw_ref(raw)?;
-        sqlx::query("INSERT OR IGNORE INTO raw_evidence VALUES(?,?,?)")
+        sqlx::query("INSERT INTO raw_evidence(ref,payload_json,bytes) VALUES(?,?,?) ON CONFLICT(ref) DO UPDATE SET transient=0")
             .bind(&reference)
             .bind(&encoded)
             .bind(encoded.len() as i64)
@@ -236,24 +236,26 @@ impl Store {
         let mut tx = self.pool.begin().await?;
         let affected = match event {
             IngestEvent::Slot(e) => {
-                sqlx::query("INSERT OR IGNORE INTO slot_events VALUES(?,?,?,?,?,?)")
+                sqlx::query("INSERT OR IGNORE INTO slot_events(source,observer,slot,block_key,status,payload_json,received_utc) VALUES(?,?,?,?,?,?,?)")
                     .bind(&source)
                     .bind(&observer)
                     .bind(slot_key(e.slot))
                     .bind(e.block_id.as_deref().unwrap_or(""))
                     .bind(label(e.status)?)
                     .bind(&payload)
+                    .bind(&receive.wall_utc)
                     .execute(&mut *tx)
                     .await?
                     .rows_affected()
             }
             IngestEvent::BlockMeta(e) => {
-                sqlx::query("INSERT OR IGNORE INTO blocks VALUES(?,?,?,?,?)")
+                sqlx::query("INSERT OR IGNORE INTO blocks(source,observer,slot,block_id,payload_json,received_utc) VALUES(?,?,?,?,?,?)")
                     .bind(&source)
                     .bind(&observer)
                     .bind(slot_key(e.slot))
                     .bind(&e.block_id)
                     .bind(&payload)
+                    .bind(&receive.wall_utc)
                     .execute(&mut *tx)
                     .await?
                     .rows_affected()
@@ -275,10 +277,11 @@ impl Store {
             }
         };
         if affected > 0 {
-            sqlx::query("INSERT OR IGNORE INTO raw_evidence VALUES(?,?,?)")
+            sqlx::query("INSERT OR IGNORE INTO raw_evidence(ref,payload_json,bytes,transient) VALUES(?,?,?,?)")
                 .bind(reference)
                 .bind(&raw_json)
                 .bind(raw_json.len() as i64)
+                .bind(i64::from(!matches!(event,IngestEvent::Observation(_))))
                 .execute(&mut *tx)
                 .await?;
         }
@@ -361,6 +364,11 @@ impl Store {
     ) -> Result<(), StoreError> {
         let draw = i64::try_from(draw).map_err(|_| StoreError::Invalid)?;
         let mut tx = self.pool.begin().await?;
+        let reserved:i64=sqlx::query_scalar("SELECT COUNT(*) FROM budget_reservations WHERE id=? AND source=? AND route=? AND lamports>=?")
+            .bind(&canary.id).bind(label(canary.source)?).bind(label(canary.config.route)?).bind(i64::try_from(canary.config.tip_lamports).map_err(|_|StoreError::Invalid)?).fetch_one(&mut *tx).await?;
+        if reserved != 1 || !matches!(canary.source, Source::Live | Source::Sim) {
+            return Err(StoreError::Invalid);
+        }
         sqlx::query("INSERT OR IGNORE INTO policy_state VALUES(?,0)")
             .bind(policy_key)
             .execute(&mut *tx)
@@ -417,8 +425,9 @@ impl Store {
         }
         Ok(())
     }
-    pub async fn send_summary(&self) -> Result<Value, StoreError> {
-        let rows = sqlx::query("SELECT status,COUNT(*) AS n FROM send_attempts GROUP BY status")
+    pub async fn send_summary(&self, source: Source) -> Result<Value, StoreError> {
+        let rows = sqlx::query("SELECT a.status,COUNT(*) AS n FROM send_attempts a JOIN canaries c ON c.id=a.canary_id WHERE c.source=? GROUP BY a.status")
+            .bind(label(source)?)
             .fetch_all(&self.pool)
             .await?;
         let mut result = serde_json::Map::new();
@@ -429,6 +438,20 @@ impl Store {
             );
         }
         Ok(Value::Object(result))
+    }
+    /// Prunes bounded batches of routine live metadata. Observations, sends, proofs and
+    /// block candidates referenced by any owned canary are retained.
+    pub async fn prune_metadata(&self, cutoff_utc: &str) -> Result<u64, StoreError> {
+        let cutoff = chrono::DateTime::parse_from_rfc3339(cutoff_utc)
+            .map_err(|_| StoreError::Invalid)?
+            .with_timezone(&chrono::Utc)
+            .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        let mut tx = self.pool.begin().await?;
+        let slots=sqlx::query("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 5000)").bind(&cutoff).execute(&mut *tx).await?.rows_affected();
+        let blocks=sqlx::query("DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000)").bind(&cutoff).execute(&mut *tx).await?.rows_affected();
+        sqlx::query("DELETE FROM raw_evidence WHERE rowid IN (SELECT r.rowid FROM raw_evidence r WHERE r.transient=1 AND NOT EXISTS(SELECT 1 FROM slot_events WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) AND NOT EXISTS(SELECT 1 FROM blocks WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) AND NOT EXISTS(SELECT 1 FROM observations WHERE json_extract(payload_json,'$.data.raw_ref')=r.ref) LIMIT 10000)").execute(&mut *tx).await?;
+        tx.commit().await?;
+        Ok(slots + blocks)
     }
     /// Conservative balance hold for prepared, uncertain, or provisional live sends.
     pub async fn pending_reserved_lamports(&self) -> Result<u64, StoreError> {

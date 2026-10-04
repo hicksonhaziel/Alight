@@ -188,3 +188,51 @@ impl Wallet {
         Ok((VersionedTransaction::from(tx), reservation.source))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{governor::Governor, policy::Policy};
+    use alight_store::Store;
+    use alight_types::RunMode;
+    #[tokio::test]
+    async fn valid_budget_permit_produces_verified_signature_and_rejects_wrong_route() {
+        let dir = tempfile::tempdir().expect("directory");
+        let store = Store::open(&dir.path().join("sign.db"), 16 * 1024 * 1024)
+            .await
+            .expect("store");
+        let governor = Governor::new(store, RunMode::Sim, Some("0.001"), Some("0.001"), 60_000)
+            .expect("governor");
+        let wallet = Wallet::from_keypair(Keypair::new_from_array([1; 32]));
+        let policy = Policy::new(1, 0.30).expect("policy");
+        let config = policy
+            .cells()
+            .iter()
+            .find(|c| c.route == Route::Rpc && c.size_class == SizeClass::Small)
+            .expect("RPC");
+        let hash = bs58::encode([2u8; 32]).into_string();
+        let message = wallet
+            .message(config, "simulation-sign", &hash, None)
+            .expect("message");
+        let permit = governor
+            .reserve("simulation-sign", Route::Rpc, 5000, 1_791_108_000_000)
+            .await
+            .expect("permit");
+        let (signed, source) = wallet
+            .sign(permit, "simulation-sign", config, message.clone(), 5000)
+            .expect("sign");
+        assert_eq!(source, Source::Sim);
+        assert!(signed.signatures[0].verify(
+            wallet.public().as_ref(),
+            &bincode::serialize(&message).expect("message bytes")
+        ));
+        let permit = governor
+            .reserve("wrong-route", Route::BeamQuic, 5000, 1_791_108_000_000)
+            .await
+            .expect("permit");
+        assert!(matches!(
+            wallet.sign(permit, "wrong-route", config, message, 5000),
+            Err(BuildError::Permit)
+        ));
+    }
+}

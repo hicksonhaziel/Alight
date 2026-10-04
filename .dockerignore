@@ -1,0 +1,14 @@
+**
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain.toml
+!crates/
+!crates/**
+!bin/
+!bin/**
+!data/
+!data/fixtures/
+!data/fixtures/**
+!deploy/
+!deploy/Dockerfile
+# Private briefs, ENV, runtime databases, README and context never enter the build context.

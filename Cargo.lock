@@ -92,6 +92,7 @@ name = "alight-store"
 version = "0.0.0"
 dependencies = [
  "alight-types",
+ "chrono",
  "serde",
  "serde_json",
  "sha2",

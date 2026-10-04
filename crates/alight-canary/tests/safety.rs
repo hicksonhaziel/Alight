@@ -436,3 +436,95 @@ async fn restart_mid_flight_reloads_canary_and_resolves_late_saved_landing() {
     .expect("finalize");
     assert!(store.pending_canaries().await.expect("pending").is_empty());
 }
+
+#[tokio::test]
+async fn prepared_send_atomically_advances_policy_and_survives_restart_without_resend() {
+    let dir = tempfile::tempdir().expect("directory");
+    let path = dir.path().join("prepared.db");
+    let store = Store::open(&path, 16 * 1024 * 1024).await.expect("open");
+    let c = canary();
+    let governor = Governor::new(
+        store.clone(),
+        RunMode::Sim,
+        Some("0.001"),
+        Some("0.001"),
+        60_000,
+    )
+    .expect("governor");
+    let permit = governor
+        .reserve(&c.id, c.config.route, 5000, MS)
+        .await
+        .expect("reserve");
+    let _reservation = permit.consume();
+    store
+        .prepare_send(
+            &c,
+            "simulation-policy",
+            0,
+            &json!({"seed":"1","draw":"0"}),
+            "sha256:simulation",
+        )
+        .await
+        .expect("prepared");
+    assert!(
+        store
+            .prepare_send(&c, "simulation-policy", 0, &json!({}), "sha256:simulation")
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        store
+            .next_policy_draw("simulation-policy")
+            .await
+            .expect("cursor"),
+        1
+    );
+    store.close().await;
+    let store = Store::open(&path, 16 * 1024 * 1024).await.expect("reopen");
+    assert_eq!(store.pending_canaries().await.expect("pending").len(), 1);
+    assert_eq!(
+        store.send_summary(Source::Sim).await.expect("summary")["PREPARED"],
+        1
+    );
+    assert_eq!(
+        store
+            .send_summary(Source::Live)
+            .await
+            .expect("live summary"),
+        json!({})
+    );
+    assert_eq!(
+        store
+            .counts(Source::Sim)
+            .await
+            .expect("counts")
+            .budget_reserved_lamports,
+        5000
+    );
+    assert_eq!(
+        store
+            .next_policy_draw("simulation-policy")
+            .await
+            .expect("resume"),
+        1
+    );
+    store
+        .complete_send(
+            &c.id,
+            "UNKNOWN",
+            UTC,
+            &json!({"error_category":"simulation_disconnect"}),
+        )
+        .await
+        .expect("unknown");
+    assert!(
+        store
+            .complete_send(&c.id, "ACCEPTED", UTC, &json!({}))
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        store.pending_canaries().await.expect("still pending").len(),
+        1
+    );
+}

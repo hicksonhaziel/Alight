@@ -259,3 +259,12 @@ frames remain capped at 1 MiB. Classes use the scheduled validator cohort,
 combine all vote-account stake per identity, and require at least 16 assigned
 slots for a skip-rate class. Missing/other-epoch metrics are unknown. Equal
 metric values receive the same tercile; an entirely tied cohort is middle.
+
+Live and observe are now accepted by `alightd`; replay remains offline. Health
+includes source-filtered send-attempt counts, today's budget reservations, the
+engine gate/status, and upcoming leader classes. `/v1/leaders` is read-only and
+shares the endpoint limiter. `canaries_sent` counts transport ACKs, with unknown
+submissions separately visible. Migration `0003_metadata_retention.sql` indexes
+receive times and transient raw evidence for bounded cleanup. It retains all
+transaction observations, permanent proof bundles, and any block candidate
+referenced by an owned canary. Existing raw evidence defaults to permanent.

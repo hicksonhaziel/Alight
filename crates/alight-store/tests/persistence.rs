@@ -199,3 +199,66 @@ async fn fork_candidates_never_collapse_or_guess_identity() {
         0
     );
 }
+
+#[tokio::test]
+async fn routine_retention_preserves_observations_and_persistent_proof() {
+    let dir = tempfile::tempdir().expect("directory");
+    let store = Store::open(&dir.path().join("retention.db"), 16 * 1024 * 1024)
+        .await
+        .expect("store");
+    let raw = json!({"simulation":"old-slot"});
+    let event = IngestEvent::Slot(SlotEvent {
+        slot: 10,
+        block_id: None,
+        status: SlotStatus::Processed,
+        received: ReceiveTime {
+            clock_id: "simulation".into(),
+            mono_ns: 1,
+            wall_utc: "2026-10-03T00:00:00.000Z".into(),
+        },
+        leader: None,
+        source: Source::Live,
+        raw_ref: raw_ref(&raw).expect("ref"),
+    });
+    store
+        .record(ObserverKind::Grpc, &event, &raw)
+        .await
+        .expect("slot");
+    let mut observed = observation(
+        &json!({"simulation":"observation"}),
+        "2026-10-03T00:00:00.000Z",
+    );
+    if let IngestEvent::Observation(ref mut o) = observed {
+        o.source = Source::Live;
+    }
+    store
+        .record(
+            ObserverKind::Grpc,
+            &observed,
+            &json!({"simulation":"observation"}),
+        )
+        .await
+        .expect("observation");
+    store
+        .save_evidence(&json!({"simulation":"persistent-proof"}))
+        .await
+        .expect("proof");
+    assert_eq!(
+        store
+            .prune_metadata("2026-10-04T00:00:00Z")
+            .await
+            .expect("prune"),
+        1
+    );
+    let counts = store.counts(Source::Live).await.expect("counts");
+    assert_eq!(counts.slot_events, 0);
+    assert_eq!(counts.observations, 1);
+    assert_eq!(
+        store
+            .observations(Source::Live, "simulation-signature")
+            .await
+            .expect("preserved")
+            .len(),
+        1
+    );
+}

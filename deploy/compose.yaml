@@ -1,0 +1,48 @@
+name: alight
+services:
+  collector:
+    image: alight-collector:phase1
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["--mode", "${ALIGHT_RUNTIME_MODE:-live}"]
+    restart: unless-stopped
+    init: true
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    environment:
+      ALIGHT_BIND: 0.0.0.0:8080
+      ALIGHT_ALLOW_REMOTE_BIND: "true"
+      ALIGHT_DB_PATH: /app/data/alight.db
+      ALIGHT_DB_MAX_BYTES: "8589934592"
+    volumes:
+      - ../.env:/app/.env:ro
+      - ../data:/app/data
+    stop_grace_period: 30s
+    mem_limit: 512m
+    cpus: 2.0
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports: ["127.0.0.1:8080:80"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      collector:
+        condition: service_started
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}
+volumes:
+  caddy_data:
+  caddy_config:
