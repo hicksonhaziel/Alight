@@ -58,6 +58,58 @@ contract_enum!(
     Unknown
 );
 
+contract_enum!(RunMode, "snake_case", Observe, Live, Sim, Replay);
+
+/// Worst-case lamports reserved before signing; window_ms is a rolling burst window.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetLimits {
+    #[serde(with = "decimal_u64")]
+    pub daily_lamports: u64,
+    #[serde(with = "decimal_u64")]
+    pub burst_lamports: u64,
+    #[serde(with = "decimal_u64")]
+    pub window_ms: u64,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetReservation {
+    pub id: String,
+    pub source: Source,
+    pub route: Route,
+    pub day: String,
+    #[serde(with = "decimal_u64")]
+    pub created_ms: u64,
+    #[serde(with = "decimal_u64")]
+    pub lamports: u64,
+}
+
+/// A provider's candidate-block metadata; chain times are Unix seconds.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockMetaEvent {
+    #[serde(with = "decimal_u64")]
+    pub slot: u64,
+    pub block_id: String,
+    #[serde(with = "optional_decimal_u64")]
+    pub parent_slot: Option<u64>,
+    pub parent_block_id: Option<String>,
+    pub block_time_unix_s: Option<i64>,
+    #[serde(with = "optional_decimal_u64")]
+    pub block_height: Option<u64>,
+    #[serde(with = "optional_decimal_u64")]
+    pub executed_transactions: Option<u64>,
+    pub received: ReceiveTime,
+    pub source: Source,
+    pub raw_ref: String,
+}
+
+/// Normalized ingest shapes; provider evidence stays separately addressable.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "data", rename_all = "snake_case")]
+pub enum IngestEvent {
+    Slot(SlotEvent),
+    Observation(ObserverEvent),
+    BlockMeta(BlockMetaEvent),
+}
+
 /// JSON uses decimal strings for unsigned 64-bit values so JavaScript cannot round them.
 pub mod decimal_u64 {
     use serde::{Deserialize, Deserializer, Serializer, de::Error};

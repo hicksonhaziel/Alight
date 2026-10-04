@@ -137,3 +137,24 @@ become strings. Index scope is mandatory on observations and retained on resolve
 canaries. Phase 1 storage must persist these fields and separate unknown
 block slot events from keyed candidate blocks; the brief's nullable composite
 primary key is not a completed persistence design.
+
+## Phase 1 persistence additions (4 October)
+
+`BlockMetaEvent` retains the candidate block id, parent identity, chain timestamp
+in Unix seconds, optional height/transaction count, receive clock, source and raw
+reference. `IngestEvent` tags slot, observation and block metadata records.
+`RunMode` distinguishes observe/live/sim/replay. `BudgetLimits` and
+`BudgetReservation` use exact lamport/ms strings and record route/source/day.
+These are additive shared contracts; the existing v1 shapes stay compatible.
+
+Migration `crates/alight-store/migrations/0001_observe.sql` adds WAL persistence.
+Known-block and unknown-block keys are explicit non-null strings, so SQLite's
+NULL uniqueness rules cannot collapse or duplicate forks. Slot columns use
+20-digit zero padding internally for lossless numeric ordering; wire JSON still
+uses ordinary decimal strings. First receive times are retained on duplicates.
+Evidence, events and receive cursors commit atomically. Evidence hashes address
+captured provider-field JSON subsets, not original protobuf bytes; wire digests
+can be retained inside that subset. The store rejects mismatched references.
+Restart gaps are recorded from previous observer receive times. A missing or
+ambiguous block identity stays unknown; raw observations are never overwritten
+when a unique same-observer candidate is used during resolution.

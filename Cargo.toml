@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "bin/alight"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "bin/alight"]
 
 [workspace.package]
 version = "0.0.0"
@@ -10,14 +10,20 @@ rust-version = "1.96.1"
 [workspace.dependencies]
 alight-types = { path = "crates/alight-types" }
 alight-ingest = { path = "crates/alight-ingest" }
+alight-store = { path = "crates/alight-store" }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.150"
 thiserror = "=2.0.18"
 dotenvy = "=0.15.7"
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"] }
-tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.52.3", features = ["macros", "rt-multi-thread", "sync", "time", "signal", "net"] }
 bs58 = "=0.5.1"
 solami = { version = "=0.1.58", default-features = false, features = ["beam"] }
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio", "sqlite", "macros", "migrate"] }
+chrono = { version = "=0.4.44", default-features = false, features = ["clock", "serde"] }
+uuid = { version = "=1.23.0", features = ["v4"] }
+sha2 = "=0.10.9"
+tempfile = "=3.27.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
