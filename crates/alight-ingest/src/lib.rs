@@ -11,6 +11,7 @@ use thiserror::Error;
 
 pub mod adapter;
 pub mod clock;
+pub mod leaders;
 #[cfg(feature = "stream")]
 pub mod rpc;
 #[cfg(feature = "stream")]
@@ -168,13 +169,21 @@ impl HttpProbe {
     }
 
     async fn read_json(&self, request: reqwest::RequestBuilder) -> Result<Value, ProbeError> {
+        self.read_json_limit(request, MAX_RESPONSE_BYTES).await
+    }
+
+    async fn read_json_limit(
+        &self,
+        request: reqwest::RequestBuilder,
+        limit: usize,
+    ) -> Result<Value, ProbeError> {
         let mut response = request.send().await.map_err(|_| ProbeError::Network)?;
         if !response.status().is_success() {
             return Err(ProbeError::Http(response.status().as_u16()));
         }
         let mut bytes = Vec::new();
         while let Some(chunk) = response.chunk().await.map_err(|_| ProbeError::Network)? {
-            if bytes.len().saturating_add(chunk.len()) > MAX_RESPONSE_BYTES {
+            if bytes.len().saturating_add(chunk.len()) > limit {
                 return Err(ProbeError::Size);
             }
             bytes.extend_from_slice(&chunk);
@@ -203,6 +212,11 @@ impl HttpProbe {
             "getBlock",
             "getBalance",
             "getSignatureStatuses",
+            "getVoteAccounts",
+            "getBlockProduction",
+            "getRecentPrioritizationFees",
+            "getFeeForMessage",
+            "simulateTransaction",
         ]
         .contains(&method)
         {
@@ -220,7 +234,13 @@ impl HttpProbe {
         if let Some(token) = config.get("SOLAMI_RPC_TOKEN") {
             request = request.header("x-api-key", token);
         }
-        let body = self.read_json(request).await?;
+        // Complete epoch schedules exceed the normal proof-response cap.
+        let limit = if method == "getLeaderSchedule" {
+            8 * 1024 * 1024
+        } else {
+            MAX_RESPONSE_BYTES
+        };
+        let body = self.read_json_limit(request, limit).await?;
         rpc_result(body)
     }
 

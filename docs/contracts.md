@@ -225,3 +225,37 @@ IDs. With no live canaries, this worker makes no RPC requests. It persists proof
 subsets and outcome changes, and reloads pending records after restart.
 The clock excludes conflicting candidate timestamps and DEAD slots, and reports
 observed candidate-parent skips separately from a finalized network skip rate.
+
+## Phase 1 send pipeline
+
+The canary engine builds legacy transactions with integer compute limits, integer
+CU prices, a memo, and an explicit published tip recipient. Small/Medium/Large
+request 25,000/100,000/300,000 CU. Medium adds four read-only sysvars through a
+zero-value system self-transfer. Large adds a 384-byte memo and four zero-value
+transfers to addresses derived from the dedicated wallet's private seed. These
+addresses add writable locks without allocating accounts or transferring funds.
+They are synthetic workload shapes; no real-swap equivalence is claimed.
+
+Policy v0 has 81 cells. An inverse-assignment-count stratified arm is mixed with
+30% uniform exploration by default. Its logged propensity is the marginal
+probability across both arms, computed before updating counts. A SplitMix64 seed
+and draw, the chosen arm, exact assignment, and policy configuration key are
+persisted by migration `0002_send_attempts.sql`. Restart reconstructs the stream
+from the next committed draw. Example assignment:
+`{"policy_id":"stratified-v0-splitmix64","seed":"1","draw":"0","assignment_prob":0.012345679012345678,"uniform_arm":true,"config":{"route":"rpc","tip_lamports":"0","cu_price_micro_lamports":"0","cu_limit":25000,"fee_bucket":"zero","tip_tier":"none","size_class":"small"}}`.
+
+Balance, observer freshness, pending limits, recent local fees, and the cluster's
+fee-for-message quote precede reservation. The governor reserves the entire
+quoted fee plus tip before signing. The signed identity and assignment commit
+atomically before network I/O. `PREPARED`, `ACCEPTED`, `REJECTED`, and `UNKNOWN`
+are send-attempt states, distinct from landing outcomes. ACK means transport
+acceptance; uncertainty remains charged and pending. Restart never broadcasts
+old prepared transactions. Typed rejections add `RATE_LIMITED` and `TIP_TOO_LOW`
+to the additive v1 enum; no existing payload changes are required.
+
+Complete epoch schedules and stake/production recordings use bounded
+`gzip+base64` evidence; the evidence-save cap is 8 MiB, while individual streamed
+frames remain capped at 1 MiB. Classes use the scheduled validator cohort,
+combine all vote-account stake per identity, and require at least 16 assigned
+slots for a skip-rate class. Missing/other-epoch metrics are unknown. Equal
+metric values receive the same tercile; an entirely tied cohort is middle.

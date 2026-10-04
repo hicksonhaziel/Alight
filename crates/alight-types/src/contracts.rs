@@ -66,7 +66,9 @@ contract_enum!(
     InvalidTransaction,
     Authentication,
     LocalPolicy,
-    InsufficientFunds
+    InsufficientFunds,
+    RateLimited,
+    TipTooLow
 );
 
 /// RPC evidence is checked against this exact signature, source, and commitment.

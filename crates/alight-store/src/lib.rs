@@ -118,7 +118,8 @@ impl Store {
     /// Persists selected RPC proof fields without fabricating an observer event.
     pub async fn save_evidence(&self, raw: &Value) -> Result<String, StoreError> {
         let encoded = serde_json::to_string(raw)?;
-        if encoded.len() > 1024 * 1024 {
+        // Complete epoch schedules are saved losslessly as bounded gzip/base64 recordings.
+        if encoded.len() > 8 * 1024 * 1024 {
             return Err(StoreError::Invalid);
         }
         let reference = raw_ref(raw)?;
@@ -348,6 +349,92 @@ impl Store {
         .execute(&self.pool)
         .await?;
         Ok(())
+    }
+    /// Atomically persists the signed identity and assignment before any broadcast.
+    pub async fn prepare_send(
+        &self,
+        canary: &Canary,
+        policy_key: &str,
+        draw: u64,
+        assignment: &Value,
+        wire_sha256: &str,
+    ) -> Result<(), StoreError> {
+        let draw = i64::try_from(draw).map_err(|_| StoreError::Invalid)?;
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("INSERT OR IGNORE INTO policy_state VALUES(?,0)")
+            .bind(policy_key)
+            .execute(&mut *tx)
+            .await?;
+        let changed = sqlx::query(
+            "UPDATE policy_state SET next_draw=next_draw+1 WHERE policy_key=? AND next_draw=?",
+        )
+        .bind(policy_key)
+        .bind(draw)
+        .execute(&mut *tx)
+        .await?
+        .rows_affected();
+        if changed != 1 {
+            return Err(StoreError::Invalid);
+        }
+        sqlx::query(
+            "INSERT INTO canaries(id,source,signature,outcome,payload_json) VALUES(?,?,?,?,?)",
+        )
+        .bind(&canary.id)
+        .bind(label(canary.source)?)
+        .bind(&canary.signature)
+        .bind(canary.outcome.map(label).transpose()?)
+        .bind(serde_json::to_string(canary)?)
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query("INSERT INTO send_attempts(canary_id,policy_key,draw,assignment_json,wire_sha256,prepared_utc,status) VALUES(?,?,?,?,?,?,'PREPARED')")
+            .bind(&canary.id).bind(policy_key).bind(draw).bind(serde_json::to_string(assignment)?).bind(wire_sha256).bind(&canary.send_wall_utc).execute(&mut *tx).await?;
+        tx.commit().await?;
+        Ok(())
+    }
+    pub async fn next_policy_draw(&self, key: &str) -> Result<u64, StoreError> {
+        let next: Option<i64> =
+            sqlx::query_scalar("SELECT next_draw FROM policy_state WHERE policy_key=?")
+                .bind(key)
+                .fetch_optional(&self.pool)
+                .await?;
+        u64::try_from(next.unwrap_or(0)).map_err(|_| StoreError::Invalid)
+    }
+    /// Only sanitized result categories are supplied by the canary engine.
+    pub async fn complete_send(
+        &self,
+        id: &str,
+        status: &str,
+        utc: &str,
+        result: &Value,
+    ) -> Result<(), StoreError> {
+        if !["ACCEPTED", "REJECTED", "UNKNOWN"].contains(&status) {
+            return Err(StoreError::Invalid);
+        }
+        let changed=sqlx::query("UPDATE send_attempts SET status=?,completed_utc=?,result_json=? WHERE canary_id=? AND status='PREPARED'")
+            .bind(status).bind(utc).bind(serde_json::to_string(result)?).bind(id).execute(&self.pool).await?.rows_affected();
+        if changed != 1 {
+            return Err(StoreError::Invalid);
+        }
+        Ok(())
+    }
+    pub async fn send_summary(&self) -> Result<Value, StoreError> {
+        let rows = sqlx::query("SELECT status,COUNT(*) AS n FROM send_attempts GROUP BY status")
+            .fetch_all(&self.pool)
+            .await?;
+        let mut result = serde_json::Map::new();
+        for row in rows {
+            result.insert(
+                row.get::<String, _>("status"),
+                serde_json::json!(row.get::<i64, _>("n")),
+            );
+        }
+        Ok(Value::Object(result))
+    }
+    /// Conservative balance hold for prepared, uncertain, or provisional live sends.
+    pub async fn pending_reserved_lamports(&self) -> Result<u64, StoreError> {
+        let sum:i64=sqlx::query_scalar("SELECT COALESCE(SUM(b.lamports),0) FROM budget_reservations b JOIN canaries c ON c.id=b.id WHERE c.source='live' AND c.finalized=0")
+            .fetch_one(&self.pool).await?;
+        u64::try_from(sum).map_err(|_| StoreError::Invalid)
     }
     /// Includes unresolved and provisional landings so later fork evidence can correct them.
     pub async fn pending_canaries(&self) -> Result<Vec<Canary>, StoreError> {

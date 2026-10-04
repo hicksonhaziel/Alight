@@ -31,13 +31,27 @@ dependencies = [
 name = "alight-canary"
 version = "0.0.0"
 dependencies = [
+ "alight-ingest",
  "alight-store",
  "alight-types",
+ "base64",
+ "bincode",
+ "bs58",
  "chrono",
+ "reqwest",
+ "serde",
  "serde_json",
+ "sha2",
+ "solami",
+ "solana-hash",
+ "solana-instruction",
+ "solana-message",
+ "solana-signature",
+ "solana-signer",
  "tempfile",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -50,6 +64,7 @@ dependencies = [
  "bs58",
  "chrono",
  "dotenvy",
+ "flate2",
  "futures-util",
  "prost",
  "reqwest",
