@@ -1,0 +1,42 @@
+{
+  "canaries_sent": 0,
+  "end": {
+    "block_height": "431258107",
+    "block_id": "761Q256Wbmc1EChvdkVBiSEcFaZ3HE9m5Go59UKbBofJ",
+    "block_time_unix_s": 1791107064,
+    "executed_transactions": "1027",
+    "parent_block_id": "FoRDjhorpQBVCEKwCb7fDWj7jhL4RqQwqP1sM7zj818K",
+    "parent_slot": "453219686",
+    "raw_ref": "sha256:201c2d52162601ceade040adf16ebbfe4a4778cead91055a313b20f4cd9ad425",
+    "received": {
+      "clock_id": "1beabad3-7a61-492a-9f61-98ed7e379c84",
+      "mono_ns": "664579616708",
+      "wall_utc": "2026-10-04T09:44:25.376Z"
+    },
+    "slot": "453219687",
+    "source": "live"
+  },
+  "grpc_mean_slot_ms": 267.8478374153205,
+  "rpc_end_unix_s": 1791107064,
+  "rpc_mean_slot_ms": 267.8478374153205,
+  "rpc_start_unix_s": 1791106550,
+  "source": "live",
+  "start": {
+    "block_height": "431256188",
+    "block_id": "614eaxQqiFzLXoBPPzd1HQ7pUDn8S2FzHezvmLXq42e2",
+    "block_time_unix_s": 1791106550,
+    "executed_transactions": "1110",
+    "parent_block_id": "6LaUeXGkLTe5tMJfnq1onquRgGVD5hRsfEk4ZkiiuJVM",
+    "parent_slot": "453217767",
+    "raw_ref": "sha256:55c82dc99a42bf777f02cda39a2a2caf9e3cfa4dad2e7cd8cb48ee3e4b3360e3",
+    "received": {
+      "clock_id": "1beabad3-7a61-492a-9f61-98ed7e379c84",
+      "mono_ns": "150042451407",
+      "wall_utc": "2026-10-04T09:35:50.839Z"
+    },
+    "slot": "453217768",
+    "source": "live"
+  },
+  "tolerance_ms": 1.0,
+  "verdict": "PASS"
+}

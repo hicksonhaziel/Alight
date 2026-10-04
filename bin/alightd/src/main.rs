@@ -158,9 +158,10 @@ async fn health(State(state): State<Health>) -> Result<Json<Value>, StatusCode> 
 }
 async fn clock(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
     state.allow()?;
+    let clock = state.clock.read().await;
     Ok(Json(
         json!({"source":"live","method":"gRPC candidate-block Unix seconds over rolling slot distance",
-        "mean_slot_ms":state.clock.read().await.mean_slot_ms(),"minimum_slot_distance":"64","minimum_chain_seconds":"10"}),
+            "mean_slot_ms":clock.mean_slot_ms(),"window":clock.summary(),"minimum_slot_distance":"64","minimum_chain_seconds":"10"}),
     ))
 }
 
@@ -173,27 +174,100 @@ async fn write_frames(
         store
             .record(frame.observer, &frame.event, &frame.raw)
             .await?;
-        if frame.observer == ObserverKind::Grpc
-            && let IngestEvent::BlockMeta(e) = frame.event
-        {
-            clock.write().await.push(&e);
+        if frame.observer == ObserverKind::Grpc {
+            match frame.event {
+                IngestEvent::BlockMeta(e) => clock.write().await.push(&e),
+                IngestEvent::Slot(e) => clock.write().await.push_status(&e),
+                _ => {}
+            }
         }
     }
     Ok(())
 }
 
-async fn shutdown(seconds: Option<u64>) {
-    let duration = Duration::from_secs(seconds.unwrap_or(365 * 24 * 3600));
+async fn resolve_loop(
+    config: Arc<Config>,
+    store: Store,
+    mut stop: watch::Receiver<bool>,
+) -> Result<(), StoreError> {
+    let clock = stream::ReceiveClock::new();
+    let mut last_id = String::new();
+    loop {
+        tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(5))=>{}}
+        let mut pending = store.pending_canaries().await?;
+        pending.retain(|c| c.source == Source::Live);
+        pending.sort_by_key(|c| c.id.clone());
+        let next = pending
+            .iter()
+            .find(|c| c.id > last_id)
+            .or_else(|| pending.first());
+        let Some(canary) = next else { continue };
+        last_id = canary.id.clone();
+        let Some(signature) = canary.signature.as_deref() else {
+            continue;
+        };
+        let observations = store.observations(Source::Live, signature).await?;
+        let proof = tokio::select! {_=stop.changed()=>return Ok(()),r=alight_ingest::rpc::corroborate(&config,canary.source,signature,canary.sent_slot,&observations,&clock)=>r};
+        let mut evidence = ResolutionEvidence {
+            observations,
+            ..Default::default()
+        };
+        if let Ok(proof) = proof {
+            for (event, raw) in &proof.frames {
+                store.record(ObserverKind::Rpc, event, raw).await?;
+            }
+            if proof.proof.is_some() {
+                store.save_evidence(&proof.raw).await?;
+            }
+            for block in &proof.canonical_blocks {
+                // Block evidence is included in the proof bundle; persist its exact subset too.
+                if let Some(raw) = proof.raw["blocks"].as_array().and_then(|blocks| {
+                    blocks
+                        .iter()
+                        .find(|r| r["slot"].as_str() == Some(&block.slot.to_string()))
+                }) {
+                    store.save_evidence(raw).await?;
+                }
+            }
+            evidence.rpc = proof.proof;
+            evidence.canonical_blocks = proof.canonical_blocks;
+            evidence.observations = store.observations(Source::Live, signature).await?;
+        }
+        let resolved = alight_canary::resolver::resolve(canary, &evidence, &stream::utc_now());
+        if resolved.canary.outcome != canary.outcome
+            || resolved.canary.landed_block_id != canary.landed_block_id
+            || resolved.canary.observer_first_seen.len() != canary.observer_first_seen.len()
+            || resolved.finalized
+        {
+            store
+                .save_resolution(
+                    &resolved.canary,
+                    resolved.finalized,
+                    &stream::utc_now(),
+                    &json!({"reason":resolved.reason,"evidence":evidence}),
+                )
+                .await?;
+        }
+    }
+}
+
+async fn shutdown(seconds: Option<u64>) -> &'static str {
+    let timer = async {
+        if let Some(seconds) = seconds {
+            tokio::time::sleep(Duration::from_secs(seconds)).await;
+        } else {
+            std::future::pending::<()>().await;
+        }
+    };
     #[cfg(unix)]
     {
         if let Ok(mut signal) =
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
         {
-            tokio::select! {_=tokio::signal::ctrl_c()=>{},_=signal.recv()=>{},_=tokio::time::sleep(duration)=>{}}
-            return;
+            return tokio::select! {r=tokio::signal::ctrl_c()=>if r.is_ok(){"SIGINT"}else{"signal_registration_failed"},r=signal.recv()=>if r.is_some(){"SIGTERM"}else{"signal_stream_closed"},_=timer=>"runtime_limit"};
         }
     }
-    tokio::select! {_=tokio::signal::ctrl_c()=>{},_=tokio::time::sleep(duration)=>{}}
+    tokio::select! {r=tokio::signal::ctrl_c()=>if r.is_ok(){"SIGINT"}else{"signal_registration_failed"},_=timer=>"runtime_limit"}
 }
 
 async fn replay(args: Args) -> Result<(), Error> {
@@ -296,6 +370,12 @@ async fn run() -> Result<(), Error> {
     let id = uuid::Uuid::new_v4().to_string();
     store.start_run(&id, "observe", &stream::utc_now()).await?;
     let clock = Arc::new(RwLock::new(SlotClock::default()));
+    for block in store
+        .block_samples(ObserverKind::Grpc, Source::Live)
+        .await?
+    {
+        clock.write().await.push(&block);
+    }
     let state = Health {
         store: store.clone(),
         clock: clock.clone(),
@@ -325,6 +405,7 @@ async fn run() -> Result<(), Error> {
         tx.clone(),
         rx.clone(),
     ));
+    workers.spawn(resolve_loop(Arc::new(config), store.clone(), rx.clone()));
     if let Some(mirage) = mirage {
         workers.spawn(stream::mirage_worker(mirage, store.clone(), tx.clone(), rx));
     }
@@ -335,8 +416,9 @@ async fn run() -> Result<(), Error> {
         json!({"mode":"observe","source":"live","status":"STARTING","signing_enabled":false,"run_id":id})
     );
     let mut worker_failed = false;
+    let mut stop_reason = "writer_closed";
     let writer_result = tokio::select! {
-        _=shutdown(args.run_for)=>None,
+        reason=shutdown(args.run_for)=>{stop_reason=reason;None},
         result=&mut writer=>Some(result),
         _=workers.join_next()=>{worker_failed=true;None},
     };
@@ -355,7 +437,7 @@ async fn run() -> Result<(), Error> {
     store.end_run(&id, &stream::utc_now()).await?;
     println!(
         "{}",
-        json!({"mode":"observe","status":"STOPPED","canaries_sent":0,"counts":store.counts(Source::Live).await?})
+        json!({"mode":"observe","status":"STOPPED","stop_reason":stop_reason,"canaries_sent":0,"counts":store.counts(Source::Live).await?})
     );
     store.close().await;
     Ok(())

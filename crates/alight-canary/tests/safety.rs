@@ -69,6 +69,8 @@ fn rpc() -> RpcCheck {
         checked_commitment: Commitment::Confirmed,
         checked_block_height: 201,
         searched_history: true,
+        history_covers_sent_slot: true,
+        context_slot: 210,
         checked_at_utc: UTC.into(),
         landing: None,
         raw_ref: "simulation".into(),
@@ -320,7 +322,7 @@ fn expiry_needs_height_commitment_history_and_exact_signature_source() {
     );
     e.rpc = Some(rpc());
     assert_eq!(resolve(&c, &e, UTC).canary.outcome, Some(Outcome::Expired));
-    for bad in 0..6 {
+    for bad in 0..8 {
         let mut r = rpc();
         match bad {
             0 => r.checked_block_height = 200,
@@ -328,7 +330,9 @@ fn expiry_needs_height_commitment_history_and_exact_signature_source() {
             2 => r.searched_history = false,
             3 => r.signature = "other".into(),
             4 => r.source = Source::Replay,
-            _ => r.checked_at_utc = "2026-10-04T08:59:59Z".into(),
+            5 => r.checked_at_utc = "2026-10-04T08:59:59Z".into(),
+            6 => r.context_slot = 89,
+            _ => r.history_covers_sent_slot = false,
         };
         e.rpc = Some(r);
         assert_eq!(

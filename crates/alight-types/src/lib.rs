@@ -1,4 +1,4 @@
-//! Version 1 wire contracts established during Phase 0; implementations follow later.
+//! Version 1 wire contracts shared by the collector, storage, and canary engine.
 mod contracts;
 pub use contracts::*;
 use serde::{Deserialize, Serialize};

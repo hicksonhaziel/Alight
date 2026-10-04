@@ -79,6 +79,10 @@ pub struct RpcCheck {
     #[serde(with = "decimal_u64")]
     pub checked_block_height: u64,
     pub searched_history: bool,
+    #[serde(default)]
+    pub history_covers_sent_slot: bool,
+    #[serde(default, with = "decimal_u64")]
+    pub context_slot: u64,
     pub checked_at_utc: String,
     pub landing: Option<RpcLanding>,
     pub raw_ref: String,

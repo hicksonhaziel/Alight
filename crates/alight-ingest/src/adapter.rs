@@ -38,18 +38,26 @@ pub fn normalize(
     let raw = if observer == ObserverKind::Mirage && input.get("data").is_some() {
         let body = &input["data"];
         if let Some(s) = body.get("slot") {
-            let code = match s.get("status").and_then(Value::as_str) {
-                None | Some("SLOT_PROCESSED") => 0,
-                Some("SLOT_CONFIRMED") => 1,
-                Some("SLOT_FINALIZED") => 2,
-                Some("SLOT_FIRST_SHRED_RECEIVED") => 3,
-                Some("SLOT_COMPLETED") => 4,
-                Some("SLOT_CREATED_BANK") => 5,
-                Some("SLOT_DEAD") => 6,
+            let code = match s.get("status") {
+                None | Some(Value::Null) => 0,
+                Some(Value::String(text)) => match text.as_str() {
+                    "SLOT_PROCESSED" => 0,
+                    "SLOT_CONFIRMED" => 1,
+                    "SLOT_FINALIZED" => 2,
+                    "SLOT_FIRST_SHRED_RECEIVED" => 3,
+                    "SLOT_COMPLETED" => 4,
+                    "SLOT_CREATED_BANK" => 5,
+                    "SLOT_DEAD" => 6,
+                    _ => return Err(AdapterError),
+                },
+                Some(Value::Number(n)) => n.as_i64().ok_or(AdapterError)?,
                 _ => return Err(AdapterError),
             };
             json!({"kind":"slot","slot":s["slot"],"parent":s["parent"],"status_code":code})
         } else if let Some(b) = body.get("blockMeta") {
+            if !b.is_object() {
+                return Err(AdapterError);
+            }
             let mut b = b.clone();
             b["kind"] = json!("block_meta");
             b
@@ -102,6 +110,9 @@ pub fn normalize(
                 .as_str()
                 .filter(|s| !s.is_empty())
                 .ok_or(AdapterError)?;
+            if bs58::decode(id).into_vec().map_err(|_| AdapterError)?.len() != 32 {
+                return Err(AdapterError);
+            }
             IngestEvent::BlockMeta(BlockMetaEvent {
                 slot,
                 block_id: id.into(),
@@ -149,6 +160,34 @@ pub fn normalize(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn malformed_status_and_block_metadata_fail_without_becoming_processed_or_panicking() {
+        let clock = ReceiveTime {
+            clock_id: "replay".into(),
+            mono_ns: 0,
+            wall_utc: "2026-10-04T00:00:00Z".into(),
+        };
+        for input in [
+            json!({"data":{"slot":{"slot":"100","status":true}}}),
+            json!({"data":{"slot":{"slot":"100","status":99}}}),
+            json!({"data":{"blockMeta":[]}}),
+        ] {
+            assert!(
+                normalize(&input, ObserverKind::Mirage, Source::Replay, clock.clone()).is_err()
+            );
+        }
+        let (IngestEvent::Slot(slot), _) = normalize(
+            &json!({"data":{"slot":{"slot":"100","status":1}}}),
+            ObserverKind::Mirage,
+            Source::Replay,
+            clock,
+        )
+        .expect("numeric enum")
+        .expect("event") else {
+            panic!("slot expected")
+        };
+        assert_eq!(slot.status, SlotStatus::Confirmed);
+    }
     #[test]
     fn recorded_grpc_and_mirage_preserve_failures_and_default_status() {
         let clock = ReceiveTime {

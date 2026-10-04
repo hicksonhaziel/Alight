@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "phase": "1-observe-foundation",
+  "phase_complete": false,
+  "source": "live",
+  "captured_at_utc": "2026-10-04T10:00:56.587071+00:00",
+  "canaries_sent": 0,
+  "health": {
+    "canaries_sent": 0,
+    "counts": {
+      "blocks": 10984,
+      "budget_reserved_lamports": 0,
+      "canaries": 0,
+      "gaps": 12,
+      "observations": 38,
+      "open_gaps": 0,
+      "slot_events": 49192
+    },
+    "mode": "observe",
+    "observers": {
+      "grpc": {
+        "age_ms": "23",
+        "cursor_slot": "453222968",
+        "last_receive_utc": "2026-10-04T09:59:03.797Z",
+        "open_gaps": 0,
+        "status": "PASS"
+      },
+      "mirage": {
+        "age_ms": "52",
+        "cursor_slot": "453222967",
+        "last_receive_utc": "2026-10-04T09:59:03.769Z",
+        "open_gaps": 0,
+        "status": "PASS"
+      }
+    },
+    "run_id": "27572507-0a76-44ff-a496-7d2d647df0b5",
+    "schema_version": 1,
+    "signing_enabled": false,
+    "source": "live",
+    "status": "PASS",
+    "uptime_s": "55"
+  },
+  "clock": {
+    "mean_slot_ms": 267.95931341385887,
+    "method": "gRPC candidate-block Unix seconds over rolling slot distance",
+    "minimum_chain_seconds": "10",
+    "minimum_slot_distance": "64",
+    "source": "live",
+    "window": {
+      "ambiguous_candidate_slots": 0,
+      "candidate_parent_skipped_slots": 0,
+      "dead_slots": 0,
+      "sampled_slots": 2048
+    }
+  },
+  "restart": {
+    "at_utc": "2026-10-04T09:52:37.895656+00:00",
+    "before": {
+      "source": "live",
+      "action": "forced_process_kill",
+      "at_utc": "2026-10-04T09:50:01.889605+00:00",
+      "run_id": "25f2b909-9ddc-45e7-8745-a792cc219ab8",
+      "started_utc": "2026-10-04T09:29:13.176Z",
+      "before": {
+        "slot_events": 40812,
+        "blocks": 9121,
+        "observations": 32,
+        "gaps": 4,
+        "canaries": 0,
+        "budget_reservations": 0
+      },
+      "canaries_sent": 0
+    },
+    "after": {
+      "slot_events": 45844,
+      "blocks": 10240,
+      "observations": 36,
+      "gaps": 8,
+      "canaries": 0,
+      "budget_reservations": 0
+    },
+    "runs": [
+      [
+        "25f2b909-9ddc-45e7-8745-a792cc219ab8",
+        "2026-10-04T09:29:13.176Z",
+        "2026-10-04T09:50:07.123Z",
+        "interrupted"
+      ],
+      [
+        "01582b87-7599-4048-85e5-c0a155a4ea1e",
+        "2026-10-04T09:50:07.123Z",
+        null,
+        "running"
+      ]
+    ],
+    "gaps": [
+      [
+        "grpc",
+        "2026-10-04T09:29:13.179Z",
+        "2026-10-04T09:29:14.946Z",
+        "grpc_connecting_or_disconnected"
+      ],
+      [
+        "mirage",
+        "2026-10-04T09:29:13.179Z",
+        "2026-10-04T09:29:14.721Z",
+        "mirage_connecting_or_disconnected"
+      ],
+      [
+        "grpc",
+        "2026-10-04T09:29:35.373Z",
+        "2026-10-04T09:29:36.395Z",
+        "grpc_connecting_or_disconnected"
+      ],
+      [
+        "grpc",
+        "2026-10-04T09:33:12.301Z",
+        "2026-10-04T09:33:20.810Z",
+        "grpc_connecting_or_disconnected"
+      ],
+      [
+        "mirage",
+        "2026-10-04T09:50:01.877Z",
+        "2026-10-04T09:50:07.123Z",
+        "collector_restart"
+      ],
+      [
+        "grpc",
+        "2026-10-04T09:50:01.877Z",
+        "2026-10-04T09:50:07.123Z",
+        "collector_restart"
+      ],
+      [
+        "mirage",
+        "2026-10-04T09:50:07.320Z",
+        "2026-10-04T09:50:08.477Z",
+        "mirage_connecting_or_disconnected"
+      ],
+      [
+        "grpc",
+        "2026-10-04T09:50:07.320Z",
+        "2026-10-04T09:50:08.574Z",
+        "grpc_connecting_or_disconnected"
+      ]
+    ],
+    "preserved_and_increased": true,
+    "previous_run_interrupted": true,
+    "new_run_started": true
+  },
+  "grpc_connection_clocks": 4,
+  "rate_limit": {
+    "codes": {
+      "200": 8,
+      "429": 8
+    },
+    "passed": true
+  },
+  "fixtures": {
+    "data/fixtures/clock_rpc_validation.json": "9f4b2a642c811373961caa209834104f35eaef31d1ee259196c51a7b6b97f5cd",
+    "data/fixtures/rpc_live_corroboration.json": "760f7b638c50e53b36eadb113bc265e90574ee69712b8d046f00ea51f3d7a899",
+    "data/fixtures/rpc_absence_probe.json": "08893347681479913006c61c4dc0e5cabb14bcc7bed04698b0a803d4966f4cae"
+  },
+  "pending": [
+    "funded route smoke tests and pilot",
+    "leader schedule, builder, policy, senders",
+    "live mode, continuous one-hour gate, deployment"
+  ]
+}

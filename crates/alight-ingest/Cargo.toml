@@ -36,6 +36,14 @@ rustls.workspace = true
 
 [lints]
 workspace = true
+
+[[example]]
+name = "clock_check"
+required-features = ["stream"]
+
+[[example]]
+name = "rpc_check"
+required-features = ["stream"]
 [features]
 stream = ["beam", "solami/grpc"]
 beam = ["dep:solami", "dep:solana-instruction", "dep:solana-pubkey", "dep:solana-tls-utils", "dep:solana-message", "dep:solana-transaction", "dep:solana-system-interface", "dep:solana-signature", "dep:solana-hash"]

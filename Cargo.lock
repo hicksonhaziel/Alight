@@ -98,6 +98,7 @@ dependencies = [
 name = "alightd"
 version = "0.0.0"
 dependencies = [
+ "alight-canary",
  "alight-ingest",
  "alight-store",
  "alight-types",
@@ -107,6 +108,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "tokio",
  "uuid",

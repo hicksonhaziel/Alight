@@ -12,6 +12,8 @@ use thiserror::Error;
 pub mod adapter;
 pub mod clock;
 #[cfg(feature = "stream")]
+pub mod rpc;
+#[cfg(feature = "stream")]
 pub mod stream;
 
 pub const MAINNET_GENESIS: &str = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";

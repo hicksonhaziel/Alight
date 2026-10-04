@@ -70,11 +70,65 @@ async fn reopen_preserves_cursor_and_first_receive_and_deduplicates() {
         .await
         .expect("read");
     assert_eq!(rows[0].received.wall_utc, "2026-10-04T00:00:01Z");
+    assert_eq!(
+        store
+            .recent_observation(ObserverKind::Grpc, Source::Sim)
+            .await
+            .expect("recent")
+            .expect("observation")
+            .slot,
+        Some(100)
+    );
     store
         .start_run("second", "sim", "2026-10-04T00:01:00Z")
         .await
         .expect("run");
     assert_eq!(store.counts(Source::Sim).await.expect("counts").gaps, 1);
+}
+
+#[tokio::test]
+async fn queued_pre_disconnect_frame_cannot_close_a_new_gap() {
+    let dir = tempfile::tempdir().expect("directory");
+    let store = Store::open(&dir.path().join("queued.db"), 16 * 1024 * 1024)
+        .await
+        .expect("store");
+    let raw = json!({"source":"sim","slot":"100"});
+    store
+        .open_gap(
+            ObserverKind::Grpc,
+            Source::Sim,
+            "2026-10-04T00:00:05Z",
+            "disconnected",
+        )
+        .await
+        .expect("gap");
+    store
+        .record(
+            ObserverKind::Grpc,
+            &observation(&raw, "2026-10-04T00:00:04Z"),
+            &raw,
+        )
+        .await
+        .expect("queued old frame");
+    assert_eq!(store.counts(Source::Sim).await.expect("count").open_gaps, 1);
+    store
+        .record(
+            ObserverKind::Grpc,
+            &observation(&raw, "2026-10-04T00:00:06Z"),
+            &raw,
+        )
+        .await
+        .expect("new frame");
+    assert_eq!(store.counts(Source::Sim).await.expect("count").open_gaps, 0);
+    assert_eq!(
+        store
+            .observations(Source::Sim, "simulation-signature")
+            .await
+            .expect("observations")[0]
+            .received
+            .wall_utc,
+        "2026-10-04T00:00:04Z"
+    );
 }
 
 #[tokio::test]

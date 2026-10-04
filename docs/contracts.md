@@ -1,8 +1,7 @@
 # Alight contracts v1
 
 The shared Rust types in `crates/alight-types/src/contracts.rs` freeze the
-Phase 0 wire shapes. `CONTRACT_VERSION = 1`. They describe the future collector
-and API; this scaffold does not yet serve quotes or persist canaries.
+Phase 0 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries; quote APIs are still planned.
 Call `validate()` at API boundaries; serde decoding alone is not validation.
 
 | Enum | JSON values |
@@ -201,9 +200,28 @@ Observe/replay cannot receive a governor permit. No signer or sender exists yet.
 membership, and a typed explicit route rejection. RPC proof names the exact
 signature and source, required/checked commitment, checked block height, history
 search flag, timestamp, optional landing candidate, and captured evidence hash.
-Example absence proof: `{"signature":"simulation-signature","source":"sim","required_commitment":"confirmed","checked_commitment":"confirmed","checked_block_height":"201","searched_history":true,"checked_at_utc":"2026-10-04T10:00:00Z","landing":null,"raw_ref":"sha256:simulation-evidence"}`.
+Example absence proof: `{"signature":"simulation-signature","source":"sim","required_commitment":"confirmed","checked_commitment":"confirmed","checked_block_height":"201","searched_history":true,"history_covers_sent_slot":true,"context_slot":"210","checked_at_utc":"2026-10-04T10:00:00Z","landing":null,"raw_ref":"sha256:simulation-evidence"}`.
 A proof predating the send is rejected. A sighting blocks expiry even when block
-identity is incomplete. Confirmed outcomes remain provisional; only explicit
-finalized evidence retires pending records. Dropping requires canonical block
+identity is incomplete. Confirmed outcomes remain provisional; finalized RPC
+evidence retires landing/expiry records, while definitive route rejection can
+retire an unsent attempt. Dropping requires canonical block
 exclusion plus history absence. Transport disagreement remains UNRESOLVED.
 These are additive v1 types; `0001_observe.sql` already supplies their storage.
+
+RPC absence additionally requires `history_covers_sent_slot=true` and a
+`context_slot` at least as recent as the send. Older serialized proof fields
+default to false/zero, so they cannot grant expiry. The reader samples finalized
+slot/height before history status, requires status context to cover that slot,
+and checks `getFirstAvailableBlock` before accepting null history. Missing or
+processed status, pruned history, unsupported blocks, and network failures keep
+canaries pending. Actual `getSignatureStatuses` has no commitment argument; the
+proof is the paired finalized height/context and history search, or a confirmed/
+finalized status corroborated by candidate-block membership. See the official
+[status method](https://solana.com/docs/rpc/http/getsignaturestatuses) and
+[block method](https://solana.com/docs/rpc/http/getblock).
+
+The observe daemon checks one pending live canary every five seconds, rotating
+IDs. With no live canaries, this worker makes no RPC requests. It persists proof
+subsets and outcome changes, and reloads pending records after restart.
+The clock excludes conflicting candidate timestamps and DEAD slots, and reports
+observed candidate-parent skips separately from a finalized network skip rate.

@@ -47,6 +47,7 @@ pub fn resolve(canary: &Canary, evidence: &ResolutionEvidence, utc: &str) -> Res
         r.source == canary.source
             && r.signature == signature
             && r.checked_commitment >= r.required_commitment
+            && r.context_slot >= canary.sent_slot
             && chrono::DateTime::parse_from_rfc3339(&r.checked_at_utc)
                 .ok()
                 .zip(chrono::DateTime::parse_from_rfc3339(&canary.send_wall_utc).ok())
@@ -117,6 +118,7 @@ pub fn resolve(canary: &Canary, evidence: &ResolutionEvidence, utc: &str) -> Res
     if let Some(first) = complete.first() {
         let absent = rpc.is_some_and(|r| {
             r.searched_history
+                && r.history_covers_sent_slot
                 && r.landing.is_none()
                 && r.checked_commitment >= Commitment::Confirmed
         });
@@ -171,6 +173,7 @@ pub fn resolve(canary: &Canary, evidence: &ResolutionEvidence, utc: &str) -> Res
     if observations.is_empty()
         && let Some(rpc) = rpc
         && rpc.searched_history
+        && rpc.history_covers_sent_slot
         && rpc.landing.is_none()
         && rpc.checked_commitment >= Commitment::Confirmed
         && rpc.checked_block_height > canary.last_valid_block_height

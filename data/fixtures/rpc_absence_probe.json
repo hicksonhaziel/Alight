@@ -1,0 +1,37 @@
+{
+  "canaries_sent": 0,
+  "canary_created": false,
+  "canonical_blocks": [],
+  "captured_fields": {
+    "blocks": [],
+    "finalized_slot": "453221492",
+    "height": "431259913",
+    "history_first_available_slot": "453106955",
+    "status": {
+      "context": {
+        "apiVersion": "2.3.0",
+        "slot": 453221524
+      },
+      "value": [
+        null
+      ]
+    }
+  },
+  "expected_absent": true,
+  "read_only_probe": true,
+  "rpc": {
+    "checked_at_utc": "2026-10-04T09:52:38.915Z",
+    "checked_block_height": "431259913",
+    "checked_commitment": "finalized",
+    "context_slot": "453221524",
+    "history_covers_sent_slot": true,
+    "landing": null,
+    "raw_ref": "sha256:b0ed157677800c02a3ff979253a5bd94a0eea94771b5684c522ab1f5c32afed4",
+    "required_commitment": "confirmed",
+    "searched_history": true,
+    "signature": "1111111111111111111111111111111111111111111111111111111111111111",
+    "source": "live"
+  },
+  "source": "live",
+  "verdict": "PASS"
+}

@@ -86,6 +86,16 @@ impl Store {
         {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+            for suffix in ["-wal", "-shm"] {
+                let mut name = path.as_os_str().to_owned();
+                name.push(suffix);
+                if Path::new(&name).exists() {
+                    std::fs::set_permissions(
+                        Path::new(&name),
+                        std::fs::Permissions::from_mode(0o600),
+                    )?;
+                }
+            }
         }
         let page_size: i64 = sqlx::query_scalar("PRAGMA page_size")
             .fetch_one(&pool)
@@ -103,6 +113,22 @@ impl Store {
 
     pub async fn close(&self) {
         self.pool.close().await;
+    }
+
+    /// Persists selected RPC proof fields without fabricating an observer event.
+    pub async fn save_evidence(&self, raw: &Value) -> Result<String, StoreError> {
+        let encoded = serde_json::to_string(raw)?;
+        if encoded.len() > 1024 * 1024 {
+            return Err(StoreError::Invalid);
+        }
+        let reference = raw_ref(raw)?;
+        sqlx::query("INSERT OR IGNORE INTO raw_evidence VALUES(?,?,?)")
+            .bind(&reference)
+            .bind(&encoded)
+            .bind(encoded.len() as i64)
+            .execute(&self.pool)
+            .await?;
+        Ok(reference)
     }
 
     /// A new process records a restart gap from each previous last receive time.
@@ -259,11 +285,12 @@ impl Store {
             .bind(&source).bind(&observer).bind(slot.map(slot_key)).bind(&receive.wall_utc).execute(&mut *tx).await?;
         // A gap closes only once a normalized frame and cursor are durably saved.
         sqlx::query(
-            "UPDATE gaps SET ended_utc=? WHERE source=? AND observer=? AND ended_utc IS NULL",
+            "UPDATE gaps SET ended_utc=? WHERE source=? AND observer=? AND ended_utc IS NULL AND started_utc<=?",
         )
         .bind(&receive.wall_utc)
         .bind(&source)
         .bind(&observer)
+        .bind(&receive.wall_utc)
         .execute(&mut *tx)
         .await?;
         tx.commit().await?;
@@ -369,6 +396,21 @@ impl Store {
             result.push(e);
         }
         Ok(result)
+    }
+
+    /// One actual recent chain signature for a read-only RPC integration probe.
+    pub async fn recent_observation(
+        &self,
+        observer: ObserverKind,
+        source: Source,
+    ) -> Result<Option<ObserverEvent>, StoreError> {
+        let row:Option<String>=sqlx::query_scalar("SELECT payload_json FROM observations WHERE observer=? AND source=? ORDER BY slot_key DESC LIMIT 1")
+            .bind(label(observer)?).bind(label(source)?).fetch_optional(&self.pool).await?;
+        row.map(|s| match serde_json::from_str(&s)? {
+            IngestEvent::Observation(o) => Ok(o),
+            _ => Err(StoreError::Invalid),
+        })
+        .transpose()
     }
 
     /// Atomic reservation; uncertain spend stays charged. Returns false on cap/clock rejection.
