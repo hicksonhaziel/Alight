@@ -1,6 +1,7 @@
 use alight_ingest::{Config, HttpProbe};
 use alight_types::Verdict;
 use std::process::ExitCode;
+mod simulation;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -15,9 +16,15 @@ async fn main() -> ExitCode {
 
 async fn run() -> Result<u8, String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if matches!(
+        args.first().map(String::as_str),
+        Some("sim" | "replay-model")
+    ) {
+        return simulation::run(&args).await;
+    }
     if args.first().map(String::as_str) != Some("doctor") {
         eprintln!(
-            "Usage: alight doctor [--network] [--output PATH]\nDefault: local configuration presence only. --network performs bounded read-only Solami probes."
+            "Usage: alight doctor [--network] [--output PATH]\n       alight sim [--seed N] [--canaries N] [--slot-ms N] [--congestion X] [--flat-tip]\n                  [--shift-at N --shift-slot-ms N --shift-congestion X] [--output PATH] [--database PATH]\n       alight replay-model --input PATH [--output PATH] [--database PATH]\nDoctor defaults to configuration presence only; --network runs read-only probes. Sim/replay need no environment, keys or network."
         );
         return Ok(2);
     }

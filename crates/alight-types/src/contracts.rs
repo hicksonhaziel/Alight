@@ -205,7 +205,7 @@ pub mod optional_decimal_u64 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CanaryConfig {
     pub route: Route,
     #[serde(with = "decimal_u64")]
@@ -255,6 +255,94 @@ pub struct Canary {
     /// Each observer has its own clock identity and UTC receive time.
     pub observer_first_seen: BTreeMap<ObserverKind, ReceiveTime>,
     pub resolved_at_utc: Option<String>,
+}
+
+/// Training eligibility includes finalization; provisional landings are not labels.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrainingCanary {
+    pub canary: Canary,
+    pub finalized: bool,
+}
+
+/// Source, vantage point, regime and evaluation clock of a probability curve.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurveContext {
+    pub source: Source,
+    pub regime_id: String,
+    pub region: String,
+    pub as_of_utc: String,
+}
+
+/// M0 probability within horizon_slots, with discounted sample mass (not prior counts).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurveSnapshot {
+    pub contract_version: u32,
+    pub estimator: String,
+    pub methodology_hash: String,
+    pub context: CurveContext,
+    pub config: CanaryConfig,
+    pub horizon_slots: u32,
+    pub half_life_s: f64,
+    pub alpha: f64,
+    pub beta: f64,
+    pub p_hat: f64,
+    pub p_interval_95: [f64; 2],
+    pub n_effective: f64,
+    pub assignments: u32,
+    pub resolved: u32,
+    pub unresolved: u32,
+    pub unresolved_share: f64,
+    pub data_age_s: Option<f64>,
+    pub observation_window: Option<[String; 2]>,
+    pub evidence: Evidence,
+    /// Additional fresh resolved samples; at least one when evidence is insufficient.
+    pub samples_needed: Option<u32>,
+    pub insufficient_reasons: Vec<String>,
+}
+impl CurveSnapshot {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        let [lo, hi] = self.p_interval_95;
+        if self.contract_version != CONTRACT_VERSION
+            || self.horizon_slots == 0
+            || self.context.region.is_empty()
+            || self.context.regime_id.is_empty()
+            || self.methodology_hash.len() != 71
+            || !self.methodology_hash.starts_with("sha256:")
+            || !self.methodology_hash[7..]
+                .bytes()
+                .all(|b| b.is_ascii_hexdigit())
+            || ![self.alpha, self.beta, self.half_life_s]
+                .iter()
+                .all(|n| n.is_finite() && *n > 0.0)
+            || ![self.p_hat, lo, hi, self.unresolved_share]
+                .iter()
+                .all(|n| n.is_finite() && (0.0..=1.0).contains(n))
+            || lo > self.p_hat
+            || self.p_hat > hi
+            || !self.n_effective.is_finite()
+            || self.n_effective < 0.0
+            || self.data_age_s.is_some_and(|n| !n.is_finite() || n < 0.0)
+            || self.resolved.checked_add(self.unresolved) != Some(self.assignments)
+        {
+            return Err("invalid curve probabilities, counts, or context");
+        }
+        match self.evidence {
+            Evidence::Insufficient
+                if self.samples_needed.is_some_and(|n| n > 0)
+                    && !self.insufficient_reasons.is_empty() =>
+            {
+                Ok(())
+            }
+            Evidence::Measured
+                if self.samples_needed.is_none()
+                    && self.insufficient_reasons.is_empty()
+                    && self.data_age_s.is_some() =>
+            {
+                Ok(())
+            }
+            _ => Err("M0 curve evidence and sample requirement disagree"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

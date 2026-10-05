@@ -1,0 +1,42 @@
+{
+  "contract_version": 1,
+  "estimator": "m0-decayed-beta-v1",
+  "methodology_hash": "sha256:e9dad0dc21061689bb25f58ff46413411704822557a727204c4c0ff2b4172316",
+  "context": {
+    "source": "sim",
+    "regime_id": "sim-r0",
+    "region": "synthetic-local",
+    "as_of_utc": "2026-10-05T00:34:19.000Z"
+  },
+  "config": {
+    "route": "beam_quic",
+    "tip_lamports": "100000",
+    "cu_price_micro_lamports": "0",
+    "cu_limit": 25000,
+    "fee_bucket": "zero",
+    "tip_tier": "x1",
+    "size_class": "small"
+  },
+  "horizon_slots": 1,
+  "half_life_s": 3600.0,
+  "alpha": 45.67893379506846,
+  "beta": 30.270044112102095,
+  "p_hat": 0.6014423768928138,
+  "p_interval_95": [
+    0.48985125423893605,
+    0.707970882914267
+  ],
+  "n_effective": 73.94897790717056,
+  "assignments": 91,
+  "resolved": 91,
+  "unresolved": 0,
+  "unresolved_share": 0.0,
+  "data_age_s": 51.75,
+  "observation_window": [
+    "2026-10-05T00:00:18+00:00",
+    "2026-10-05T00:33:27.250+00:00"
+  ],
+  "evidence": "MEASURED",
+  "samples_needed": null,
+  "insufficient_reasons": []
+}

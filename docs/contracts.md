@@ -268,3 +268,43 @@ submissions separately visible. Migration `0003_metadata_retention.sql` indexes
 receive times and transient raw evidence for bounded cleanup. It retains all
 transaction observations, permanent proof bundles, and any block candidate
 referenced by an owned canary. Existing raw evidence defaults to permanent.
+
+## Phase 2 model and simulation foundation
+
+Additive v1 types: `TrainingCanary` wraps the unchanged Canary schema plus an
+explicit `finalized` boolean. Only owned source-filtered canaries enter training;
+passive transaction observations do not. A finalized record also needs a resolved
+outcome and resolution timestamp at or before the snapshot's evaluation time.
+
+`CurveContext` contains source, regime_id, region and as_of_utc. `CurveSnapshot`
+contains this context, exact CanaryConfig, a positive horizon_slots, estimator and
+methodology hash, half-life in seconds, Beta parameters, mean, equal-tail posterior
+interval, discounted n_effective, assignment/resolved/unresolved counts, unresolved
+share, latest eligible data age in seconds and eligible send window. All amount
+fields follow existing decimal-string conventions. `INSUFFICIENT` retains the
+posterior as a diagnostic, includes samples_needed and explicit reasons, and does
+not authorize a recommendation. M0 emits only MEASURED or INSUFFICIENT. Interpolation
+and extrapolation require later pooled estimators. See
+[registered methodology](methodology.md) for precise endpoint and eligibility rules.
+
+Example shape (the actual registered hash and numeric output are in
+`data/fixtures/phase2_curve_snapshot.json`):
+
+```json
+{"context":{"source":"sim","regime_id":"sim-r0","region":"synthetic-local","as_of_utc":"2026-10-05T00:34:19.000Z"},"config":{"route":"beam_quic","tip_lamports":"100000","cu_price_micro_lamports":"0","cu_limit":25000,"fee_bucket":"zero","tip_tier":"x1","size_class":"small"},"horizon_slots":1,"evidence":"MEASURED","n_effective":80.0,"data_age_s":40.0}
+```
+
+Migration `0004_curve_snapshots.sql` adds source/regime-filtered history with UTC
+epoch milliseconds, methodology hash, full JSON and SHA-256 content ID. Identical
+inserts are idempotent. Reads verify stored payload bytes against the ID. This is
+curve history; the forecast hash chain is a separate, later Phase 2 component.
+The offline commands use a separate database and do not migrate the paused live
+database. Periodic daemon snapshots remain to be integrated.
+
+`alight sim` writes a deterministic report with source=sim, explicit environment
+parameters, normal Canary records, artificial ground-truth probabilities, exact
+registered methodology hash, and curve snapshots. Synthetic signatures are null;
+no transaction is signed or submitted. `replay-model` recalculates those same
+snapshots and rejects disagreement or methodology-version drift. Replay execution
+preserves the dataset's original sim source rather than relabeling synthetic
+evidence as live. Shared JSON enables exact float round trips for reproducibility.

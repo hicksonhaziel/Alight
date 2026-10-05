@@ -1,0 +1,112 @@
+{
+  "phase": 2,
+  "scope": "model-and-simulator-foundation",
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-05T04:43:06.402210+00:00",
+  "methodology": {
+    "registered_commit": "2f4450c9f63412665c34a31b4a750c6e57a6ff88",
+    "registered_at_utc": "2026-10-05T05:27:27+01:00",
+    "path": "docs/methodology.md",
+    "sha256": "e9dad0dc21061689bb25f58ff46413411704822557a727204c4c0ff2b4172316",
+    "live_signal_reports": 0
+  },
+  "checks": {
+    "cargo_fmt": "PASS",
+    "cargo_clippy_workspace_all_targets": "PASS",
+    "cargo_test_workspace": "PASS",
+    "tests_passed": 40,
+    "repository_secret_scan": "PASS",
+    "phase0_receipt": "PASS",
+    "phase1_receipt": "PASS",
+    "private_test_log_sha256": "3f93fbc18a179add0088e8cca5d13ba5918db790593a6d20258d230623d27015"
+  },
+  "simulation": {
+    "source": "sim",
+    "seed": "42",
+    "canaries": 8100,
+    "curve_snapshots": 243,
+    "measured": 243,
+    "replay_bytes_equal": true,
+    "private_report_sha256": "9aea0d56994207015a1800ca7ff55096e7a006abf1fd426556bfcbe88c7ca2d7",
+    "stored_rows": 243,
+    "sqlite_quick_check": "ok",
+    "network_requests": 0,
+    "transactions_sent": 0
+  },
+  "registered_m0_benchmarks": [
+    {
+      "seed": 7,
+      "shifted": false,
+      "measured_curves": 243,
+      "mae": 0.021495,
+      "threshold": 0.08
+    },
+    {
+      "seed": 7,
+      "shifted": true,
+      "measured_curves": 243,
+      "mae": 0.031266,
+      "threshold": 0.08
+    },
+    {
+      "seed": 42,
+      "shifted": false,
+      "measured_curves": 243,
+      "mae": 0.018729,
+      "threshold": 0.08
+    },
+    {
+      "seed": 42,
+      "shifted": true,
+      "measured_curves": 240,
+      "mae": 0.029614,
+      "threshold": 0.08
+    },
+    {
+      "seed": 2026,
+      "shifted": false,
+      "measured_curves": 243,
+      "mae": 0.018322,
+      "threshold": 0.08
+    },
+    {
+      "seed": 2026,
+      "shifted": true,
+      "measured_curves": 243,
+      "mae": 0.026171,
+      "threshold": 0.08
+    }
+  ],
+  "runtime": {
+    "collector": "stopped",
+    "proxy": "stopped",
+    "legacy_collector": "inactive",
+    "resumed_live_collection": false
+  },
+  "fixtures": [
+    {
+      "path": "data/fixtures/phase2_curve_snapshot.json",
+      "sha256": "79b9c340b97456cee24850fd7368adb4bf2e4bffb345912b8c29a021b3166e4c"
+    }
+  ],
+  "beam_http": {
+    "checked_on": "2026-10-05",
+    "hostname": "beam-http.solami.dev",
+    "google_dns_status": 3,
+    "answer_count": 0,
+    "local_dns": "name_not_found",
+    "beam_quic_dns": "resolved",
+    "support_message_sent": false
+  },
+  "remaining": [
+    "M1 monotone pooled model",
+    "M2 blend and pooled evidence",
+    "policy v1 and equal-spend comparison",
+    "forecast hash chain and grader",
+    "B1-B4 comparisons",
+    "periodic daemon snapshot job",
+    "latency quantiles and quantile quotes",
+    "daily Signal job",
+    "owned live funding and Beam HTTP verification"
+  ]
+}

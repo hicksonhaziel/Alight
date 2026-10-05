@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "bin/alight", "bin/alightd"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -12,8 +12,10 @@ alight-types = { path = "crates/alight-types" }
 alight-ingest = { path = "crates/alight-ingest" }
 alight-store = { path = "crates/alight-store" }
 alight-canary = { path = "crates/alight-canary" }
+alight-model = { path = "crates/alight-model" }
+alight-sim = { path = "crates/alight-sim" }
 serde = { version = "=1.0.228", features = ["derive"] }
-serde_json = "=1.0.150"
+serde_json = { version = "=1.0.150", features = ["float_roundtrip"] }
 thiserror = "=2.0.18"
 dotenvy = "=0.15.7"
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"] }

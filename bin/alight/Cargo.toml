@@ -7,8 +7,15 @@ rust-version.workspace = true
 [dependencies]
 alight-ingest.workspace = true
 alight-types.workspace = true
+alight-model.workspace = true
+alight-sim.workspace = true
+alight-store.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
 
 [lints]
 workspace = true

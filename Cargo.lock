@@ -22,8 +22,13 @@ name = "alight"
 version = "0.0.0"
 dependencies = [
  "alight-ingest",
+ "alight-model",
+ "alight-sim",
+ "alight-store",
  "alight-types",
+ "serde",
  "serde_json",
+ "tempfile",
  "tokio",
 ]
 
@@ -88,9 +93,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "alight-model"
+version = "0.0.0"
+dependencies = [
+ "alight-types",
+ "chrono",
+ "serde_json",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
+name = "alight-sim"
+version = "0.0.0"
+dependencies = [
+ "alight-canary",
+ "alight-model",
+ "alight-types",
+ "chrono",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "alight-store"
 version = "0.0.0"
 dependencies = [
+ "alight-model",
  "alight-types",
  "chrono",
  "serde",

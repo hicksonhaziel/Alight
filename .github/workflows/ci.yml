@@ -20,4 +20,5 @@ jobs:
       - run: python3 scripts/test_webhook_signature.py
       - run: python3 scripts/verify_phase0_receipt.py
       - run: python3 scripts/verify_phase1_receipt.py
+      - run: python3 scripts/verify_phase2_receipt.py
       - run: node --check scripts/spike_grpc.mjs && node --check scripts/spike_ws.mjs && node --check scripts/create_canary_wallet.mjs
