@@ -1,0 +1,3993 @@
+{
+  "components": {
+    "schemas": {
+      "Alert": {
+        "properties": {
+          "at_utc": {
+            "type": "string"
+          },
+          "details": true,
+          "id": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/AlertRule"
+          },
+          "schema_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "id",
+          "source",
+          "rule",
+          "subject",
+          "at_utc",
+          "summary",
+          "details"
+        ],
+        "title": "Alert",
+        "type": "object"
+      },
+      "AlertRule": {
+        "enum": [
+          "ROUTE_DEGRADATION",
+          "OBSERVER_DISAGREEMENT",
+          "REGIME_CHANGE",
+          "QUOTE_DRIFT",
+          "BUDGET"
+        ],
+        "type": "string"
+      },
+      "ApiClock": {
+        "properties": {
+          "mean_slot_ms": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "method": {
+            "type": "string"
+          },
+          "minimum_chain_seconds": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minimum_slot_distance": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "window": {
+            "$ref": "#/components/schemas/ClockWindow"
+          }
+        },
+        "required": [
+          "source",
+          "method",
+          "window",
+          "minimum_slot_distance",
+          "minimum_chain_seconds"
+        ],
+        "type": "object"
+      },
+      "ApiErrorResponse": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "code",
+          "message"
+        ],
+        "title": "ApiErrorResponse",
+        "type": "object"
+      },
+      "ApiHealth": {
+        "properties": {
+          "as_of_utc": {
+            "type": "string"
+          },
+          "budget_reserved_today_by_route": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "canaries_sent": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "canary_engine": true,
+          "collector_status": {
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/HealthCounts"
+          },
+          "leaders": true,
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          },
+          "observers": {
+            "items": {
+              "$ref": "#/components/schemas/ObserverHealthView"
+            },
+            "type": "array"
+          },
+          "region": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "send_attempts": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "signing_enabled": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "status": {
+            "type": "string"
+          },
+          "uptime_s": {
+            "$ref": "#/components/schemas/DecimalU64"
+          }
+        },
+        "required": [
+          "schema_version",
+          "source",
+          "mode",
+          "run_id",
+          "as_of_utc",
+          "region",
+          "status",
+          "collector_status",
+          "signing_enabled",
+          "uptime_s",
+          "canaries_sent",
+          "counts",
+          "observers",
+          "send_attempts",
+          "budget_reserved_today_by_route",
+          "canary_engine",
+          "leaders"
+        ],
+        "type": "object"
+      },
+      "ApiStreamSnapshot": {
+        "properties": {
+          "as_of_utc": {
+            "type": "string"
+          },
+          "clock": {
+            "$ref": "#/components/schemas/ApiClock"
+          },
+          "health": {
+            "$ref": "#/components/schemas/ApiHealth"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "ledger": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastEntry"
+            },
+            "type": "array"
+          },
+          "proves": {
+            "items": {
+              "$ref": "#/components/schemas/ProveReport"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "kind",
+          "source",
+          "as_of_utc",
+          "health",
+          "clock",
+          "proves",
+          "ledger"
+        ],
+        "title": "ApiStreamSnapshot",
+        "type": "object"
+      },
+      "ApiTelemetry": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "value": true
+        },
+        "required": [
+          "source",
+          "value"
+        ],
+        "title": "ApiTelemetry",
+        "type": "object"
+      },
+      "BaselineCostComparison": {
+        "properties": {
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicCost"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "savings_usd": {
+            "description": "Positive means the baseline costs more under the chosen objective.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unavailable_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "BaselineForecast": {
+        "properties": {
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CanaryConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "model_snapshot_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "p_hat": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "tape": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TipTapeSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "unavailable_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "CanaryConfig": {
+        "properties": {
+          "cu_limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "cu_price_micro_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "fee_bucket": {
+            "$ref": "#/components/schemas/FeeBucket"
+          },
+          "route": {
+            "$ref": "#/components/schemas/Route"
+          },
+          "size_class": {
+            "$ref": "#/components/schemas/SizeClass"
+          },
+          "tip_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "tip_tier": {
+            "$ref": "#/components/schemas/TipTier"
+          }
+        },
+        "required": [
+          "route",
+          "tip_lamports",
+          "cu_price_micro_lamports",
+          "cu_limit",
+          "fee_bucket",
+          "tip_tier",
+          "size_class"
+        ],
+        "type": "object"
+      },
+      "ClockWindow": {
+        "properties": {
+          "ambiguous_candidate_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "candidate_parent_skipped_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "dead_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sampled_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sampled_slots",
+          "ambiguous_candidate_slots",
+          "dead_slots",
+          "candidate_parent_skipped_slots"
+        ],
+        "type": "object"
+      },
+      "CurveContext": {
+        "description": "Source, vantage point, regime and evaluation clock of a probability curve.",
+        "properties": {
+          "as_of_utc": {
+            "type": "string"
+          },
+          "regime_id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "regime_id",
+          "region",
+          "as_of_utc"
+        ],
+        "type": "object"
+      },
+      "CurvePage": {
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/components/schemas/CurveSnapshot"
+            },
+            "type": "array"
+          },
+          "regime_id": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "regime_id",
+          "curves"
+        ],
+        "title": "CurvePage",
+        "type": "object"
+      },
+      "CurvePrediction": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/CanaryConfig"
+          },
+          "data_age_s": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "m1_weight": {
+            "format": "double",
+            "type": "number"
+          },
+          "n_effective": {
+            "format": "double",
+            "type": "number"
+          },
+          "observation_window": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "p_hat": {
+            "format": "double",
+            "type": "number"
+          },
+          "p_interval_95": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "samples_needed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "unresolved_share": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "config",
+          "p_hat",
+          "p_interval_95",
+          "evidence",
+          "n_effective",
+          "unresolved_share",
+          "m1_weight"
+        ],
+        "type": "object"
+      },
+      "CurveSnapshot": {
+        "description": "M0 probability within horizon_slots, with discounted sample mass (not prior counts).",
+        "properties": {
+          "alpha": {
+            "format": "double",
+            "type": "number"
+          },
+          "assignments": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "beta": {
+            "format": "double",
+            "type": "number"
+          },
+          "config": {
+            "$ref": "#/components/schemas/CanaryConfig"
+          },
+          "context": {
+            "$ref": "#/components/schemas/CurveContext"
+          },
+          "contract_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "data_age_s": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "estimator": {
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "half_life_s": {
+            "format": "double",
+            "type": "number"
+          },
+          "horizon_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "insufficient_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "methodology_hash": {
+            "type": "string"
+          },
+          "n_effective": {
+            "format": "double",
+            "type": "number"
+          },
+          "observation_window": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "p_hat": {
+            "format": "double",
+            "type": "number"
+          },
+          "p_interval_95": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "resolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "samples_needed": {
+            "description": "Additional fresh resolved samples; at least one when evidence is insufficient.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "unresolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "unresolved_share": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "contract_version",
+          "estimator",
+          "methodology_hash",
+          "context",
+          "config",
+          "horizon_slots",
+          "half_life_s",
+          "alpha",
+          "beta",
+          "p_hat",
+          "p_interval_95",
+          "n_effective",
+          "assignments",
+          "resolved",
+          "unresolved",
+          "unresolved_share",
+          "evidence",
+          "insufficient_reasons"
+        ],
+        "type": "object"
+      },
+      "DecimalU64": {
+        "format": "uint64-decimal",
+        "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|1844674407370955[0-0][0-9]{3}|18446744073709551[0-5][0-9]{2}|184467440737095516[0-0][0-9]{1}|1844674407370955161[0-4][0-9]{0}|18446744073709551615)$",
+        "type": "string"
+      },
+      "DelayCostPoint": {
+        "description": "Return magnitudes are basis points, delay_ms uses the supplied measured slot clock.",
+        "properties": {
+          "delay_ms": {
+            "format": "double",
+            "type": "number"
+          },
+          "delay_slots": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "median_bps": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pairs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "split_half_relative_change": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "upper_bps": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "delay_slots",
+          "delay_ms",
+          "pairs"
+        ],
+        "type": "object"
+      },
+      "DelayCostSnapshot": {
+        "properties": {
+          "as_of_utc": {
+            "type": "string"
+          },
+          "data_age_s": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "disconnected": {
+            "type": "boolean"
+          },
+          "max_age_s": {
+            "format": "double",
+            "type": "number"
+          },
+          "measured_slot_ms": {
+            "format": "double",
+            "type": "number"
+          },
+          "minimum_pairs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "observation_window": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/DelayCostPoint"
+            },
+            "type": "array"
+          },
+          "pool": {
+            "type": "string"
+          },
+          "regime_id": {
+            "type": "string"
+          },
+          "slot_samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "sparse": {
+            "type": "boolean"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "trade_samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "upper_quantile": {
+            "format": "double",
+            "type": "number"
+          },
+          "window_s": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "regime_id",
+          "pool",
+          "mint",
+          "as_of_utc",
+          "window_s",
+          "measured_slot_ms",
+          "upper_quantile",
+          "max_age_s",
+          "minimum_pairs",
+          "trade_samples",
+          "slot_samples",
+          "disconnected",
+          "stale",
+          "sparse",
+          "points"
+        ],
+        "type": "object"
+      },
+      "EconomicCost": {
+        "properties": {
+          "delay_cost_usd": {
+            "type": "string"
+          },
+          "expected_cost_usd": {
+            "type": "string"
+          },
+          "latency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatencyEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missed_edge_usd": {
+            "type": "string"
+          },
+          "nominal_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "nominal_spend_usd": {
+            "type": "string"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/CurvePrediction"
+          },
+          "qualifies": {
+            "type": "boolean"
+          },
+          "upper_cost_usd": {
+            "type": "string"
+          },
+          "upper_delay_cost_usd": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "prediction",
+          "qualifies",
+          "nominal_lamports",
+          "nominal_spend_usd",
+          "delay_cost_usd",
+          "upper_delay_cost_usd",
+          "missed_edge_usd",
+          "expected_cost_usd",
+          "upper_cost_usd"
+        ],
+        "type": "object"
+      },
+      "EconomicsInputs": {
+        "description": "USD size/conversion are decimal text; edge is bps; lambda is dimensionless.",
+        "properties": {
+          "base_fee_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "edge_bps": {
+            "format": "double",
+            "type": "number"
+          },
+          "lambda": {
+            "format": "double",
+            "type": "number"
+          },
+          "pool": {
+            "type": "string"
+          },
+          "size_usd": {
+            "type": "string"
+          },
+          "sol_usd": {
+            "type": "string"
+          },
+          "use_upper_quantile": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pool",
+          "size_usd",
+          "sol_usd",
+          "edge_bps",
+          "lambda",
+          "base_fee_lamports",
+          "use_upper_quantile"
+        ],
+        "type": "object"
+      },
+      "EconomicsQuote": {
+        "properties": {
+          "economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fallback_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model_quote": {
+            "$ref": "#/components/schemas/ModelQuote"
+          }
+        },
+        "required": [
+          "model_quote"
+        ],
+        "type": "object"
+      },
+      "EconomicsSummary": {
+        "properties": {
+          "assumption": {
+            "type": "string"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/components/schemas/BaselineCostComparison"
+            },
+            "type": "array"
+          },
+          "evaluated": {
+            "items": {
+              "$ref": "#/components/schemas/EconomicCost"
+            },
+            "type": "array"
+          },
+          "frontier": {
+            "items": {
+              "$ref": "#/components/schemas/EconomicCost"
+            },
+            "type": "array"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/EconomicsInputs"
+          },
+          "knee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CanaryConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "market": {
+            "$ref": "#/components/schemas/DelayCostSnapshot"
+          },
+          "recommendation": {
+            "$ref": "#/components/schemas/EconomicCost"
+          }
+        },
+        "required": [
+          "inputs",
+          "market",
+          "assumption",
+          "evaluated",
+          "frontier",
+          "recommendation",
+          "baselines"
+        ],
+        "type": "object"
+      },
+      "Evidence": {
+        "enum": [
+          "MEASURED",
+          "INTERPOLATED",
+          "EXTRAPOLATED",
+          "INSUFFICIENT"
+        ],
+        "type": "string"
+      },
+      "FeeBucket": {
+        "enum": [
+          "zero",
+          "local_median",
+          "local_p90"
+        ],
+        "type": "string"
+      },
+      "Forecast": {
+        "properties": {
+          "baselines": {
+            "items": {
+              "$ref": "#/components/schemas/BaselineForecast"
+            },
+            "type": "array"
+          },
+          "created_at_utc": {
+            "type": "string"
+          },
+          "economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsQuote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at_utc": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "methodology_hash": {
+            "type": "string"
+          },
+          "model_snapshot_hash": {
+            "type": "string"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/ModelQuote"
+          },
+          "regime_id": {
+            "type": "string"
+          },
+          "request": {
+            "$ref": "#/components/schemas/ModelQuoteRequest"
+          },
+          "requested_economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsInputs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Preserves requested inputs even when stale/absent market evidence causes fallback."
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "created_at_utc",
+          "expires_at_utc",
+          "regime_id",
+          "methodology_hash",
+          "model_snapshot_hash",
+          "request",
+          "quote",
+          "baselines"
+        ],
+        "type": "object"
+      },
+      "ForecastEntry": {
+        "properties": {
+          "forecast": {
+            "$ref": "#/components/schemas/Forecast"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "prev_hash": {
+            "type": "string"
+          },
+          "sequence": {
+            "$ref": "#/components/schemas/DecimalU64"
+          }
+        },
+        "required": [
+          "sequence",
+          "prev_hash",
+          "hash",
+          "forecast"
+        ],
+        "type": "object"
+      },
+      "ForecastLedgerExport": {
+        "description": "Phase 3 bounded forecast-only export; whole-chain verification is performed before pagination.",
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastEntry"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "schema_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "verified_through_sequence": {
+            "$ref": "#/components/schemas/DecimalU64"
+          }
+        },
+        "required": [
+          "schema_version",
+          "source",
+          "day",
+          "kind",
+          "verified_through_sequence",
+          "entries"
+        ],
+        "title": "ForecastLedgerExport",
+        "type": "object"
+      },
+      "HealthCounts": {
+        "properties": {
+          "blocks": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "budget_reserved_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "canaries": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "gaps": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "observations": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "open_gaps": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "slot_events": {
+            "$ref": "#/components/schemas/DecimalU64"
+          }
+        },
+        "required": [
+          "slot_events",
+          "blocks",
+          "observations",
+          "gaps",
+          "open_gaps",
+          "canaries",
+          "budget_reserved_lamports"
+        ],
+        "type": "object"
+      },
+      "IndexScope": {
+        "enum": [
+          "provider_reported",
+          "rpc_block_list",
+          "unknown"
+        ],
+        "type": "string"
+      },
+      "LatencyEstimate": {
+        "description": "Infinity/unidentifiable quantiles are null, never silently excluded failures.",
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "ms": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "ms_interval_95": {
+            "items": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "n_effective": {
+            "format": "double",
+            "type": "number"
+          },
+          "quantile": {
+            "format": "double",
+            "type": "number"
+          },
+          "samples_needed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "slots": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "slots_interval_95": {
+            "items": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "quantile",
+          "slots_interval_95",
+          "ms_interval_95",
+          "n_effective",
+          "evidence"
+        ],
+        "type": "object"
+      },
+      "LeaderClass": {
+        "properties": {
+          "leader": {
+            "type": "string"
+          },
+          "skip_rate_tercile": {
+            "$ref": "#/components/schemas/Tercile"
+          },
+          "stake_tercile": {
+            "$ref": "#/components/schemas/Tercile"
+          }
+        },
+        "required": [
+          "leader",
+          "skip_rate_tercile",
+          "stake_tercile"
+        ],
+        "type": "object"
+      },
+      "LedgerPage": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastEntry"
+            },
+            "type": "array"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "entries"
+        ],
+        "title": "LedgerPage",
+        "type": "object"
+      },
+      "LedgerVerification": {
+        "properties": {
+          "entries": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "verified",
+          "entries"
+        ],
+        "title": "LedgerVerification",
+        "type": "object"
+      },
+      "ModelCovariates": {
+        "description": "Congestion is a dimensionless measured covariate; unknown is not zero.",
+        "properties": {
+          "congestion": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ModelQuote": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/CurveContext"
+          },
+          "contract_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "latency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatencyEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "methodology_hash": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurvePrediction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "samples_needed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "target": {
+            "$ref": "#/components/schemas/PredictionTarget"
+          }
+        },
+        "required": [
+          "contract_version",
+          "methodology_hash",
+          "context",
+          "target",
+          "evidence"
+        ],
+        "type": "object"
+      },
+      "ModelQuoteRequest": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CanaryConfig"
+            },
+            "maxItems": 81,
+            "minItems": 1,
+            "type": "array"
+          },
+          "context": {
+            "$ref": "#/components/schemas/CurveContext"
+          },
+          "covariates": {
+            "$ref": "#/components/schemas/ModelCovariates"
+          },
+          "leader_class_next": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LeaderClass"
+            },
+            "type": "array"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PredictionTarget"
+          }
+        },
+        "required": [
+          "context",
+          "candidates",
+          "covariates",
+          "target"
+        ],
+        "type": "object"
+      },
+      "ObserverHealthPage": {
+        "properties": {
+          "observers": {
+            "items": {
+              "$ref": "#/components/schemas/ObserverHealthView"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "observers"
+        ],
+        "title": "ObserverHealthPage",
+        "type": "object"
+      },
+      "ObserverHealthView": {
+        "properties": {
+          "age_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cursor_slot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_receive_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observer": {
+            "$ref": "#/components/schemas/ObserverKind"
+          },
+          "open_gaps": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "observer",
+          "status",
+          "open_gaps"
+        ],
+        "type": "object"
+      },
+      "ObserverKind": {
+        "enum": [
+          "grpc",
+          "mirage",
+          "rpc",
+          "webhook"
+        ],
+        "type": "string"
+      },
+      "PassiveTip": {
+        "properties": {
+          "block_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cu_limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "cu_price_micro_lamports": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fee_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "index_in_block": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "index_scope": {
+            "$ref": "#/components/schemas/IndexScope"
+          },
+          "observer": {
+            "$ref": "#/components/schemas/ObserverKind"
+          },
+          "received": {
+            "$ref": "#/components/schemas/ReceiveTime"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "requested_tip_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "slot": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "tip_lamports": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Successful outer transfers are paid; inner transfers require execution evidence."
+          }
+        },
+        "required": [
+          "source",
+          "observer",
+          "signature",
+          "slot",
+          "index_scope",
+          "recipient",
+          "requested_tip_lamports",
+          "fee_lamports",
+          "success",
+          "received"
+        ],
+        "type": "object"
+      },
+      "PredictionTarget": {
+        "oneOf": [
+          {
+            "properties": {
+              "horizon_slots": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "kind": {
+                "const": "probability",
+                "type": "string"
+              },
+              "target_p": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "kind",
+              "target_p",
+              "horizon_slots"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "latency_quantile",
+                "type": "string"
+              },
+              "max_ms": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "max_slots": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "quantile": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "kind",
+              "quantile"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ProveLock": {
+        "properties": {
+          "claimed_probability": {
+            "format": "double",
+            "type": "number"
+          },
+          "config": {
+            "$ref": "#/components/schemas/CanaryConfig"
+          },
+          "expires_at_utc": {
+            "type": "string"
+          },
+          "forecast_hash": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "locked_at_utc": {
+            "type": "string"
+          },
+          "methodology_hash": {
+            "type": "string"
+          },
+          "model_snapshot_hash": {
+            "type": "string"
+          },
+          "n": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "regime_id": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimProofEnvironment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PredictionTarget"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "forecast_hash",
+          "model_snapshot_hash",
+          "methodology_hash",
+          "config",
+          "regime_id",
+          "region",
+          "locked_at_utc",
+          "expires_at_utc",
+          "target",
+          "claimed_probability",
+          "n"
+        ],
+        "type": "object"
+      },
+      "ProvePage": {
+        "properties": {
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/ProveReport"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "reports"
+        ],
+        "title": "ProvePage",
+        "type": "object"
+      },
+      "ProveReport": {
+        "properties": {
+          "as_of_utc": {
+            "type": "string"
+          },
+          "attempts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "lock": {
+            "$ref": "#/components/schemas/ProveLock"
+          },
+          "lock_hash": {
+            "type": "string"
+          },
+          "observed_rate": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ProveState"
+          },
+          "successes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "unresolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ProveVerdict"
+          },
+          "wilson_interval_95": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "lock",
+          "lock_hash",
+          "as_of_utc",
+          "state",
+          "attempts",
+          "resolved",
+          "successes",
+          "unresolved",
+          "verdict"
+        ],
+        "type": "object"
+      },
+      "ProveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "forecast_hash": {
+            "type": "string"
+          },
+          "n": {
+            "format": "uint32",
+            "maximum": 400,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalU64"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "request_id",
+          "forecast_hash",
+          "n"
+        ],
+        "title": "ProveRequest",
+        "type": "object"
+      },
+      "ProveState": {
+        "enum": [
+          "LOCKED",
+          "RUNNING",
+          "WAITING_FUNDS",
+          "WAITING_OBSERVER",
+          "BUDGET_CAPPED",
+          "COMPLETE",
+          "VOIDED"
+        ],
+        "type": "string"
+      },
+      "ProveVerdict": {
+        "enum": [
+          "CONSISTENT",
+          "INCONSISTENT",
+          "INCONCLUSIVE"
+        ],
+        "type": "string"
+      },
+      "QuotePreview": {
+        "properties": {
+          "baselines": {
+            "items": {
+              "$ref": "#/components/schemas/BaselineForecast"
+            },
+            "type": "array"
+          },
+          "economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsQuote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_snapshot_hash": {
+            "type": "string"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/ModelQuote"
+          },
+          "requested_economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsInputs"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "quote",
+          "baselines",
+          "model_snapshot_hash"
+        ],
+        "title": "QuotePreview",
+        "type": "object"
+      },
+      "QuoteServiceRequest": {
+        "properties": {
+          "economics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomicsInputs"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "frozen_model_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelQuoteRequest"
+          },
+          "ttl_s": {
+            "format": "uint32",
+            "maximum": 86400,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "model",
+          "ttl_s"
+        ],
+        "title": "QuoteServiceRequest",
+        "type": "object"
+      },
+      "ReceiveTime": {
+        "properties": {
+          "clock_id": {
+            "type": "string"
+          },
+          "mono_ns": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "wall_utc": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clock_id",
+          "mono_ns",
+          "wall_utc"
+        ],
+        "type": "object"
+      },
+      "Route": {
+        "enum": [
+          "beam_quic",
+          "beam_http",
+          "rpc"
+        ],
+        "type": "string"
+      },
+      "RunMode": {
+        "enum": [
+          "observe",
+          "live",
+          "sim",
+          "replay"
+        ],
+        "type": "string"
+      },
+      "SimProofEnvironment": {
+        "properties": {
+          "congestion": {
+            "format": "double",
+            "type": "number"
+          },
+          "continuous_latency": {
+            "type": "boolean"
+          },
+          "fee_slope": {
+            "format": "double",
+            "type": "number"
+          },
+          "never_land_mass": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "slot_ms": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "tip_slope": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "slot_ms",
+          "congestion",
+          "tip_slope",
+          "fee_slope",
+          "continuous_latency"
+        ],
+        "type": "object"
+      },
+      "SizeClass": {
+        "enum": [
+          "small",
+          "medium",
+          "large"
+        ],
+        "type": "string"
+      },
+      "Source": {
+        "enum": [
+          "live",
+          "sim",
+          "replay"
+        ],
+        "type": "string"
+      },
+      "TapePage": {
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PassiveTip"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "through": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "from",
+          "through",
+          "rows"
+        ],
+        "title": "TapePage",
+        "type": "object"
+      },
+      "Tercile": {
+        "enum": [
+          "low",
+          "middle",
+          "high",
+          "unknown"
+        ],
+        "type": "string"
+      },
+      "TipTapeSummary": {
+        "properties": {
+          "median_lamports": {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          "samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "window": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "window",
+          "samples",
+          "median_lamports"
+        ],
+        "type": "object"
+      },
+      "TipTier": {
+        "enum": [
+          "none",
+          "x1",
+          "x2",
+          "x5",
+          "x10"
+        ],
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "OperatorBearer": {
+        "description": "Server-side ALIGHT_OPERATOR_KEY. Never put it in a URL.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Canary landing forecasts with explicit live/sim/replay evidence. Public reads never sign, send or persist forecasts.",
+    "title": "Alight API",
+    "version": "1"
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/clock": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClock"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/curve": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "regime",
+            "required": false,
+            "schema": {
+              "maxLength": 128,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 243,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurvePage"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiHealth"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/leaders": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiTelemetry"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/ledger": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DecimalU64",
+              "default": "0"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPage"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/ledger/verify": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerVerification"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/observers": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObserverHealthPage"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/openapi.json": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OpenAPI 3.1 document"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/prove": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProveReport"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProveReport"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": [
+          {
+            "OperatorBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/prove/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProveReport"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/proves": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvePage"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/quote": {
+      "get": {
+        "parameters": [
+          {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteServiceRequest"
+                }
+              }
+            },
+            "description": "URL-encoded QuoteServiceRequest JSON; entire query at most 8192 bytes",
+            "in": "query",
+            "name": "request",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotePreview"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteServiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastEntry"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": [
+          {
+            "OperatorBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/stream": {
+      "get": {
+        "description": "Read-only source-scoped snapshots each second; 32 connections maximum, 1 MiB output cap, 4 KiB input cap, slow clients disconnect. Text/binary controls are rejected.",
+        "responses": {
+          "101": {
+            "description": "WebSocket upgrade"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": [],
+        "x-websocket-message": {
+          "$ref": "#/components/schemas/ApiStreamSnapshot"
+        }
+      }
+    },
+    "/v1/tape": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "through",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TapePage"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "414": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Typed source-scoped response"
+          }
+        },
+        "security": []
+      }
+    }
+  }
+}

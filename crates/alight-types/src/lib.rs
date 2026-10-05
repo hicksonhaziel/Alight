@@ -1,10 +1,12 @@
 //! Version 1 wire contracts shared by the collector, storage, and canary engine.
+mod alerts;
 mod api;
 mod contracts;
 mod economics;
 mod phase2;
 mod phase3;
 mod schema;
+pub use alerts::*;
 pub use api::*;
 pub use contracts::*;
 pub use economics::*;

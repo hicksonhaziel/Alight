@@ -21,6 +21,7 @@ dependencies = [
 name = "alight"
 version = "0.0.0"
 dependencies = [
+ "alight-client",
  "alight-forecast",
  "alight-ingest",
  "alight-model",
@@ -88,6 +89,24 @@ dependencies = [
  "thiserror",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "alight-client"
+version = "0.0.0"
+dependencies = [
+ "alight-api",
+ "alight-forecast",
+ "alight-sim",
+ "alight-store",
+ "alight-types",
+ "axum",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -169,6 +188,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "alight-notify"
+version = "0.0.0"
+dependencies = [
+ "alight-forecast",
+ "alight-sim",
+ "alight-store",
+ "alight-types",
+ "axum",
+ "chrono",
+ "reqwest",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "alight-prove"
 version = "0.0.0"
 dependencies = [
@@ -246,6 +282,7 @@ dependencies = [
  "alight-canary",
  "alight-forecast",
  "alight-ingest",
+ "alight-notify",
  "alight-prove",
  "alight-sim",
  "alight-store",

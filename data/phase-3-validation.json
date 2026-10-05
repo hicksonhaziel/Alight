@@ -1,0 +1,240 @@
+{
+  "base_commit": "25d75a110e5585959f4763e9ec3502d8e4cf1f56",
+  "checks": {
+    "alerts": {
+      "local_webhook_deliveries": 5,
+      "restart_suppression": "PASS",
+      "rules_fired_once": 5,
+      "stale_sparse_source_rejection": "PASS"
+    },
+    "all_target_clippy": "PASS",
+    "developer_flow": {
+      "cli": {
+        "exit_codes": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "n": 40,
+        "quote_prove_export_ledger": "PASS",
+        "resolved": 40
+      },
+      "rust_sdk": {
+        "ledger_verified": true,
+        "n": 40,
+        "resolved": 40,
+        "verdict": "CONSISTENT"
+      },
+      "status": "PASS",
+      "typescript_sdk": {
+        "ledger_verified": true,
+        "n": 40,
+        "resolved": 40,
+        "verdict": "CONSISTENT"
+      }
+    },
+    "format": "PASS",
+    "generated_contracts": "PASS",
+    "historical_economics_replay": "PASS",
+    "historical_phase2_receipt": "PASS",
+    "repository_scan": "PASS",
+    "rust_workspace": {
+      "command": "cargo test --workspace --features alight-ingest/beam --locked --offline",
+      "failed": 0,
+      "passed": 84
+    },
+    "typescript_tests": {
+      "failed": 0,
+      "passed": 3
+    },
+    "typescript_typecheck": "PASS"
+  },
+  "code_sha256": {
+    ".env.example": "7a022fc45d6f972d72cb59825bcc4f41e4c4a166060906311fb13ac1c1950846",
+    ".github/workflows/ci.yml": "4111fde2aa093bb2ce61db72788ffc2d0c12839fc43fbc3660f2b2809a21d6d2",
+    "Cargo.lock": "fcd8ff429c6be269b58cd7d6c17477aafef8661ea5a9bf5703450938af14e85a",
+    "Cargo.toml": "cab821f062ba7b05d5e32cff856999f8443d9039bf13e6a097fb604ff5c6cb1d",
+    "bin/alight/Cargo.toml": "474c542b989637846814a53a3089b3c8a660cc636b1100c2dad4473721f7a042",
+    "bin/alight/src/api.rs": "6ceea61dbe11adce73fab4d18a184357c3f5a277f2a041e005ffa91ff23c7c64",
+    "bin/alight/src/forecasting.rs": "e7ddfb6af25736f988fe1a2c6d25c7b531a56a700306bc1f20a4237d23b6f1ec",
+    "bin/alight/src/main.rs": "34acc89758ece03e1c2c8fc278751ddaade94e5c33e37c99f4e4620bab626156",
+    "bin/alight/src/simulation.rs": "fdb47ba3e62bd6cc8ef68f6a5173f281067d0773359c2131b0ac4ac9c05abe56",
+    "bin/alight/tests/simulation.rs": "97980185da24b336f8bb468c433f98fc6310c4bbc50fc499586f0d90336a0ebb",
+    "bin/alightd/Cargo.toml": "7a65245763288f268bed15f105b8a64cc2f6af9262b8dc86d168b14714b4ef6d",
+    "bin/alightd/src/alerts.rs": "cf325d4217419e45f545ed32615d84f1220e4f585d31ade4f5ddddaac51a0c42",
+    "bin/alightd/src/main.rs": "a1eee6431823c39462cb45ef81fe8c2e190b5de6061d6fb57ac54102fbc315bb",
+    "bin/alightd/tests/api.rs": "0339ee230b6725be7e1c879c82f365cc1209103ce58708046b08d2ce913164ba",
+    "bin/alightd/tests/replay.rs": "2a3082eef3935a2427446fe06a1801989812cc844605c3d0ce5199e4327bdf7d",
+    "crates/alight-api/Cargo.toml": "047665a60a62310506721b27acac0f8509905eccaaef6692532d534678f17c56",
+    "crates/alight-api/examples/openapi.rs": "9f0a4f693b3338a8d2bb5c5c43f02464c20bdb89782efa960d8038ad40580a68",
+    "crates/alight-api/src/lib.rs": "be9fbec59e66a148b7db475b6670942202e2c36458e9a8e5b2dd617bf86ca978",
+    "crates/alight-api/src/openapi.rs": "cf525579810b4681219545bceee51267031d4ce095b199c06ce87756b8301457",
+    "crates/alight-api/tests/api.rs": "b3db7673ef87cfecc5685189d044c7069f94a6eeb198df8f163d8de4c9838c72",
+    "crates/alight-canary/Cargo.toml": "5dea2b8a478a9678cdb2d9e1f2060ecd795a70b1e32efb37b9158e60819907c6",
+    "crates/alight-canary/examples/golden_messages.rs": "70a7326721a2e63b4a2dc95dd33bf0dfc265410c9f79b2ce63da9d694be913c6",
+    "crates/alight-canary/src/builder.rs": "aab67d46c56c9ee1a238570d959c1368d4e5d81d11ac23fe380fea1e8b4e1423",
+    "crates/alight-canary/src/engine.rs": "c9b293d0dbd872e04865f8fd5b19707d28fc1fa4bc8a49fd8d68b219edfa6f8d",
+    "crates/alight-canary/src/governor.rs": "630d7ed0aa8c6146dda6750c01cf3cbcbecc719abe726b3f039f5b0866c51824",
+    "crates/alight-canary/src/lib.rs": "4e3d4671b6c32e0ee4be7db30ee4a824bedabd1a3003f3439e7c542663854ef6",
+    "crates/alight-canary/src/policy.rs": "779cf456399bbfb05f0d25ad05438a25c5a845ee3dad0adf23ec9e71a2ee1813",
+    "crates/alight-canary/src/resolver.rs": "726a51f16fe15f8647c5078d18efab7e255786aaee54d37d0cfdae17359192c3",
+    "crates/alight-canary/src/routes.rs": "887378ac04dad3c723f3a760ffc11a55f3219d0ffc1ccfd04985f9ecfc7213a1",
+    "crates/alight-canary/tests/builder.rs": "bc39f5c3cc9f438061863998575249bfd969c070cf18a6500d98ac1c96d6310f",
+    "crates/alight-canary/tests/safety.rs": "a2c4986d9460fd1670b8123db21d1d418725fa4ebd0573fb573921c3c16007bb",
+    "crates/alight-client/Cargo.toml": "191ff6eb71a4d6791255339245b127d3e22a2f976452ecaac509061f458d9a4b",
+    "crates/alight-client/examples/quote_then_send.rs": "73e10c23168b719fa1c4a8362e9ac0549539e470eeedb7170c10998abea5769e",
+    "crates/alight-client/src/lib.rs": "719a72e07008b9c51bee5766d58b06d9ee834033997b1f93911db2a2dd6f5605",
+    "crates/alight-client/src/tests.rs": "e8e30918f18ab3396226b292a3ab28af91601be79bd35c78dda9c22f271d848f",
+    "crates/alight-econ/Cargo.toml": "607dd03599d9817423996cfa70e9697702a8de7cfb22bf9cad6a4290fbe51c7a",
+    "crates/alight-econ/examples/replay.rs": "16ff684a10306372a8d4052f518b68b0d33b1f8993cb2c6df47c8cc400a6a840",
+    "crates/alight-econ/src/blur.rs": "9ce94249c807b6a004b6cb57b10085e159b7c46cddaf4310d5c058ddc702cb56",
+    "crates/alight-econ/src/lib.rs": "4a8588fa349e25a608358bfb8da4b472f710495005196cfc47196a026f02d7b8",
+    "crates/alight-econ/src/optimizer.rs": "b14ca6c803f7a4a800bfafe2849f97ac3921e3199b4f2a878ccf62313a110afb",
+    "crates/alight-econ/src/series.rs": "cda8d01ff6007803f9e11b52f4d8f307875e45bcb9e547675c6f55bd88db1b89",
+    "crates/alight-econ/tests/economics.rs": "e6797cf9613b6eb273c4af7377c5a7fccf6564286f496fd71fe259d58413401b",
+    "crates/alight-forecast/Cargo.toml": "b10454ba597f77f5103130f5e69685317b7e3df7cb5415fc9896417381ca942c",
+    "crates/alight-forecast/src/lib.rs": "c46d034c92426834ed09944f8b3d9901fb15befcb947d50fe3acd1ab0bb6ebbb",
+    "crates/alight-forecast/src/service.rs": "2c02a6cba39b4528cc5623abe4713efed22ba23206321a8bfbb979fe812faec7",
+    "crates/alight-forecast/tests/combined.rs": "c6ff3c4648319a11005dd258676dc6235977ccb6a728f81c824391f29ba152f2",
+    "crates/alight-forecast/tests/passive_baseline.rs": "7dc1c02db18aad6a66a46dad4ccd078c8563a2c1e8fa61a06a13db3ffee7e2ed",
+    "crates/alight-ingest/Cargo.toml": "e750f794f738c6b75c03eaa1c5e2c58ec60ce2e47e168cbcff91ffaf95304de1",
+    "crates/alight-ingest/examples/beam_connect.rs": "f7701cefbe8822f2be0d22ffe6b6b8b295370b585273342bbe75cabdda4f49f7",
+    "crates/alight-ingest/examples/clock_check.rs": "50aa02b3b2e74d70e892585886783b6d1d0d816e750a30ab619cc98da251bf45",
+    "crates/alight-ingest/examples/rpc_check.rs": "f75431ff851750481df41692695936963707b078779310b1a41d1a2fa0a8f718",
+    "crates/alight-ingest/src/adapter.rs": "4310ac303c1cdb5729689f2e9eb879545781f5d5fddc1b681affdd7dd20a0416",
+    "crates/alight-ingest/src/clock.rs": "3593db0fbab72c1e293f2ce2ee4a86cb4401f74cd0525bdfff36e1cd7c2086ed",
+    "crates/alight-ingest/src/leaders.rs": "a45c51cb948659cf71aa26972a4a91562a361bb110120b0d05f7fcf460d8c262",
+    "crates/alight-ingest/src/lib.rs": "90f3c265277d26342234dfa8968c6a59873aea593f99e613d8a23cbc8671c063",
+    "crates/alight-ingest/src/rpc.rs": "ce927b50f955bf9b52457d74289d6ccbf46f3d38908948c97f20aad9a55d2beb",
+    "crates/alight-ingest/src/stream.rs": "0b6aeb786fa03402c6383a0a6d837c4f881b37f551c72aad279f3d72389906ec",
+    "crates/alight-model/Cargo.toml": "dbc1e8202bc0d1cf512a242e1aca6827f29d3da74c699e9c696fdf54ffaa5e74",
+    "crates/alight-model/src/beta.rs": "129b75264f64ccbfcc967934a8832be10d2d41e2248bc1040c0c4b9e9379ee9c",
+    "crates/alight-model/src/latency.rs": "2cdd8713d0328aa95d8f73a5f242733bd0c25763547d7c16ff47c3ecec3080db",
+    "crates/alight-model/src/lib.rs": "b202dd8193ab57ed7f5b6e20ec5cd3f173ebf0ab5bd99a1a54dfc20bb4bdd511",
+    "crates/alight-model/src/pooled.rs": "7babfac8b8ee85bceb18a33f913033462c9752f02c7e1fd2f7c4d45247492bdd",
+    "crates/alight-model/src/quote.rs": "f6918da7f5affa4b4c13a1f68f204bc6942b46b7d55a258092d40d3891ce1229",
+    "crates/alight-model/src/regression.rs": "26a4f396d61b7eefc0e6540f0616f9547355bb3bcfb74d5c6cc8ab4b78a3e1f3",
+    "crates/alight-model/src/scoring.rs": "747bdbe6b821f99c4469e3305e20728f5d5c6f3c0a8afa0b1800a17463055d0c",
+    "crates/alight-model/src/signal.rs": "fd7562094a850fb98061dd1e720bfdb2db210da8316a301e7da996ac92d6efc4",
+    "crates/alight-model/tests/cells.rs": "3a092b2a43600834cb7825f302299a2a591605dcdc51c1d4b3f8149e8e6caace",
+    "crates/alight-notify/Cargo.toml": "ad181f0ac155e8e109c07ea1a63ec804ddcbbb01ed080c45cebfb2ef91884fa7",
+    "crates/alight-notify/src/lib.rs": "5b5b9d5b198cc90e54ef3b8fa68f4fbaa49cfca283694c22468e2982b9191d04",
+    "crates/alight-notify/src/tests.rs": "ac65b2da3b1566e9c75291a93fa28300302ffc19f1dd5e9e3f6357440b5fc530",
+    "crates/alight-prove/Cargo.toml": "063e5848b50a1df5498300955a6c9b7085f91f60820cc0875cd4234786c870b1",
+    "crates/alight-prove/src/lib.rs": "91f7e54397ca99d0c4d64bbb141d21cc7983a94c0a166da6b372751f965e3d60",
+    "crates/alight-prove/tests/prepared.rs": "722fbaa5d278f2e705148223124ad0d8becad8f161f040881cc3be4b9467ff69",
+    "crates/alight-prove/tests/prove.rs": "663109d7f1af97f94d3ed1ad2051040f419db0e16d1cf03501518a09b6fc036b",
+    "crates/alight-sim/Cargo.toml": "d303e9c3198ccd34a0ec47244a69975565c348922324bf7bb316be9fb7b25d56",
+    "crates/alight-sim/src/lib.rs": "c049d4aafc6e4b4fa6ed16660d7801e208687ce88c4ca625fe1b2141e7a9af10",
+    "crates/alight-sim/tests/analysis.rs": "ffa8a75eac6dc384a5b908c83c42d8a4088d3f7e5326a8e0382e4e37105a74f6",
+    "crates/alight-sim/tests/learner.rs": "5e6938971da99e6a07d9385d221bb88cf4311035bd61733bf3e7662d18c705d9",
+    "crates/alight-sim/tests/models.rs": "8fb917a3f46553f0320e911ef2fb8c36acda73f1011b8b66b6a294683cab78ab",
+    "crates/alight-sim/tests/policy.rs": "f3717dcb06940dcf18b724c20960d4e67460c7d10c0f542e117cadc945736bb2",
+    "crates/alight-store/Cargo.toml": "ec62871cc856d0663596e221aaeaba328c7d420ca5845aae31cb49456f2f82d3",
+    "crates/alight-store/migrations/0001_observe.sql": "595e6513dd3beeda76ea0fa84b5cc8db271761a835edd73248a2523fe9a01af0",
+    "crates/alight-store/migrations/0002_send_attempts.sql": "fec6a9b6e469e388f625d0edeca1092ec0a62220c17c15da01332ff7bf142c38",
+    "crates/alight-store/migrations/0003_metadata_retention.sql": "b587d9d8d25b8536339ac30cdc4eb84e9c26bdc0938f017c5e2dd445151b29ba",
+    "crates/alight-store/migrations/0004_curve_snapshots.sql": "cea87e5c620e15b112f0d21dc388131ebddaf045015117f0ea480e34b3d0606d",
+    "crates/alight-store/migrations/0005_forecast_ledger.sql": "e0687c1ea0f50599fd8cae244982c2e1795f86cf224267fe71dfdd22e8fc4436",
+    "crates/alight-store/migrations/0006_phase3_quotes_tape.sql": "ec27b81932ead6a0c6f3119f5c1dd0ebda469961885e953fc6fc444c6b4f0ab8",
+    "crates/alight-store/migrations/0007_prove.sql": "910afbb053302215a8e7f35c9b40834b6b43eee785a5d36ea36fd1f3877883e3",
+    "crates/alight-store/migrations/0008_alerts.sql": "247e957c36b9740d6d15bc47030dff5491fca6e38ae2f964e548adb370b42b6d",
+    "crates/alight-store/src/alerts.rs": "bf9614784e29831cbfa99c351be84fdf5af97af7b52ac851c3ae67a8b21a2fa1",
+    "crates/alight-store/src/curves.rs": "e666f3c53328c4deb55abc9d0c8428b7aaa5adcf3f22ee77da3051e7ba3af103",
+    "crates/alight-store/src/ledger.rs": "98601b954e484653c55a16500e864f3c24579e6380f6fc29e09057d1e19806cc",
+    "crates/alight-store/src/lib.rs": "779b83a06325736fd96adf54611e72b88d7cbc52d880964575d8af8cb4ff4b45",
+    "crates/alight-store/src/phase3.rs": "42ecebae895b42b992a2b5092d33ea8ebc76466226544b90f286fc776b66991b",
+    "crates/alight-store/src/prove.rs": "2e21d27165f5068fa0ac68de9a61e1a7b24fb5bec785ccb9153830f6656109d7",
+    "crates/alight-store/tests/curves.rs": "1d29e9857c04a876d824247369084ee39bcee0200e19bfff672ffe6edfc1f87a",
+    "crates/alight-store/tests/ledger.rs": "96d3bf15cf6186b87aee3d7bd052dc108334dd7925fd64ca8c61393c5d4f1871",
+    "crates/alight-store/tests/persistence.rs": "e69ece6d4c296a0c8e5b185c0e1a1af627e7667628b7edb82cb60b1db797d8e9",
+    "crates/alight-store/tests/phase3.rs": "89a74ad8d8afde5f8724c7fe9a5be95390556160ac249f11a63b29ea1f589804",
+    "crates/alight-tape/Cargo.toml": "b16a27bfb8edd1d366b5524b2c8a3bad48b46d40a07a88cdefb584e5201d71de",
+    "crates/alight-tape/src/lib.rs": "fe4c2b856bc33cf1a640d42c554fbe6dccff3a70ea2a9256e4bb17f5ff84d9b9",
+    "crates/alight-tape/tests/tape.rs": "0efcce82ab9277bad021657aaee866df6250a6314eba3ae2230cf97d658042b9",
+    "crates/alight-types/Cargo.toml": "e1f19bbf44f66aeac8d268a7cc172aa569e8e988df579c5bfd9e05c89364f573",
+    "crates/alight-types/src/alerts.rs": "0d47fd776ab8315f7f327b4c7b5f37bcf11eb2e57ccc570d79c7c2876921ee99",
+    "crates/alight-types/src/api.rs": "8dfe7fd8d651d439a6fccd0006180279071dca61426a9b79f5747eef936a4807",
+    "crates/alight-types/src/contracts.rs": "9d5e57ec311c0b9748f48cb7d4270dcf67839a0879db19b9b1ad389bbe990623",
+    "crates/alight-types/src/economics.rs": "de2c636aacd2daecfbd278ba933fbd6f366e343d9ecb437b2c8d05fafbd9189b",
+    "crates/alight-types/src/lib.rs": "02a46070f946e9b61040d661216485b3da5c2879609e0f177a1e3e750cd62655",
+    "crates/alight-types/src/phase2.rs": "f89bb24bdb74e72e0533db228f715f141a0abbaf37137b6e7bb71de68d222c39",
+    "crates/alight-types/src/phase3.rs": "4f9f4f9747506c989e15af096af4bd064c205387f04db6522b07273bc7c0b7e0",
+    "crates/alight-types/src/schema.rs": "085e3d8401f30bea9e39624ed8406728b62052d636c168423ca7d04cd04cf331",
+    "docs/contracts.md": "7e23a18f3c4bab9bdc450719111224ab878fed5a79d22be72f8bf580b02b8d7e",
+    "docs/operations.md": "f71cdfe68728a34df8faecde798331647f88577e5700e680f00af157a61d0044",
+    "docs/phase-3-report.md": "a534593b15c9ea791bdafa116470b489607de775dff615326a005a57cb752f5f",
+    "docs/prove-methodology.md": "fc81279e286ca10c19bec722584cd501a65962e94173c4ff1029a0d7af6c5b07",
+    "rust-toolchain.toml": "080d1c422a980a506912db5c2cc9fbedcf1df1fe4c8de676934ab7c421c5d768",
+    "scripts/test_phase3_developer.py": "9dbdfa2fbf0cb6ad02e506e8327ca73cd5518669057cd10ef9debf5bb767dd03",
+    "scripts/verify_api_contracts.py": "d83c6a801bab7f83df7f57792dc7864bd68418b874d284d8aa71dc8471f68faa",
+    "scripts/verify_phase3_final_receipt.py": "e8b2b325d1b45ce2b4d32c1fe3e6899869c8cb84b87f96277d6b92b86cad3be7",
+    "sdk/ts/examples/quote_then_send.mjs": "434381c2c12b73674b7f06aba22f81530c5f1873562e8a3cbcc0972254c2d561",
+    "sdk/ts/generate.mjs": "bcc02b9c37041f36d11769ace08df23e6eb02ce8e106f0d34879275adaebb029",
+    "sdk/ts/openapi.json": "b02ca923dab405de40c572522bfb7f8d123e52dcd3db133f4c7e76c2c5bb63ae",
+    "sdk/ts/package-lock.json": "412ee5bea645b7ab7aa8c1fbc20267c9d225b39e80ab6db5c2ed042bfa58ea54",
+    "sdk/ts/package.json": "dca37268ed00d9f97061f8f8e41633b802d2f0ba0bb8c42517adf053b9f8c298",
+    "sdk/ts/src/index.ts": "47e4d0ba82447ceb9cf8cd66e12043db4fae982268e99450a73546776cfe50bc",
+    "sdk/ts/src/schemas.ts": "d1089eeeffb97c1661c31075318e24720e50cc099dfdb7b2271c87572f12aee8",
+    "sdk/ts/src/types.ts": "1fb80299c9c55311ea5d32e1e6d7f51f94a1f40b4f2c352b795f42e132f0315c",
+    "sdk/ts/src/validation.ts": "88e493eba45d7480b704d63d2a08f3c96dc41b4253bdac68f0a4eba0f3b6e262",
+    "sdk/ts/test/client.mjs": "e88bd30ee6764a5a37a08ae51424b3a8980c454b8a30493bb710cbe166c42884",
+    "sdk/ts/test/types.ts": "0074927df54865223acd6f9ceb812c86fade77c4ffab8059a057af8a04f57465",
+    "sdk/ts/tsconfig.check.json": "6eb28c9a7ef677e8e8bfcb1ce70a3f5171687b967e7c0d949fd4dd1d21729c1f",
+    "sdk/ts/tsconfig.json": "77e3105e58b4b461c4172ea6a0c9730c8140c6df4b4f27794f335e5bf8943c45"
+  },
+  "limitations": [
+    "Funded live N=40 and CLI/SDK quote/Prove against owned live evidence remain pending.",
+    "Canary examples do not establish swap performance or market savings.",
+    "Offline examples were exercised locally; GitHub CI is configured but latest remote status has not been inspected.",
+    "Phase 3 export is a bounded UTC-day forecast subset; Phase 6 adds the full dataset.",
+    "Alert delivery is opt-in, one attempt; crash-pending events are not automatically replayed."
+  ],
+  "live_exit_condition": "PENDING",
+  "phase": 3,
+  "recorded_at_utc": "2026-10-05T20:15:30.363709+00:00",
+  "runtime": {
+    "collection_resumed": false,
+    "collector_containers": "Exited",
+    "collector_services": "inactive",
+    "owned_live_transactions_sent": 0,
+    "provider_requests_in_developer_flow": 0,
+    "real_alert_endpoints_contacted": 0
+  },
+  "schema_version": 1,
+  "status": "OFFLINE_PASS_LIVE_PENDING",
+  "tasks": {
+    "3.1": {
+      "offline": "PASS"
+    },
+    "3.10": {
+      "offline": "PASS"
+    },
+    "3.2": {
+      "offline": "PASS"
+    },
+    "3.3": {
+      "offline": "PASS"
+    },
+    "3.4": {
+      "offline": "PASS"
+    },
+    "3.5": {
+      "offline": "PASS"
+    },
+    "3.6": {
+      "offline": "PASS"
+    },
+    "3.7": {
+      "funded_live_n40": "PENDING",
+      "offline": "PASS"
+    },
+    "3.8": {
+      "offline": "PASS"
+    },
+    "3.9": {
+      "offline": "PASS"
+    }
+  }
+}

@@ -1,10 +1,11 @@
 # Phase 3 — economics, API and Prove
 
-5 October 2026. Tasks **3.1–3.6** pass offline acceptance: Blur economics,
-passive tape, immutable combined quotes and REST/WS API. Prove passes Sim
-acceptance through its HTTP endpoint. Phase 3 remains open: SDKs, CLI completion,
-alerts and funded live acceptance follow. No owned live outcomes or market
-savings are established by these checks.
+5 October 2026. Tasks **3.1–3.10** are implemented with offline acceptance,
+including the authenticated API, Sim Prove, Rust/TypeScript clients, CLI and five
+alert rules. The formal Phase 3 live exit condition remains pending: funded live
+N=40 and CLI/SDK quote/Prove against owned live evidence have not run. Collection
+stays paused. No live landing performance or market savings are established.
+The sections below preserve each historical batch's checks and limitations.
 
 The Blur REST/WS client follows the recorded paths, queries and payloads, uses
 bounded responses and pool filters, retries disconnects with capped backoff,
@@ -176,3 +177,41 @@ before a future owner-authorized live resume.
 shared-type checks pass (11 tests), along with formatting, all-target workspace
 Clippy, repository scanning and Caddy validation. The earlier 76-test workspace
 receipt remains historical; the final full Phase 3 sweep follows SDK/CLI/alerts.
+
+## Developer clients, CLI and alerts
+
+Both SDKs use the shared contracts; TypeScript types/runtime validators are generated
+from the actual OpenAPI document. Clients preserve full-width integer strings,
+validate source labels, reject credential-bearing URLs/remote plaintext HTTP,
+bound response sizes/timeouts and never automatically retry writes. Public reads
+omit operator credentials. Canary examples print the immutable forecast hash and
+request ID before requesting governed held-out sends. Both actual Sim examples
+complete N=40 with CONSISTENT verdicts and verified ledgers; they establish no
+swap fidelity or funded live integration.
+
+The CLI adds explicit API quote/freeze, Prove/request/report, doctor, ledger
+verification, date-filtered forecast export and daemon `run`, preserving the
+existing offline model/simulation commands. The actual Sim acceptance exercises
+quote -> freeze -> N=40 -> report -> ledger -> export, refused output overwrite,
+missing operator authentication, `run`, and every documented exit code 0/1/2/3.
+
+Alerts cover route degradation, explicit observer disagreement, recorded regime
+change, frozen quote drift and daily budget. Durable atomic state suppresses
+repeats across restart; recovery rearms conditions. All five induced rules deliver
+exactly once to a temporary local receiver. Discord/Slack formatting and stale,
+sparse/cross-source refusal are checked. External delivery is opt-in, bounded and
+not automatically replayed after uncertainty; crash-pending events remain visible
+in local storage. Real observer disagreement/route degradation has not been
+induced on mainnet. Detailed rule thresholds and export limits are in operations.
+
+The final offline checks and code hashes are recorded in
+`data/phase-3-validation.json`. No web package exists; Phase 4 UI and Phase 6 full
+dataset export remain later work. Live acceptance remains pending without funding
+and an owner-authorized collection resume.
+
+Final sweep: **84 Rust workspace tests pass, 0 fail**, with Beam enabled; all-target
+Clippy and formatting pass. TypeScript type checking and all three SDK tests pass.
+The actual developer-flow script passes again on the final binaries, including
+both N=40 SDK examples and CLI N=40, with zero provider requests/live sends.
+Historical Phase 2 and exact Blur economics receipts verify. Repository scanning
+finds no known credentials; both collector services/containers remain stopped.

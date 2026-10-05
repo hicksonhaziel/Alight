@@ -511,3 +511,26 @@ with a Beam tip through the same configured Solami RPC endpoint/authentication
 used by `rpc`; the latter carries no Beam tip. The enum values stay unchanged,
 including historical simulation and forecast records. They identify experimental
 submission treatments, not independent HTTP endpoints. QUIC remains separate.
+
+Phase 3 clients share `alight-types` in Rust and generated OpenAPI-derived types
+and runtime schemas in TypeScript. Rebuild contracts with `cargo run -p alight-api
+--example openapi --locked > sdk/ts/openapi.json`, then `npm --prefix sdk/ts run
+generate`; CI compares the Rust export and generated files. TypeScript money and
+u64 counters use `DecimalU64`, with `decimalU64(string|bigint)` and `u64BigInt` for
+lossless arithmetic. Passing a JS number, leading zeros or u64 overflow fails.
+No provider/wallet key is an SDK contract.
+
+`ForecastLedgerExport` v1 uses `kind=forecast_ledger_export`, explicit source,
+UTC `day`, decimal-string `verified_through_sequence` and `entries`. Example:
+`{"schema_version":1,"source":"sim","day":"2026-10-05","kind":
+"forecast_ledger_export","verified_through_sequence":"0","entries":[]}`.
+This is a date-filtered forecast subset, not the full Phase 6 dataset.
+
+`Alert` v1 carries id/source, `ROUTE_DEGRADATION|OBSERVER_DISAGREEMENT|REGIME_CHANGE|
+QUOTE_DRIFT|BUDGET`, subject, UTC time, fixed summary and rule-specific sanitized
+details. Generic webhook envelope: `{"type":"alight.alert.v1","data":Alert}`.
+Budget details preserve lamport values as decimal strings; rule input/state live
+in shared types. Migration 0008 changes no forecast/canary serialization or hashes.
+For example, an induced budget event has source `sim`, rule `BUDGET`, subject
+`daily_budget` and details `{"reserved_lamports":"90","daily_cap_lamports":
+"100","threshold_fraction":0.9}`. Chat formatters do not interpret mentions.

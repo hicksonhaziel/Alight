@@ -141,3 +141,82 @@ published Beam-recipient tip; plain RPC carries none. These arms share an endpoi
 The earlier hostname failure is historical. Funded tipped submission and landing
 remain unverified; a connection failure is retained as uncertainty. Do not report
 a successful live route until a real canary lands and observers confirm it.
+
+## Phase 3 developer clients and CLI
+
+Build both binaries and the Rust canary example with `cargo build -p alight -p
+alightd -p alight-client --bins --examples --locked`. The TypeScript client needs
+`npm --prefix sdk/ts ci --ignore-scripts` and `npm --prefix sdk/ts run build`.
+Start the key-free Sim daemon using the offline API instructions above (or
+`alight run --mode sim` with the same daemon flags), then run either:
+
+```sh
+target/debug/examples/quote_then_send http://127.0.0.1:8080 .alight/operator.key
+node sdk/ts/examples/quote_then_send.mjs http://127.0.0.1:8080 .alight/operator.key
+```
+
+Each example reads a supported synthetic curve, previews and freezes its quote,
+prints the forecast hash/request ID before sending, runs 40 governed held-out
+Sim canaries and verifies the ledger. These are canary bots; they neither build
+swaps nor handle a wallet/provider key. `quote_then_send` / `quoteThenSend` also
+provide that convenience in each SDK. On an uncertain write response, reconcile
+the saved forecast hash and Prove ID; never repeat the entire convenience flow.
+No write retries are automatic. SDK endpoints require HTTPS except loopback HTTP,
+reject URL credentials/query parameters, enforce source labels, cap responses at
+8 MiB and use a 30-second request timeout. Public reads omit the operator key.
+
+CLI API commands take explicit `--api URL --source live|sim|replay`:
+
+```sh
+target/debug/alight doctor --api http://127.0.0.1:8080 --source sim
+target/debug/alight quote --api http://127.0.0.1:8080 --source sim --request quote.json
+target/debug/alight quote --api http://127.0.0.1:8080 --source sim --request quote.json --freeze --operator-key-file .alight/operator.key
+target/debug/alight prove --api http://127.0.0.1:8080 --source sim --request prove.json --operator-key-file .alight/operator.key
+target/debug/alight prove --api http://127.0.0.1:8080 --source sim --id prove-sim-example
+target/debug/alight ledger verify --api http://127.0.0.1:8080 --source sim
+target/debug/alight export --api http://127.0.0.1:8080 --source sim --day 2026-10-05 --output .alight/forecasts.json
+```
+
+`quote.json` is a `QuoteServiceRequest` from the served OpenAPI contract;
+`prove.json` is `{"request_id":"example","forecast_hash":"sha256:…","n":40,
+"seed":"42"}` in Sim. Live omits the seed. Prove IDs are returned in `lock.id`.
+Examples construct a request from actual health/curve data, avoiding stale clocks.
+The existing database-based model commands and seeded `sim`/replay remain available.
+Exit codes are **0** successful/supported/CONSISTENT, **1** failed check or
+INCONSISTENT, **2** configuration/transport/runtime error, **3** insufficient
+quote evidence, degraded doctor health or INCONCLUSIVE. Live POST can return a
+queued/inconclusive report; use `prove --id` to read progress without resubmitting.
+
+Export verifies the source's whole ledger before paging to that verified head,
+then selects forecast issue dates in UTC. It is bounded to 10,000 rows / 64 MiB,
+creates a new output file and refuses overwrite. This Phase 3 export contains
+forecasts; the Phase 6 dataset exporter will add canaries, regimes and Parquet/CSV.
+A date-filtered subset cannot independently verify the complete chain or models.
+Run `python3 scripts/test_phase3_developer.py` after building: it starts/stops only
+temporary Sim daemons and checks both examples, CLI lifecycle, all four exit codes,
+export/overwrite protection, and `run` without provider credentials.
+
+## Phase 3 alerts
+
+Observe/live daemons evaluate stored evidence every ten seconds and persist local
+alerts. Outbound delivery is explicitly configured with the private
+`ALIGHT_ALERT_WEBHOOK_URL` and `ALIGHT_ALERT_FORMAT=webhook|discord|slack`; unset URL
+records `NO_ENDPOINT`. Sim does not load these environment values. No real
+endpoint was configured or contacted during acceptance.
+
+Rules use fresh same-cell canary evidence with effective n >= 30: route degradation
+requires non-overlapping 95% intervals; quote drift compares a later same-regime
+estimate with the frozen interval before expiry. Observer disagreement requires
+three distinct recent canaries with explicit latest resolver disagreement evidence
+in a five-minute window. A recorded regime transition fires once; budget alerts
+fire at 90% of the exact configured daily cap. These report estimates/recorded
+transitions and do not claim a new network upgrade or real-swap performance.
+
+Migration 0008 adds source-scoped rule state/events. One atomic transition emits
+one event per active condition; restart preserves suppression and recovery rearms
+it. The event history is capped at 10,000 rows per source. Webhook delivery makes
+one bounded, five-second attempt with redirects disabled. Delivery errors do not
+retry an uncertain response. A crash after persistence can leave `PENDING` events;
+there is no automatic replay or guaranteed external delivery. Discord disables
+mentions; Slack uses plain-text blocks. The induced test delivers all five rules
+to a temporary loopback receiver and checks restart suppression.

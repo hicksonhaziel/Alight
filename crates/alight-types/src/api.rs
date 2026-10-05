@@ -143,3 +143,16 @@ pub struct ApiStreamSnapshot {
     pub proves: Vec<ProveReport>,
     pub ledger: Vec<ForecastEntry>,
 }
+
+/// Phase 3 bounded forecast-only export; whole-chain verification is performed before pagination.
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct ForecastLedgerExport {
+    pub schema_version: u32,
+    pub source: Source,
+    pub day: String,
+    pub kind: String,
+    #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
+    pub verified_through_sequence: u64,
+    pub entries: Vec<ForecastEntry>,
+}

@@ -71,6 +71,8 @@ pub fn document() -> Value {
     add::<LedgerVerification>(&mut schemas);
     add::<TapePage>(&mut schemas);
     add::<ApiStreamSnapshot>(&mut schemas);
+    add::<Alert>(&mut schemas);
+    add::<ForecastLedgerExport>(&mut schemas);
     // Boundary bounds complement the serde shape; semantic/model gates still run in handlers.
     schemas["ProveRequest"]["properties"]["n"]["minimum"] = json!(1);
     schemas["ProveRequest"]["properties"]["n"]["maximum"] = json!(400);

@@ -12,6 +12,7 @@ alight-canary.workspace = true
 alight-forecast.workspace = true
 alight-prove.workspace = true
 alight-api.workspace = true
+alight-notify.workspace = true
 alight-sim.workspace = true
 tokio.workspace = true
 serde_json.workspace = true
