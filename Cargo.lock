@@ -84,7 +84,9 @@ dependencies = [
 name = "alight-forecast"
 version = "0.0.0"
 dependencies = [
+ "alight-econ",
  "alight-model",
+ "alight-sim",
  "alight-store",
  "alight-types",
  "chrono",
@@ -98,6 +100,7 @@ name = "alight-ingest"
 version = "0.0.0"
 dependencies = [
  "alight-store",
+ "alight-tape",
  "alight-types",
  "base64",
  "bs58",
@@ -165,6 +168,18 @@ dependencies = [
  "tempfile",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "alight-tape"
+version = "0.0.0"
+dependencies = [
+ "alight-types",
+ "base64",
+ "bs58",
+ "chrono",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

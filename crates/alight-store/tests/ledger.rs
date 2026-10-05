@@ -71,6 +71,8 @@ async fn ledger_restarts_detects_tamper_and_grades_only_later_final_outcomes() {
         request,
         quote,
         baselines: vec![],
+        economics: None,
+        requested_economics: None,
     };
     let entry = store.append_forecast(&forecast).await.expect("append");
     assert_eq!(store.verify_ledger(Source::Sim).await.expect("verify"), 1);

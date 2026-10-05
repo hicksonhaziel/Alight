@@ -1,8 +1,10 @@
 //! Model jobs and forecast lifecycle. No provider client, keys, signer or transaction sender.
+mod service;
 use alight_model::{estimate, pooled, quote, scoring, signal};
 use alight_store::{Store, StoreError, content_hash};
 use alight_types::*;
 use chrono::{DateTime, Duration, Utc};
+pub use service::issue_combined;
 use std::collections::BTreeMap;
 
 fn utc(text: &str) -> Result<DateTime<Utc>, StoreError> {
@@ -134,35 +136,88 @@ pub async fn issue(
     frozen_hash: Option<&str>,
     tape: &[TipTapeObservation],
 ) -> Result<ForecastEntry, StoreError> {
+    issue_inner(store, request, ttl_s, frozen_hash, tape, None).await
+}
+async fn issue_inner(
+    store: &Store,
+    request: ModelQuoteRequest,
+    ttl_s: u32,
+    frozen_hash: Option<&str>,
+    tape: &[TipTapeObservation],
+    economics: Option<&EconomicsInputs>,
+) -> Result<ForecastEntry, StoreError> {
     if !(1..=86400).contains(&ttl_s) {
         return Err(StoreError::Invalid);
     }
     let samples = store.training_canaries(request.context.source).await?;
-    let models = [1, 2, 4]
-        .into_iter()
-        .map(|h| pooled::fit_blend(&samples, &request.context, h).map_err(|_| StoreError::Invalid))
-        .collect::<Result<Vec<_>, _>>()?;
+    let work_request = request.clone();
+    let (samples, models, response) =
+        tokio::task::spawn_blocking(move || -> Result<_, StoreError> {
+            let models = [1, 2, 4]
+                .into_iter()
+                .map(|h| {
+                    pooled::fit_blend(&samples, &work_request.context, h)
+                        .map_err(|_| StoreError::Invalid)
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let response =
+                quote::quote(&samples, &work_request, &models).map_err(|_| StoreError::Invalid)?;
+            Ok((samples, models, response))
+        })
+        .await
+        .map_err(|_| StoreError::Invalid)??;
     let model_hash = store.save_models(&models).await?;
-    let response = quote::quote(&samples, &request, &models).map_err(|_| StoreError::Invalid)?;
     let frozen = if let Some(hash) = frozen_hash {
         Some(store.load_models(hash).await?)
     } else {
         None
     };
-    let baseline = quote::baselines(
-        &samples,
-        &request,
-        &models,
-        response.recommendation.as_ref().map(|r| &r.config),
-        tape,
-        frozen_hash.zip(frozen.as_deref()),
-    )
-    .map_err(|_| StoreError::Invalid)?;
+    let requested_economics = economics.cloned();
+    let (economics, baseline) = if let Some(inputs) = economics {
+        let (e, b) = service::combine(
+            store,
+            &samples,
+            &request,
+            &models,
+            &response,
+            inputs,
+            tape,
+            frozen_hash.zip(frozen.as_deref()),
+        )
+        .await?;
+        (Some(e), b)
+    } else {
+        (
+            None,
+            quote::baselines(
+                &samples,
+                &request,
+                &models,
+                response.recommendation.as_ref().map(|r| &r.config),
+                tape,
+                frozen_hash.zip(frozen.as_deref()),
+            )
+            .map_err(|_| StoreError::Invalid)?,
+        )
+    };
+    let response = economics
+        .as_ref()
+        .map_or(response.clone(), |e| e.model_quote.clone());
+    let id_hash = if let Some(e) = &economics {
+        content_hash(&(
+            request.clone(),
+            ttl_s,
+            frozen_hash,
+            tape,
+            &model_hash,
+            &requested_economics,
+            e,
+        ))?
+    } else {
+        content_hash(&(request.clone(), ttl_s, frozen_hash, tape, &model_hash))?
+    };
     let forecast = Forecast {
-        id: format!(
-            "q-{}",
-            content_hash(&(request.clone(), ttl_s, frozen_hash, tape, &model_hash))?
-        ),
+        id: format!("q-{id_hash}"),
         source: request.context.source,
         created_at_utc: request.context.as_of_utc.clone(),
         expires_at_utc: (utc(&request.context.as_of_utc)? + Duration::seconds(i64::from(ttl_s)))
@@ -173,19 +228,27 @@ pub async fn issue(
         request,
         quote: response,
         baselines: baseline,
+        economics,
+        requested_economics,
     };
-    if let Some(previous) = store
-        .forecasts(forecast.source)
-        .await?
-        .into_iter()
-        .find(|e| e.forecast.id == forecast.id)
-    {
+    if let Some(previous) = store.forecast(forecast.source, &forecast.id).await? {
         if content_hash(&previous.forecast)? != content_hash(&forecast)? {
             return Err(StoreError::Invalid);
         }
         return Ok(previous);
     }
-    store.append_forecast(&forecast).await
+    match store.append_forecast(&forecast).await {
+        Ok(entry) => Ok(entry),
+        Err(error) => {
+            // A concurrent identical retry may have committed after the initial lookup.
+            if let Some(previous) = store.forecast(forecast.source, &forecast.id).await?
+                && content_hash(&previous.forecast)? == content_hash(&forecast)?
+            {
+                return Ok(previous);
+            }
+            Err(error)
+        }
+    }
 }
 /// Report a completed UTC day once under the registered methodology; manual reports can be refreshed.
 pub async fn daily(

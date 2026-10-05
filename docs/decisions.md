@@ -97,6 +97,26 @@ The optimizer follows the brief's nominal upfront fee/tip objective, displaying
 that assumption rather than claiming realized on-chain spend or validated swap
 savings. Live market integration remains paused at the owner's request.
 
+## 2026-10-05: Passive tape evidence and transfer accounting
+
+The gRPC spike retained signature/index/outcome only, so its reduced fixture
+cannot establish tip amounts. Full Mirage captures contain the same Yellowstone
+protobuf transaction/message/meta shape, including loaded account keys and inner
+instructions. Use those captures for decoder evidence and native gRPC protobuf
+fields in the collector. Keep known-recipient filtering on the existing filtered
+stream rather than opening an extra subscription. A failed transaction's transfer
+instructions are intent, not paid tips: preserve requested amount and report zero
+paid tip. Recipient membership cannot identify a Beam HTTP/QUIC route. Provider
+indices and absent block identity remain explicit; passive rows never train models.
+Successful outer System transfers have known paid amounts. Inner transfers remain
+unknown without individual execution proof because a program may catch a failed
+CPI. B3 uses positive known paid totals once per signature, excluding ambiguous
+forks, unknown payments and observer conflicts. This is a descriptive population.
+Combined economics use exact-cell decayed conditional delay bins projected onto
+the quoted horizon probability, with an unobserved residual tail assigned to
+nonlanding. This assumption is printed with the frozen estimate; sparse cells
+retain probability-only recommendations.
+
 ## 2026-10-03: Observer evidence
 
 gRPC and Mirage are separate transport observations from the same provider;

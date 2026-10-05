@@ -2,9 +2,11 @@
 mod contracts;
 mod economics;
 mod phase2;
+mod phase3;
 pub use contracts::*;
 pub use economics::*;
 pub use phase2::*;
+pub use phase3::*;
 use serde::{Deserialize, Serialize};
 
 /// Same-process senders/observers share one monotonic origin; each restart gets a new identity.

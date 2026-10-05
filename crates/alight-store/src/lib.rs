@@ -1,6 +1,7 @@
 //! SQLite WAL persistence. Event evidence and cursors commit in the same transaction.
 mod curves;
 mod ledger;
+mod phase3;
 use alight_types::{
     BudgetLimits, BudgetReservation, Canary, IngestEvent, ObserverEvent, ObserverKind, Source,
 };

@@ -76,6 +76,73 @@ fn distribution(
     }
     Ok(histogram)
 }
+/// Decayed exact-cell delay shape projected onto the model's horizon probability.
+/// Delays are slots and masses are probabilities. Only finalized outcomes known
+/// as-of enter this conditional shape. Unobserved residual tail is nonlanding.
+/// This projection is a modeling assumption, not an independently measured CDF.
+pub fn landing_distribution(
+    samples: &[TrainingCanary],
+    config: &CanaryConfig,
+    context: &CurveContext,
+    horizon: u32,
+    p_hat: f64,
+) -> Result<Option<LandingDistribution>, ModelError> {
+    if horizon == 0 || !p_hat.is_finite() || !(0.0..=1.0).contains(&p_hat) {
+        return Err(ModelError::Invalid);
+    }
+    let cell = estimate(samples, config, context, horizon)?;
+    if cell.evidence != Evidence::Measured {
+        return Ok(None);
+    }
+    let histogram = distribution(samples, config, context, false)?;
+    let within = histogram
+        .iter()
+        .filter(|(s, _)| *s <= f64::from(horizon))
+        .map(|(_, w)| w)
+        .sum::<f64>();
+    let outside = histogram
+        .iter()
+        .filter(|(s, _)| *s > f64::from(horizon))
+        .map(|(_, w)| w)
+        .sum::<f64>();
+    if within == 0.0 && p_hat > 0.0 {
+        return Ok(None);
+    }
+    let mut nonlanding = if outside == 0.0 { 1.0 - p_hat } else { 0.0 };
+    let mut masses = Vec::new();
+    for (slots, weight) in histogram {
+        let probability = if slots <= f64::from(horizon) {
+            if within == 0.0 {
+                0.0
+            } else {
+                p_hat * weight / within
+            }
+        } else if outside == 0.0 {
+            0.0
+        } else {
+            (1.0 - p_hat) * weight / outside
+        };
+        if !slots.is_finite() {
+            nonlanding += probability;
+        } else {
+            if slots < 0.0 || slots > f64::from(u32::MAX) {
+                return Err(ModelError::Invalid);
+            }
+            masses.push(LandingMass {
+                delay_slots: slots as u32,
+                probability,
+            });
+        }
+    }
+    Ok(Some(LandingDistribution {
+        context: context.clone(),
+        n_effective: cell.n_effective,
+        data_age_s: cell.data_age_s.ok_or(ModelError::Invalid)?,
+        masses,
+        nonlanding_probability: nonlanding,
+    }))
+}
+
 fn bootstrap(values: &[(f64, f64)], q: f64, n: usize, seed: u64) -> [Option<f64>; 2] {
     if values.is_empty() || n == 0 {
         return [None, None];

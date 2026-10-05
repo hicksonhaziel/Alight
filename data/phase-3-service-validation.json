@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "scope": "phase-3-passive-tape-and-combined-quotes",
+  "phase_complete": false,
+  "implemented_tasks_in_batch": [
+    "3.4",
+    "3.5"
+  ],
+  "remaining_tasks": [
+    "3.6",
+    "3.7",
+    "3.8",
+    "3.9",
+    "3.10"
+  ],
+  "validated_at_utc": "2026-10-05T18:27:31.968114+00:00",
+  "base_commit": "9a03d7dbafeaf60faa9d9c4d67252f7f9a3d4cc0",
+  "checks": {
+    "cargo_fmt": "PASS",
+    "cargo_clippy_workspace_all_targets_beam": "PASS",
+    "cargo_test_workspace_beam": "PASS",
+    "workspace_tests_passed": 69,
+    "new_tests_passed": 10,
+    "repository_secret_scan": "PASS",
+    "phase2_historical_receipt": "PASS",
+    "phase3_economics_historical_replay": "PASS"
+  },
+  "validated_files_sha256": {
+    "Cargo.lock": "dd544b9b995ce48039f04e45213f8459c75faa6c9fb9dfbbb5e85671f7316dda",
+    "Cargo.toml": "4b9e739d6211e3e051d63a398bddc16b71a24b9a7bf12aa3ebe5e330382f5f26",
+    "bin/alightd/src/main.rs": "202960a0e5a3eb435c4f0083e6555c870165e06817c2e29e9c405281af929050",
+    "crates/alight-forecast/Cargo.toml": "b10454ba597f77f5103130f5e69685317b7e3df7cb5415fc9896417381ca942c",
+    "crates/alight-forecast/src/lib.rs": "281d235201b68415a9cd6daa6fd1933aa6f9fb4632f4f103231357d32698a723",
+    "crates/alight-forecast/src/service.rs": "e996d0037afe52d9596c898661f87e2cf5c5d21d6ed645644659748ff25e5ca0",
+    "crates/alight-forecast/tests/combined.rs": "aa5c1f9c848ba2978c90f1e4bc5f8e0487914d8490ae48c4202364621fbbf1bd",
+    "crates/alight-forecast/tests/passive_baseline.rs": "7dc1c02db18aad6a66a46dad4ccd078c8563a2c1e8fa61a06a13db3ffee7e2ed",
+    "crates/alight-ingest/Cargo.toml": "e750f794f738c6b75c03eaa1c5e2c58ec60ce2e47e168cbcff91ffaf95304de1",
+    "crates/alight-ingest/src/stream.rs": "0b6aeb786fa03402c6383a0a6d837c4f881b37f551c72aad279f3d72389906ec",
+    "crates/alight-model/src/latency.rs": "2cdd8713d0328aa95d8f73a5f242733bd0c25763547d7c16ff47c3ecec3080db",
+    "crates/alight-store/migrations/0006_phase3_quotes_tape.sql": "ec27b81932ead6a0c6f3119f5c1dd0ebda469961885e953fc6fc444c6b4f0ab8",
+    "crates/alight-store/src/ledger.rs": "99a83f4ce966bafc7dc5f1f6d2a0dd803f0116d435eb33ef6e95ae242fea5a7b",
+    "crates/alight-store/src/lib.rs": "18609941849663a1901690fc3761cb2998cabf948ceecde95be0a053eab39d02",
+    "crates/alight-store/src/phase3.rs": "42ecebae895b42b992a2b5092d33ea8ebc76466226544b90f286fc776b66991b",
+    "crates/alight-store/tests/ledger.rs": "96d3bf15cf6186b87aee3d7bd052dc108334dd7925fd64ca8c61393c5d4f1871",
+    "crates/alight-store/tests/phase3.rs": "89a74ad8d8afde5f8724c7fe9a5be95390556160ac249f11a63b29ea1f589804",
+    "crates/alight-tape/Cargo.toml": "b16a27bfb8edd1d366b5524b2c8a3bad48b46d40a07a88cdefb584e5201d71de",
+    "crates/alight-tape/src/lib.rs": "fe4c2b856bc33cf1a640d42c554fbe6dccff3a70ea2a9256e4bb17f5ff84d9b9",
+    "crates/alight-tape/tests/tape.rs": "0efcce82ab9277bad021657aaee866df6250a6314eba3ae2230cf97d658042b9",
+    "crates/alight-types/src/lib.rs": "31bfbe309f5d4203844f55f210dc4a4f7599fd039a8881b27c45821302d6f443",
+    "crates/alight-types/src/phase2.rs": "b664b9e762a32c66277af49c53fe11ac80fa7b3ff972586655f974eff2c35a19",
+    "crates/alight-types/src/phase3.rs": "a78ae26308468652aa5c2955b8469b41e961d3bd2049cf7a1b2fd7c631475a4f"
+  },
+  "fixture": {
+    "path": "data/fixtures/mirage_transactions_sample.jsonl",
+    "sha256": "3574f4cc72cfef745ce0839ff75094cee2d8a372658303b45bf6b02221bf73ef",
+    "transactions": 3,
+    "controlled_transfer_lamports": "9897",
+    "controlled_transaction_fee_lamports": "5000",
+    "provider_index": "672",
+    "published_beam_tip_claim": false
+  },
+  "storage": {
+    "per_source_default_retention_s": 86400,
+    "per_source_default_max_rows": 10000,
+    "per_source_default_max_payload_bytes": 16777216,
+    "adversarial_test_rows": 100,
+    "adversarial_test_max_payload_bytes": 4096,
+    "payload_caps_exclude_sqlite_overhead": true,
+    "source_and_fork_isolation": true,
+    "idle_pruning_and_restart": "PASS",
+    "passive_rows_used_as_owned_training": 0
+  },
+  "combined_service": {
+    "sources_tested": [
+      "sim"
+    ],
+    "absent_and_stale_market_fallback": "PASS",
+    "frozen_response_and_requested_inputs": "PASS",
+    "concurrent_retry_idempotence": "PASS",
+    "ledger_and_market_document_verification": "PASS",
+    "fallback_inputs_change_forecast_identity": "PASS",
+    "distribution_projection_assumption_explicit": true
+  },
+  "runtime": {
+    "resumed_live_collection": false,
+    "live_database_modified": false,
+    "transactions_signed": 0,
+    "transactions_sent": 0,
+    "external_requests_for_validation": 0
+  },
+  "limitations": [
+    "API, Prove, SDKs, CLI additions and alerts remain pending.",
+    "No new live tip capture, owned outcomes, funded Prove or observed market savings.",
+    "Inner-transfer payment stays unknown without execution evidence; passive rows are descriptive, not landing labels.",
+    "Conditional delay shape is projected onto the quoted horizon probability; the residual unobserved tail is modeled as nonlanding."
+  ]
+}

@@ -163,6 +163,35 @@ Example normalized historical trade (abridged quantities):
 {"source":"replay","pool":"EgUV2hrWfsgfFyftxCx4ut82811ygWFbWYNPdv3cRWQA","mint":"CTMV7yXV1mpucM7svPEtmVFBB8g6hqHGVPczmbYrj9Jb","slot":"453068193","block_time_unix_s":1791066584,"tx_index":260,"ix_index":3,"inner_ix_index":3,"price_usd":"0.00013739913814689506","base_amount":"145561320614819","base_reserve":"210847950099700846"}
 ```
 
+## Phase 3 passive tape and persisted quotes (3.4–3.5)
+
+`PassiveTransaction` is a bounded normalized Yellowstone transaction subset:
+resolved static+loaded account keys, compiled outer/inner instructions, actual
+fee, execution success, receive clock and provider index scope. `PassiveTip`
+aggregates explicit System transfers per allowlisted recipient; `tip_lamports`
+is zero on failed execution, null when inner-transfer payment is unverified,
+and `requested_tip_lamports` retains instruction
+intent. Route is not inferred. `0006_phase3_quotes_tape.sql` adds bounded tape
+storage and content-addressed market snapshots. Tape identity includes source,
+observer, slot, block identity (when known), signature and recipient. Retention
+defaults to 24 hours, 10,000 rows and 16 MiB per source; first receives survive duplicates.
+Candidate-block ambiguities stay descriptive and never become landing labels.
+These are gross committed transfer amounts, not recipient net-balance changes.
+The transaction fee repeats in each recipient row; fee totals must deduplicate
+transactions rather than sum recipient rows. Passive provider indices are decimal
+u64 strings, preserving the native protocol width.
+
+`Forecast.economics` and `requested_economics` are optional and omitted when absent, preserving historical
+ledger bytes/hashes. Combined quote issuance freezes the models and economics
+snapshot and appends the complete response atomically in the existing ledger.
+The quote/economics model responses must match. Requested inputs survive fallback.
+Saved market inputs remain
+source/regime/pool-scoped and checked for freshness. Example tape row:
+
+```json
+{"source":"sim","observer":"grpc","signature":"synthetic-signature","slot":"1000","block_id":null,"index_in_block":"5","index_scope":"provider_reported","recipient":"synthetic-recipient","tip_lamports":"0","requested_tip_lamports":"100000","fee_lamports":"5000","cu_price_micro_lamports":"0","cu_limit":20000,"success":false,"received":{"clock_id":"sim-clock","mono_ns":"1000","wall_utc":"2026-10-05T00:00:00Z"}}
+```
+
 ## Migration from the local brief
 
 No database or public API is deployed, so no data migration exists yet.

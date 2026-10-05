@@ -30,6 +30,37 @@ fn time(text: &str) -> Result<chrono::DateTime<chrono::Utc>, StoreError> {
 }
 
 impl Store {
+    /// Reads one source-scoped forecast by its ID or chain hash and checks its payload/link.
+    pub async fn forecast(
+        &self,
+        source: Source,
+        id_or_hash: &str,
+    ) -> Result<Option<ForecastEntry>, StoreError> {
+        let source_label = label(source)?;
+        let row = sqlx::query("SELECT sequence,prev_hash,hash,payload_json FROM forecast_ledger WHERE source=? AND (forecast_id=? OR hash=?) LIMIT 1")
+            .bind(&source_label).bind(id_or_hash).bind(id_or_hash).fetch_optional(&self.pool).await?;
+        row.map(|row| {
+            let payload: String = row.try_get("payload_json")?;
+            let forecast: Forecast = serde_json::from_str(&payload)?;
+            let sequence: i64 = row.try_get("sequence")?;
+            let prev_hash: String = row.try_get("prev_hash")?;
+            let hash: String = row.try_get("hash")?;
+            if sequence <= 0
+                || forecast.source != source
+                || canonical(&forecast)? != payload
+                || hash != chain_hash(&source_label, sequence, &prev_hash, &payload)
+            {
+                return Err(StoreError::Invalid);
+            }
+            Ok(ForecastEntry {
+                sequence: sequence as u64,
+                prev_hash,
+                hash,
+                forecast,
+            })
+        })
+        .transpose()
+    }
     pub async fn forecasts_to_grade(
         &self,
         source: Source,
@@ -106,6 +137,47 @@ impl Store {
         {
             return Err(StoreError::Invalid);
         }
+        if forecast.economics.is_some() != forecast.requested_economics.is_some() {
+            return Err(StoreError::Invalid);
+        }
+        if let Some(economics) = &forecast.economics {
+            if canonical(&economics.model_quote)? != canonical(&forecast.quote)?
+                || economics.economics.is_some() == economics.fallback_reason.is_some()
+            {
+                return Err(StoreError::Invalid);
+            }
+            if let Some(summary) = &economics.economics {
+                if summary.market.source != forecast.source
+                    || summary.market.regime_id != forecast.regime_id
+                    || forecast
+                        .requested_economics
+                        .as_ref()
+                        .map(canonical)
+                        .transpose()?
+                        != Some(canonical(&summary.inputs)?)
+                    || summary.market.pool != summary.inputs.pool
+                    || time(&summary.market.as_of_utc)? > created
+                    || !summary.recommendation.qualifies
+                    || forecast
+                        .quote
+                        .recommendation
+                        .as_ref()
+                        .map(canonical)
+                        .transpose()?
+                        != Some(canonical(&summary.recommendation.prediction)?)
+                {
+                    return Err(StoreError::Invalid);
+                }
+                let saved: String =
+                    sqlx::query_scalar("SELECT payload_json FROM market_snapshots WHERE hash=?")
+                        .bind(content_hash(&summary.market)?)
+                        .fetch_one(&self.pool)
+                        .await?;
+                if saved != canonical(&summary.market)? {
+                    return Err(StoreError::Invalid);
+                }
+            }
+        }
         let models = self.load_models(&forecast.model_snapshot_hash).await?;
         if models.iter().any(|m| {
             m.context.source != forecast.source
@@ -163,6 +235,7 @@ impl Store {
         let mut previous = GENESIS.to_owned();
         let mut sequence = 0i64;
         let mut checked_models = std::collections::BTreeSet::new();
+        let mut checked_markets = std::collections::BTreeSet::new();
         for row in rows {
             sequence += 1;
             let payload: String = row.try_get("payload_json")?;
@@ -190,6 +263,24 @@ impl Store {
                             .await?;
                     let models: Vec<ModelFit> = serde_json::from_str(&document)?;
                     if content_hash(&models)? != *model_hash {
+                        return Err(StoreError::Invalid);
+                    }
+                }
+            }
+            if let Some(summary) = forecast
+                .economics
+                .as_ref()
+                .and_then(|e| e.economics.as_ref())
+            {
+                let market_hash = content_hash(&summary.market)?;
+                if checked_markets.insert(market_hash.clone()) {
+                    let document: String = sqlx::query_scalar(
+                        "SELECT payload_json FROM market_snapshots WHERE hash=?",
+                    )
+                    .bind(market_hash)
+                    .fetch_one(&mut *tx)
+                    .await?;
+                    if document != canonical(&summary.market)? {
                         return Err(StoreError::Invalid);
                     }
                 }

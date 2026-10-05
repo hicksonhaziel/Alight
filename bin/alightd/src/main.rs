@@ -285,6 +285,9 @@ async fn retention_loop(
             }
             tokio::task::yield_now().await;
         }
+        let tape_limits = TapeLimits::default();
+        let now = stream::utc_now();
+        tokio::select! { _=stop.changed()=>return Ok(()),r=store.prune_passive_tips(Source::Live,&tape_limits,&now)=>{r?;} }
         tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(300))=>{}}
     }
 }
@@ -306,6 +309,15 @@ async fn write_frames(
         store
             .record(frame.observer, &frame.event, &frame.raw)
             .await?;
+        match frame.passive_tips {
+            Ok(tips) if !tips.is_empty() => {
+                store
+                    .save_passive_tips(&tips, &TapeLimits::default(), &stream::utc_now())
+                    .await?;
+            }
+            Err(reason) => eprintln!("passive tape record skipped: {reason}"),
+            _ => {}
+        }
         if frame.observer == ObserverKind::Grpc {
             match frame.event {
                 IngestEvent::BlockMeta(e) => clock.write().await.push(&e),

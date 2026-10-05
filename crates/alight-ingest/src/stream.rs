@@ -2,6 +2,7 @@
 use crate::{Config, adapter::normalize};
 use alight_store::Store;
 use alight_types::*;
+use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::{SecondsFormat, Utc};
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
@@ -48,6 +49,7 @@ pub struct Frame {
     pub observer: ObserverKind,
     pub event: IngestEvent,
     pub raw: Value,
+    pub passive_tips: Result<Vec<PassiveTip>, &'static str>,
 }
 
 // Credentials never implement Debug/Serialize and are never placed into error strings.
@@ -55,11 +57,13 @@ pub struct GrpcOptions {
     pub url: String,
     pub token: String,
     pub accounts: Vec<String>,
+    pub tip_accounts: Vec<String>,
     pub replay: bool,
     pub force_disconnect_after: Option<Duration>,
 }
 pub struct MirageOptions {
     pub url: String,
+    pub tip_accounts: Vec<String>,
 }
 
 pub async fn options(
@@ -102,6 +106,7 @@ pub async fn options(
         }
         accounts.push(t.to_owned());
     }
+    let tip_accounts = accounts.clone();
     if let Some(payer) = config.get("ALIGHT_CANARY_PUBKEY") {
         if bs58::decode(payer)
             .into_vec()
@@ -140,6 +145,7 @@ pub async fn options(
                     .append_pair("api_key", token);
                 Some(MirageOptions {
                     url: url.to_string(),
+                    tip_accounts: tip_accounts.clone(),
                 })
             }
             _ => None,
@@ -150,6 +156,7 @@ pub async fn options(
             url,
             token,
             accounts,
+            tip_accounts,
             replay,
             force_disconnect_after: None,
         },
@@ -181,13 +188,97 @@ fn selected_update(update: geyser::SubscribeUpdate) -> Result<Option<Value>, &'s
     })
 }
 
+/// Resolves v0 lookup keys after static keys, preserving the provider's index scope.
+fn passive_update(
+    update: &geyser::SubscribeUpdate,
+    observer: ObserverKind,
+    received: &ReceiveTime,
+) -> Result<Option<PassiveTransaction>, &'static str> {
+    let Some(UpdateOneof::Transaction(t)) = &update.update_oneof else {
+        return Ok(None);
+    };
+    let info = t.transaction.as_ref().ok_or("tape_missing_transaction")?;
+    let message = info
+        .transaction
+        .as_ref()
+        .and_then(|t| t.message.as_ref())
+        .ok_or("tape_missing_message")?;
+    let meta = info.meta.as_ref().ok_or("tape_missing_meta")?;
+    let account_keys = message
+        .account_keys
+        .iter()
+        .chain(&meta.loaded_writable_addresses)
+        .chain(&meta.loaded_readonly_addresses)
+        .map(|key| {
+            if key.len() != 32 {
+                return Err("tape_invalid_account");
+            }
+            Ok(bs58::encode(key).into_string())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if account_keys.len() > 256
+        || message.instructions.len()
+            + meta
+                .inner_instructions
+                .iter()
+                .map(|g| g.instructions.len())
+                .sum::<usize>()
+            > 4096
+    {
+        return Err("tape_parser_bound");
+    }
+    let mut instructions = message
+        .instructions
+        .iter()
+        .enumerate()
+        .map(|(i, ix)| PassiveInstruction {
+            program_id_index: ix.program_id_index,
+            accounts: ix.accounts.iter().map(|i| u32::from(*i)).collect(),
+            data_base64: STANDARD.encode(&ix.data),
+            outer_index: i as u32,
+            inner_index: None,
+        })
+        .collect::<Vec<_>>();
+    for group in &meta.inner_instructions {
+        for (i, ix) in group.instructions.iter().enumerate() {
+            instructions.push(PassiveInstruction {
+                program_id_index: ix.program_id_index,
+                accounts: ix.accounts.iter().map(|i| u32::from(*i)).collect(),
+                data_base64: STANDARD.encode(&ix.data),
+                outer_index: group.index,
+                inner_index: Some(i as u32),
+            });
+        }
+    }
+    Ok(Some(PassiveTransaction {
+        source: Source::Live,
+        observer,
+        signature: bs58::encode(&info.signature).into_string(),
+        slot: t.slot,
+        block_id: None,
+        index_in_block: Some(info.index),
+        index_scope: IndexScope::ProviderReported,
+        success: meta.err.is_none(),
+        fee_lamports: meta.fee,
+        account_keys,
+        instructions,
+        received: received.clone(),
+    }))
+}
+
 async fn emit(
     update: geyser::SubscribeUpdate,
     observer: ObserverKind,
     clock: &ReceiveClock,
     tx: &mpsc::Sender<Frame>,
+    tip_accounts: &[String],
 ) -> Result<(), &'static str> {
     let received = clock.receive();
+    let passive_tips = passive_update(&update, observer, &received).and_then(|transaction| {
+        transaction.map_or(Ok(vec![]), |t| {
+            alight_tape::parse(&t, tip_accounts).map_err(|_| "tape_invalid_transaction")
+        })
+    });
     let Some(raw) = selected_update(update)? else {
         return Ok(());
     };
@@ -198,6 +289,7 @@ async fn emit(
         observer,
         event,
         raw,
+        passive_tips,
     })
     .await
     .map_err(|_| "writer_closed")
@@ -319,7 +411,14 @@ async fn grpc_session(
             .await
             .map_err(|_| "grpc_ping")?;
         } else {
-            emit(update, ObserverKind::Grpc, &clock, tx).await?;
+            emit(
+                update,
+                ObserverKind::Grpc,
+                &clock,
+                tx,
+                &options.tip_accounts,
+            )
+            .await?;
         }
     }
 }
@@ -378,7 +477,14 @@ async fn mirage_session(
             WsMessage::Binary(bytes) => {
                 let update = geyser::SubscribeUpdate::decode(bytes).map_err(|_| "mirage_schema")?;
                 // The wire protocol is the same Yellowstone protobuf; retain Mirage provenance.
-                emit(update, ObserverKind::Mirage, &clock, tx).await?;
+                emit(
+                    update,
+                    ObserverKind::Mirage,
+                    &clock,
+                    tx,
+                    &options.tip_accounts,
+                )
+                .await?;
             }
             WsMessage::Ping(bytes) => ws
                 .send(WsMessage::Pong(bytes))
@@ -387,5 +493,69 @@ async fn mirage_session(
             WsMessage::Close(_) => return Err("mirage_closed"),
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use solami::solana::storage::confirmed_block as proto;
+
+    #[test]
+    fn native_transaction_preserves_loaded_keys_full_width_index_and_execution_fee() {
+        let mut transfer = 2u32.to_le_bytes().to_vec();
+        transfer.extend(9897u64.to_le_bytes());
+        let update = geyser::SubscribeUpdate {
+            update_oneof: Some(UpdateOneof::Transaction(
+                geyser::SubscribeUpdateTransaction {
+                    slot: u64::MAX,
+                    transaction: Some(geyser::SubscribeUpdateTransactionInfo {
+                        signature: vec![7; 64],
+                        index: u64::MAX,
+                        transaction: Some(proto::Transaction {
+                            message: Some(proto::Message {
+                                account_keys: vec![vec![0; 32], vec![1; 32]],
+                                instructions: vec![proto::CompiledInstruction {
+                                    program_id_index: 0,
+                                    accounts: vec![1, 2],
+                                    data: transfer,
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }),
+                        meta: Some(proto::TransactionStatusMeta {
+                            fee: u64::MAX,
+                            loaded_writable_addresses: vec![vec![2; 32]],
+                            loaded_readonly_addresses: vec![vec![3; 32]],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }),
+                },
+            )),
+            ..Default::default()
+        };
+        let received = ReceiveTime {
+            clock_id: "fixture".into(),
+            mono_ns: 1,
+            wall_utc: "2026-10-05T00:00:00Z".into(),
+        };
+        let t = passive_update(&update, ObserverKind::Grpc, &received)
+            .expect("normalize")
+            .expect("transaction");
+        assert_eq!(t.account_keys.len(), 4);
+        assert_eq!(t.fee_lamports, u64::MAX);
+        let tips = alight_tape::parse(&t, &[bs58::encode([2u8; 32]).into_string()]).expect("parse");
+        assert_eq!(tips[0].tip_lamports, Some(9897));
+        assert_eq!(tips[0].index_in_block, Some(u64::MAX));
+        assert_eq!(tips[0].index_scope, IndexScope::ProviderReported);
+        assert_eq!(tips[0].block_id, None);
+        let selected = selected_update(update)
+            .expect("existing observer subset")
+            .expect("frame");
+        assert_eq!(selected["index"], u64::MAX.to_string());
+        assert_eq!(selected["failed"], false);
+        assert!(selected.get("instructions").is_none());
     }
 }

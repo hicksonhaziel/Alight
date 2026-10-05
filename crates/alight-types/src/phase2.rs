@@ -117,6 +117,11 @@ pub struct Forecast {
     pub request: ModelQuoteRequest,
     pub quote: ModelQuote,
     pub baselines: Vec<BaselineForecast>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub economics: Option<crate::EconomicsQuote>,
+    /// Preserves requested inputs even when stale/absent market evidence causes fallback.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub requested_economics: Option<crate::EconomicsInputs>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastEntry {
