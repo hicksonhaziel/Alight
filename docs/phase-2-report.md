@@ -90,8 +90,8 @@ they are implemented. The API/SDK quote service follows in Phase 3.
 
 Beam HTTP remains a separate live dependency. The documented hostname returned
 NXDOMAIN locally and DNS status 3/no answers through Google on 5 October; the
-QUIC hostname resolves. Ask Solami to confirm the supported HTTP URL, auth and
-request format using the [prepared Telegram message](beam-support-message.md).
+QUIC hostname resolves. Solami needs to confirm the supported HTTP URL, auth and
+request format.
 No support message has been sent. HTTP can be modeled artificially while its
 real endpoint is unavailable, but no live HTTP result is claimed. Owned live
 validation also requires funding the dedicated wallet. The collector stays
