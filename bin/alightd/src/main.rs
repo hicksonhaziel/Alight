@@ -7,14 +7,13 @@ use alight_ingest::{
 };
 use alight_store::{Store, StoreError};
 use alight_types::*;
-use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use serde_json::{Value, json};
 use std::{
     fs::{File, OpenOptions},
     net::SocketAddr,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    sync::Arc,
+    time::Duration,
 };
 use thiserror::Error;
 use tokio::sync::{RwLock, mpsc, watch};
@@ -47,6 +46,9 @@ struct Args {
     mode: Option<String>,
     run_for: Option<u64>,
     disconnect: Option<u64>,
+    operator_key_file: Option<PathBuf>,
+    seed: Option<u64>,
+    sim_canaries: Option<u32>,
 }
 impl Args {
     fn parse() -> Result<Self, Error> {
@@ -57,10 +59,15 @@ impl Args {
             match key.as_str() {
                 "--db" => result.db = Some(value.into()),
                 "--bind" => result.bind = Some(value.parse().map_err(|_| Error::Configuration)?),
-                "--mode" if ["observe", "live", "replay"].contains(&value.as_str()) => {
+                "--mode" if ["observe", "live", "replay", "sim"].contains(&value.as_str()) => {
                     result.mode = Some(value)
                 }
                 "--replay" => result.replay = Some(value.into()),
+                "--operator-key-file" => result.operator_key_file = Some(value.into()),
+                "--seed" => result.seed = Some(value.parse().map_err(|_| Error::Configuration)?),
+                "--sim-canaries" => {
+                    result.sim_canaries = Some(value.parse().map_err(|_| Error::Configuration)?)
+                }
                 "--run-for" => {
                     result.run_for = Some(value.parse().map_err(|_| Error::Configuration)?)
                 }
@@ -89,97 +96,6 @@ fn lock(path: &Path) -> Result<File, Error> {
         .open(path.with_extension("db.lock"))?;
     file.try_lock().map_err(|_| Error::Locked)?;
     Ok(file)
-}
-
-#[derive(Clone)]
-struct Health {
-    store: Store,
-    clock: Arc<RwLock<SlotClock>>,
-    started: Instant,
-    run_id: String,
-    mirage: bool,
-    mode: RunMode,
-    engine: Arc<RwLock<Value>>,
-    leaders: Arc<RwLock<Value>>,
-    limiter: Arc<Mutex<(Instant, u32)>>,
-}
-impl Health {
-    // Shared fixed-window limit: 10 requests/s across both read-only endpoints.
-    fn allow(&self) -> Result<(), StatusCode> {
-        let mut bucket = self
-            .limiter
-            .lock()
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-        if bucket.0.elapsed() >= Duration::from_secs(1) {
-            *bucket = (Instant::now(), 10);
-        }
-        if bucket.1 == 0 {
-            return Err(StatusCode::TOO_MANY_REQUESTS);
-        }
-        bucket.1 -= 1;
-        Ok(())
-    }
-}
-
-async fn health(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
-    state.allow()?;
-    let counts = state
-        .store
-        .counts(Source::Live)
-        .await
-        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-    let mut observers = serde_json::Map::new();
-    let mut ready = true;
-    for observer in [ObserverKind::Grpc, ObserverKind::Mirage] {
-        if observer == ObserverKind::Mirage && !state.mirage {
-            continue;
-        }
-        let mut value = state
-            .store
-            .observer_health(observer, Source::Live)
-            .await
-            .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-        let age = value["last_receive_utc"]
-            .as_str()
-            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-            .map(|t| {
-                (chrono::Utc::now() - t.with_timezone(&chrono::Utc))
-                    .num_milliseconds()
-                    .max(0)
-            });
-        let fresh = age.is_some_and(|ms| ms < 30_000) && value["open_gaps"].as_i64() == Some(0);
-        value["status"] = json!(if fresh { "PASS" } else { "STALE" });
-        value["age_ms"] = json!(age.map(|n| n.to_string()));
-        ready &= fresh;
-        observers.insert(
-            alight_store::label(observer).map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?,
-            value,
-        );
-    }
-    let sends = state
-        .store
-        .send_summary(Source::Live)
-        .await
-        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-    let sent = sends["ACCEPTED"].as_u64().unwrap_or(0);
-    let budget = state
-        .store
-        .budget_by_route(
-            Source::Live,
-            &chrono::Utc::now().format("%Y-%m-%d").to_string(),
-        )
-        .await
-        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-    Ok(Json(
-        json!({"schema_version":1,"mode":state.mode,"source":"live","run_id":state.run_id,
-        "status":if ready{"PASS"}else{"DEGRADED"},"collector_status":if ready{"PASS"}else{"DEGRADED"},"uptime_s":state.started.elapsed().as_secs().to_string(),
-        "signing_enabled":state.mode==RunMode::Live,"canaries_sent":sent,"send_attempts":sends,"budget_reserved_today_by_route":budget,
-        "canary_engine":state.engine.read().await.clone(),"leaders":state.leaders.read().await.clone(),"counts":counts,"observers":observers}),
-    ))
-}
-async fn leaders(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
-    state.allow()?;
-    Ok(Json(state.leaders.read().await.clone()))
 }
 
 async fn leader_loop(
@@ -334,15 +250,6 @@ async fn retention_loop(
         tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(300))=>{}}
     }
 }
-async fn clock(State(state): State<Health>) -> Result<Json<Value>, StatusCode> {
-    state.allow()?;
-    let clock = state.clock.read().await;
-    Ok(Json(
-        json!({"source":"live","method":"gRPC candidate-block Unix seconds over rolling slot distance",
-            "mean_slot_ms":clock.mean_slot_ms(),"window":clock.summary(),"minimum_slot_distance":"64","minimum_chain_seconds":"10"}),
-    ))
-}
-
 async fn write_frames(
     store: Store,
     clock: Arc<RwLock<SlotClock>>,
@@ -518,8 +425,106 @@ async fn replay(args: Args) -> Result<(), Error> {
     Ok(())
 }
 
+fn operator_key(path: Option<&Path>, configured: Option<&str>) -> Result<Option<String>, Error> {
+    if let Some(path) = path {
+        if std::fs::metadata(path)?.len() > 258 {
+            return Err(Error::Configuration);
+        }
+        let text = std::fs::read_to_string(path)?;
+        Ok(Some(text.trim().to_owned()))
+    } else {
+        Ok(configured.map(str::to_owned))
+    }
+}
+
+async fn sim_server(args: Args) -> Result<(), Error> {
+    if args.replay.is_some() || args.disconnect.is_some() {
+        return Err(Error::Configuration);
+    }
+    let bind = args
+        .bind
+        .unwrap_or_else(|| SocketAddr::from(([127, 0, 0, 1], 8080)));
+    if !bind.ip().is_loopback() {
+        return Err(Error::Configuration);
+    }
+    let db = args
+        .db
+        .unwrap_or_else(|| PathBuf::from(".alight/sim-api.db"));
+    let _lock = lock(&db)?;
+    let store = Store::open(&db, 512 * 1024 * 1024).await?;
+    if store.counts(Source::Live).await?.canaries != 0
+        || store.counts(Source::Live).await?.slot_events != 0
+    {
+        return Err(Error::Configuration);
+    }
+    let params = alight_sim::Parameters {
+        seed: args.seed.unwrap_or(42),
+        canaries: args.sim_canaries.unwrap_or(1000),
+        ..Default::default()
+    };
+    params.validate().map_err(|_| Error::Configuration)?;
+    let generation = params.clone();
+    let data = tokio::task::spawn_blocking(move || {
+        alight_sim::generate_focused(&generation, Route::BeamHttp, SizeClass::Small)
+    })
+    .await
+    .map_err(|_| Error::Task)?
+    .map_err(|_| Error::Configuration)?;
+    for sample in data.training().map_err(|_| Error::Configuration)? {
+        store.import_training(&sample).await?;
+    }
+    let mut as_of = data.as_of_utc.clone();
+    if let Some(floor) = store.experiment_clock_floor(Source::Sim).await? {
+        let time =
+            chrono::DateTime::parse_from_rfc3339(&floor).map_err(|_| Error::Configuration)?;
+        if time > chrono::DateTime::parse_from_rfc3339(&as_of).map_err(|_| Error::Configuration)? {
+            as_of = floor;
+        }
+    }
+    alight_forecast::tick(&store, Source::Sim, "local", &as_of).await?;
+    let api = alight_api::ApiState::new(
+        store.clone(),
+        alight_api::Options {
+            mode: RunMode::Sim,
+            region: "local".into(),
+            run_id: format!("sim-{}", params.seed),
+            operator_key: operator_key(args.operator_key_file.as_deref(), None)?,
+            simulated_as_of_utc: Some(as_of),
+            simulation: Some(SimProofEnvironment {
+                slot_ms: params.slot_ms,
+                congestion: params.congestion,
+                tip_slope: params.tip_slope,
+                fee_slope: params.fee_slope,
+                never_land_mass: params.never_land_mass,
+                continuous_latency: params.continuous_latency,
+            }),
+            ..Default::default()
+        },
+    )
+    .map_err(|_| Error::Configuration)?;
+    let listener = tokio::net::TcpListener::bind(bind).await?;
+    println!(
+        "{}",
+        json!({"mode":"sim","source":"sim","status":"READY","bind":listener.local_addr()?.to_string(),"signing_enabled":false,"network_provider_requests":0})
+    );
+    axum::serve(listener, alight_api::router(api))
+        .with_graceful_shutdown(async move {
+            shutdown(args.run_for).await;
+        })
+        .await?;
+    store.close().await;
+    Ok(())
+}
+
 async fn run() -> Result<(), Error> {
     let args = Args::parse()?;
+    // Sim returns before reading .env, constructing a provider client, or loading keys.
+    if args.mode.as_deref() == Some("sim") {
+        return sim_server(args).await;
+    }
+    if args.seed.is_some() || args.sim_canaries.is_some() {
+        return Err(Error::Configuration);
+    }
     if args.mode.as_deref() == Some("replay") {
         return replay(args).await;
     }
@@ -594,22 +599,25 @@ async fn run() -> Result<(), Error> {
         json!({"status":if mode==RunMode::Live{"STARTING"}else{"DISABLED"}}),
     ));
     let leader_state = Arc::new(RwLock::new(json!({"status":"STARTING","source":"live"})));
-    let state = Health {
-        store: store.clone(),
-        clock: clock.clone(),
-        started: Instant::now(),
-        run_id: id.clone(),
-        mirage: mirage.is_some(),
-        mode,
-        engine: engine_state.clone(),
-        leaders: leader_state.clone(),
-        limiter: Arc::new(Mutex::new((Instant::now(), 10))),
-    };
-    let app = Router::new()
-        .route("/v1/health", get(health))
-        .route("/v1/clock", get(self::clock))
-        .route("/v1/leaders", get(leaders))
-        .with_state(state);
+    let mut api = alight_api::ApiState::new(
+        store.clone(),
+        alight_api::Options {
+            mode,
+            region: "local".into(),
+            run_id: id.clone(),
+            mirage_enabled: mirage.is_some(),
+            operator_key: operator_key(
+                args.operator_key_file.as_deref(),
+                config.get("ALIGHT_OPERATOR_KEY"),
+            )?,
+            ..Default::default()
+        },
+    )
+    .map_err(|_| Error::Configuration)?;
+    api.clock = clock.clone();
+    api.engine = engine_state.clone();
+    api.leaders = leader_state.clone();
+    let app = alight_api::router(api);
     let (stop, rx) = watch::channel(false);
     let mut server_rx = rx.clone();
     let server = tokio::spawn(async move {

@@ -188,7 +188,11 @@ pub mod decimal_u64 {
     }
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
         let text = String::deserialize(deserializer)?;
-        if text.is_empty() || !text.bytes().all(|b| b.is_ascii_digit()) {
+        if text.is_empty()
+            || text.len() > 20
+            || text.len() > 1 && text.starts_with('0')
+            || !text.bytes().all(|b| b.is_ascii_digit())
+        {
             return Err(D::Error::custom("expected an unsigned decimal string"));
         }
         text.parse().map_err(D::Error::custom)
@@ -209,7 +213,11 @@ pub mod optional_decimal_u64 {
     ) -> Result<Option<u64>, D::Error> {
         Option::<String>::deserialize(deserializer)?
             .map(|text| {
-                if text.is_empty() || !text.bytes().all(|b| b.is_ascii_digit()) {
+                if text.is_empty()
+                    || text.len() > 20
+                    || text.len() > 1 && text.starts_with('0')
+                    || !text.bytes().all(|b| b.is_ascii_digit())
+                {
                     return Err(D::Error::custom("expected an unsigned decimal string"));
                 }
                 text.parse().map_err(D::Error::custom)

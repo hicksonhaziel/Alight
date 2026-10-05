@@ -15,8 +15,19 @@
 	}
 }
 :80 {
-	@readonly path /v1/health /v1/clock /v1/leaders
+	@readonly {
+		method GET HEAD
+		path /v1/health /v1/clock /v1/leaders /v1/curve /v1/quote /v1/prove/* /v1/proves /v1/ledger /v1/ledger/verify /v1/tape /v1/observers /v1/openapi.json /v1/stream
+	}
 	handle @readonly {
+		reverse_proxy collector:8080
+	}
+	@operator {
+		method POST
+		path /v1/quote /v1/prove
+	}
+	handle @operator {
+		# The backend validates ALIGHT_OPERATOR_KEY before reading a request body.
 		reverse_proxy collector:8080
 	}
 	handle {

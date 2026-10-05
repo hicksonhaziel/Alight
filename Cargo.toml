@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "crates/alight-prove", "bin/alight", "bin/alightd"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "crates/alight-prove", "crates/alight-api", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -18,6 +18,7 @@ alight-forecast = { path = "crates/alight-forecast" }
 alight-econ = { path = "crates/alight-econ" }
 alight-tape = { path = "crates/alight-tape" }
 alight-prove = { path = "crates/alight-prove" }
+alight-api = { path = "crates/alight-api" }
 schemars = "=1.2.2"
 tower = { version = "=0.5.3", features = ["util"] }
 subtle = "=2.6.1"

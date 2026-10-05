@@ -1,8 +1,8 @@
-# Phase 3 — economics, quotes and Prove backend
+# Phase 3 — economics, API and Prove
 
-5 October 2026. Tasks **3.1–3.5** pass offline acceptance: Blur economics,
-passive tape and immutable combined quotes. The Prove backend now passes Sim
-acceptance. Phase 3 remains open: API/Prove endpoints, SDKs, CLI completion,
+5 October 2026. Tasks **3.1–3.6** pass offline acceptance: Blur economics,
+passive tape, immutable combined quotes and REST/WS API. Prove passes Sim
+acceptance through its HTTP endpoint. Phase 3 remains open: SDKs, CLI completion,
 alerts and funded live acceptance follow. No owned live outcomes or market
 savings are established by these checks.
 
@@ -143,3 +143,36 @@ Prove changes also pass the six focused tests. Repository scanning, historical
 Phase 2 receipts and exact economics replay pass. No web package exists yet.
 Collection remains paused; no live transaction was signed or sent. Phase 3's
 CLI/SDK quote and funded live N=40 Prove exit condition remains open.
+
+## REST/WS API and Sim daemon
+
+`alight-api` serves source-scoped health/clock/leaders, curve history, read-only
+quote preview, authenticated forecast freeze/Prove, reports, ledger pages/full
+verification, observer freshness, passive tape and generated OpenAPI 3.1. Defaults
+are 20 requests/s globally, two operator writes/s, two model/verification workers
+and 32 WS connections. Bodies/queries, row counts and stream frame sizes are
+bounded. Keys are hashed and compared in constant time; unset keys disable writes.
+Fixed errors never echo a request, credential or provider response. WS snapshots
+are read-only; input controls are rejected and slow clients disconnect.
+
+Three integration tests validate actual REST and loopback WS captures against the
+served schemas, including full-width integer strings and malformed/overflow
+cases. They cover authenticated quote -> N=40 held-out Prove -> ledger verification,
+restart without duplicate spend, source isolation, disabled/incorrect keys,
+observe refusal, public/operator rate caps, body/query bounds and WS connection
+limits. Python `jsonschema==4.23.0` is pinned for those checks in CI.
+
+The actual `alightd --mode sim` test starts with deliberately invalid provider
+and signing configuration, quotes its synthetic dataset, completes N=40, kills
+the process and restarts against the same DB. It recovers the same report, clock
+and reserved amount with zero sends. Sim returns before reading `.env` or creating
+provider/wallet clients; its optional operator key file is an API credential.
+Caddy now forwards the GET allowlist and two authenticated POST paths. Its
+configuration validates in a temporary network-disabled container; existing
+collector/Caddy services remain stopped. The old image still needs rebuilding
+before a future owner-authorized live resume.
+
+`data/phase-3-api-validation.json` records this batch. The focused API, daemon and
+shared-type checks pass (11 tests), along with formatting, all-target workspace
+Clippy, repository scanning and Caddy validation. The earlier 76-test workspace
+receipt remains historical; the final full Phase 3 sweep follows SDK/CLI/alerts.

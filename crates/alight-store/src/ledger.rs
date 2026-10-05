@@ -326,6 +326,33 @@ impl Store {
         tx.commit().await?;
         Ok(sequence as u64)
     }
+    /// Bounded newest source-scoped rows, checking each canonical hash before use.
+    pub async fn forecast_tail(
+        &self,
+        source: Source,
+        limit: u32,
+    ) -> Result<Vec<ForecastEntry>, StoreError> {
+        if !(1..=100).contains(&limit) {
+            return Err(StoreError::Invalid);
+        }
+        let hashes: Vec<String> = sqlx::query_scalar(
+            "SELECT hash FROM forecast_ledger WHERE source=? ORDER BY sequence DESC LIMIT ?",
+        )
+        .bind(label(source)?)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+        let mut entries = Vec::new();
+        for hash in hashes {
+            entries.push(
+                self.forecast(source, &hash)
+                    .await?
+                    .ok_or(StoreError::Invalid)?,
+            );
+        }
+        entries.reverse();
+        Ok(entries)
+    }
     /// Source-filtered forecast rows, oldest first. Verify the ledger before exporting them.
     pub async fn forecasts(&self, source: Source) -> Result<Vec<ForecastEntry>, StoreError> {
         let rows=sqlx::query("SELECT sequence,prev_hash,hash,payload_json FROM forecast_ledger WHERE source=? ORDER BY sequence").bind(label(source)?).fetch_all(&self.pool).await?;

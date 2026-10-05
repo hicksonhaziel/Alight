@@ -35,6 +35,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "alight-api"
+version = "0.0.0"
+dependencies = [
+ "alight-canary",
+ "alight-forecast",
+ "alight-ingest",
+ "alight-prove",
+ "alight-sim",
+ "alight-store",
+ "alight-types",
+ "axum",
+ "chrono",
+ "futures-util",
+ "reqwest",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sha2",
+ "subtle",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite",
+ "tower",
+]
+
+[[package]]
 name = "alight-canary"
 version = "0.0.0"
 dependencies = [
@@ -214,15 +242,18 @@ dependencies = [
 name = "alightd"
 version = "0.0.0"
 dependencies = [
+ "alight-api",
  "alight-canary",
  "alight-forecast",
  "alight-ingest",
  "alight-prove",
+ "alight-sim",
  "alight-store",
  "alight-types",
  "axum",
  "bs58",
  "chrono",
+ "reqwest",
  "rustls",
  "serde",
  "serde_json",

@@ -3,6 +3,34 @@ use alight_types::*;
 use sqlx::Row;
 
 impl Store {
+    /// Persisted experiment clock floor (UTC), including an interrupted reservation.
+    /// Used only to prevent offline simulation from rewinding across server restarts.
+    pub async fn experiment_clock_floor(
+        &self,
+        source: Source,
+    ) -> Result<Option<String>, StoreError> {
+        let report: Option<String> = sqlx::query_scalar("SELECT s.updated_utc FROM prove_state s JOIN prove_sessions p ON p.id=s.session_id WHERE p.source=? ORDER BY julianday(s.updated_utc) DESC LIMIT 1")
+            .bind(label(source)?).fetch_optional(&self.pool).await?;
+        let reserved: Option<i64> =
+            sqlx::query_scalar("SELECT MAX(created_ms) FROM budget_reservations WHERE source=?")
+                .bind(label(source)?)
+                .fetch_one(&self.pool)
+                .await?;
+        let report = report
+            .as_deref()
+            .map(chrono::DateTime::parse_from_rfc3339)
+            .transpose()
+            .map_err(|_| StoreError::Invalid)?
+            .map(|t| t.with_timezone(&chrono::Utc));
+        let reserved = reserved
+            .map(|ms| chrono::DateTime::from_timestamp_millis(ms).ok_or(StoreError::Invalid))
+            .transpose()?;
+        Ok(report
+            .into_iter()
+            .chain(reserved)
+            .max()
+            .map(|t| t.to_rfc3339()))
+    }
     /// Immutable lock and initial report commit together, acquiring a source/cell freeze.
     pub async fn lock_prove(&self, lock: &ProveLock) -> Result<ProveReport, StoreError> {
         if !(1..=400).contains(&lock.n) || lock.id.is_empty() || lock.id.len() > 100 {

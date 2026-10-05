@@ -1,17 +1,18 @@
 # Alight contracts v1
 
-## Phase 3 Prove backend and planned API contracts (3.6–3.7)
+## Phase 3 API and Prove contracts (3.6–3.7)
 
-The Prove backend and read-only quote preview are implemented. The HTTP/WS
-routes and their authentication/rate-limit wiring below remain task 3.6; this
-section specifies that boundary and does not claim the endpoints are served yet.
+`alight-api` serves the routes below. `alightd --mode sim` runs them without
+provider configuration or signing keys; operator HTTP writes still require an
+API bearer key. Live Prove queues the existing governed sender. Its funded live
+acceptance remains open. Schema contract tests validate actual REST/WS captures.
 
 `GET /v1/quote?request=JSON` previews a `QuoteServiceRequest` without a database
 write; authenticated `POST /v1/quote` freezes it and returns `ForecastEntry`.
 `POST /v1/prove` accepts `ProveRequest` with an idempotency `request_id`, a locked
 `forecast_hash`, `n` (1–400, normally 40), and optional decimal-string sim seed.
 Observe and replay modes reject new Prove runs. Only live mode can construct the
-existing governed sender; simulation requires no network, environment or keys.
+existing governed sender; simulation requires no provider network or wallet keys.
 Example operator request: `{"request_id":"demo-40","forecast_hash":"sha256:...","n":40,"seed":"42"}`.
 
 `ProveLock` is immutable: source, forecast/model/methodology hashes, exact numeric
@@ -23,13 +24,40 @@ the claim never refits. A regime change voids the run; expiry stops new sends
 without converting pending transactions into failures. Unknown prepared sends
 are resolved after restart, never rebroadcast. See `docs/prove-methodology.md`.
 
-The API must bound and rate-limit public REST and WebSocket reads. Writes require
+Public REST and WebSocket reads are bounded and rate-limited. Writes require
 `Authorization: Bearer <ALIGHT_OPERATOR_KEY>`; secrets never appear in query
 strings, schemas, exported payloads or stream messages. An unset key disables
 operator actions. Responses and stream snapshots carry their data source.
 
+| Public GET | Response |
+| --- | --- |
+| `/v1/health`, `/v1/clock`, `/v1/leaders` | Typed health/clock and source-wrapped leader telemetry |
+| `/v1/curve?regime=...&limit=243` | Source/regime history, at most 1,000 rows |
+| `/v1/prove/{id}`, `/v1/proves?limit=20` | Persisted immutable claims/progress; at most 100 reports |
+| `/v1/ledger?after=0&limit=50`, `/v1/ledger/verify` | Hash-checked pages (100 maximum), full chain/document verification |
+| `/v1/tape?from=...&through=...&limit=100` | Source-scoped transfers; at most 1,000 rows and one-day time span |
+| `/v1/observers`, `/v1/openapi.json` | Observer freshness and generated OpenAPI 3.1 schemas |
+| `/v1/stream` | Read-only WS snapshots of health/clock, eight Prove reports and latest ledger entry |
+
+Defaults are 20 REST requests/s globally and two authenticated writes/s, two
+concurrent model/verification workers, and 32 WebSockets. Queries are capped at
+8 KiB and operator bodies at 64 KiB with a five-second receive deadline. Streams
+emit each second, cap output at 1 MiB and incoming frames at 4 KiB, and disconnect
+slow clients. Text/binary control messages are rejected. Errors are fixed typed
+codes with no request/provider/credential echo. Caddy forwards the public GET
+allowlist and only the two authenticated POST routes. None of these reads writes
+a forecast or starts a canary.
+
+Unsigned health counters, budget amounts and cursors now use canonical decimal
+strings, matching the shared u64 contract. Leader telemetry is source-wrapped.
+Historical health receipts retain their original numeric fields. Requests reject
+leading-zero unsigned strings; serialization already emitted canonical values.
+Quote POST requires a current regime and timestamp within 30 seconds; future
+requests and cross-source requests are rejected. Unsupported evidence remains
+an insufficient quote. Sim preserves its experiment clock across restart.
+
 The shared Rust types in `crates/alight-types/src/contracts.rs` freeze the
-Phase 0 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries; quote APIs are still planned.
+Phase 0 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries.
 Call `validate()` at API boundaries; serde decoding alone is not validation.
 
 | Enum | JSON values |

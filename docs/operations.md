@@ -34,15 +34,54 @@ backup under ignored `.alight/backups/` before switching. Build the current
 host binary too (`cargo build -p alightd --locked`) if it is needed for rollback:
 older binaries cannot write after the retention migration adds table columns.
 
-Caddy exposes only read-only health, clock, and leader endpoints on
-`127.0.0.1:8080`. Request headers, URI/query strings, and client addresses are
-removed from its access logs. The backend shares a 10-request/s limiter. This
+Caddy exposes the public GET allowlist and authenticated quote/Prove POST routes
+on `127.0.0.1:8080`. Request headers, URI/query strings, and client addresses are
+removed from its access logs. The backend shares a 20-request/s limiter and a
+separate two-writes/s operator limit. An unset `ALIGHT_OPERATOR_KEY` disables writes. This
 local deployment uses HTTP; a public hostname and TLS belong to a later VPS
 configuration. The collector uses a private container network, an unprivileged
 UID, a read-only root filesystem, and no additional Linux capabilities. Caddy
 retains only NET_BIND_SERVICE, required by its official binary's file capability.
 The collector has a bounded 256 MiB temporary workspace for SQLite index creation.
 Full epoch schedule responses have a separate bounded 45-second deadline.
+
+## Offline Phase 3 API
+
+The saved/stopped collector image predates these routes. Rebuild from current
+sources before an owner-authorized live resume; this development did not restart
+collection. For a provider/key-free Sim server with API operator authentication:
+
+```sh
+python3 -m pip install jsonschema==4.23.0  # contract-test dependency
+python3 - <<'PY'
+from pathlib import Path
+import secrets
+p = Path('.alight/operator.key')
+p.parent.mkdir(exist_ok=True)
+if not p.exists():
+    p.write_text(secrets.token_hex(32) + '\n')
+    p.chmod(0o600)
+PY
+cargo run -p alightd --locked -- --mode sim --db .alight/sim-api.db \
+  --bind 127.0.0.1:8080 --operator-key-file .alight/operator.key --seed 42
+```
+
+Sim reads no `.env` or provider/signing keys, uses synthetic Beam HTTP small
+canaries to seed its model, and shows `source=sim` throughout. The optional key
+file is an API credential, not a wallet key. Without it public reads work and
+operator writes are disabled. Use the same seed/database on restart; experiment
+clock and charged reservations remain durable. A changed seed needs a fresh Sim
+database. `--run-for 30` provides a bounded local session. OpenAPI is available at
+`/v1/openapi.json`; endpoint contracts and error/limit semantics are in
+`docs/contracts.md`. API tests invoke the pinned Python JSON Schema validator;
+its package must be installed before `cargo test` on a clean checkout.
+
+Public quote preview uses a URL-encoded `QuoteServiceRequest` in the `request`
+query parameter. Operator `POST /v1/quote` freezes the same request and returns a
+forecast hash; `POST /v1/prove` uses that hash and an idempotent request ID. Keep
+bearer keys in the `Authorization` header. Only live mode schedules real sends,
+through the existing observer/funding/budget/prepared-send checks. Observe and
+replay reject Prove. Sim can demonstrate N=40 without provider traffic or spend.
 
 Hickson requested that collection be paused after deployment verification to
 save internet data. Both containers are explicitly stopped; the prior systemd

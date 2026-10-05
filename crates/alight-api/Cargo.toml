@@ -1,31 +1,34 @@
 [package]
-name = "alightd"
+name = "alight-api"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-alight-ingest = { workspace = true, features = ["stream"] }
-alight-store.workspace = true
 alight-types.workspace = true
-alight-canary.workspace = true
+alight-store.workspace = true
 alight-forecast.workspace = true
 alight-prove.workspace = true
-alight-api.workspace = true
+alight-canary.workspace = true
+alight-ingest.workspace = true
 alight-sim.workspace = true
-tokio.workspace = true
-serde_json.workspace = true
-serde.workspace = true
-chrono.workspace = true
-uuid.workspace = true
 axum.workspace = true
-rustls.workspace = true
-bs58.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+chrono.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+tower.workspace = true
 reqwest.workspace = true
+serde_urlencoded.workspace = true
+tokio-tungstenite.workspace = true
+futures-util.workspace = true
 
 [lints]
 workspace = true
