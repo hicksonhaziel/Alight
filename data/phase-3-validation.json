@@ -8,6 +8,18 @@
       "stale_sparse_source_rejection": "PASS"
     },
     "all_target_clippy": "PASS",
+    "clean_checkout": {
+      "cli_n": 40,
+      "dependencies": "pinned cached dependencies; offline",
+      "method": "fresh public Git archive; npm ci/build; cargo build both bins/Rust example; complete developer flow",
+      "owned_live_transactions_sent": 0,
+      "private_project_files_present": false,
+      "provider_requests": 0,
+      "public_source_commit": "c3e72abbaace2fcb9e7a99f3420a5e7edf49567f",
+      "rust_sdk_n": 40,
+      "status": "PASS",
+      "typescript_sdk_n": 40
+    },
     "developer_flow": {
       "cli": {
         "exit_codes": [
@@ -164,12 +176,12 @@
     "crates/alight-types/src/schema.rs": "085e3d8401f30bea9e39624ed8406728b62052d636c168423ca7d04cd04cf331",
     "docs/contracts.md": "7e23a18f3c4bab9bdc450719111224ab878fed5a79d22be72f8bf580b02b8d7e",
     "docs/operations.md": "f71cdfe68728a34df8faecde798331647f88577e5700e680f00af157a61d0044",
-    "docs/phase-3-report.md": "a534593b15c9ea791bdafa116470b489607de775dff615326a005a57cb752f5f",
+    "docs/phase-3-report.md": "7afe716bd9dfefa0d67e84e134ec8b69866acc1998d5ec9915ac5fe0b867043c",
     "docs/prove-methodology.md": "fc81279e286ca10c19bec722584cd501a65962e94173c4ff1029a0d7af6c5b07",
     "rust-toolchain.toml": "080d1c422a980a506912db5c2cc9fbedcf1df1fe4c8de676934ab7c421c5d768",
     "scripts/test_phase3_developer.py": "9dbdfa2fbf0cb6ad02e506e8327ca73cd5518669057cd10ef9debf5bb767dd03",
     "scripts/verify_api_contracts.py": "d83c6a801bab7f83df7f57792dc7864bd68418b874d284d8aa71dc8471f68faa",
-    "scripts/verify_phase3_final_receipt.py": "e8b2b325d1b45ce2b4d32c1fe3e6899869c8cb84b87f96277d6b92b86cad3be7",
+    "scripts/verify_phase3_final_receipt.py": "45f02ed95592184a8b04cbd8ae578e1f319c51c8936e8b1e9b639f7b5d6b8f15",
     "sdk/ts/examples/quote_then_send.mjs": "434381c2c12b73674b7f06aba22f81530c5f1873562e8a3cbcc0972254c2d561",
     "sdk/ts/generate.mjs": "bcc02b9c37041f36d11769ace08df23e6eb02ce8e106f0d34879275adaebb029",
     "sdk/ts/openapi.json": "b02ca923dab405de40c572522bfb7f8d123e52dcd3db133f4c7e76c2c5bb63ae",
@@ -231,6 +243,7 @@
       "offline": "PASS"
     },
     "3.8": {
+      "clean_checkout": "PASS",
       "offline": "PASS"
     },
     "3.9": {

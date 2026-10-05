@@ -215,3 +215,8 @@ The actual developer-flow script passes again on the final binaries, including
 both N=40 SDK examples and CLI N=40, with zero provider requests/live sends.
 Historical Phase 2 and exact Blur economics receipts verify. Repository scanning
 finds no known credentials; both collector services/containers remain stopped.
+
+A fresh public Git archive of `c3e72ab` (without `.env`, private handoff/briefs or
+README) installed the TS SDK, built both binaries and the Rust example using the
+cached pinned dependencies, and passed the complete developer-flow script. Both
+SDKs and CLI again completed N=40/ledger verification; zero provider/live sends.

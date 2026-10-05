@@ -9,7 +9,7 @@ r=json.loads(receipt.read_text())
 published=subprocess.run(['git','log','-1','--format=%H','--','data/phase-3-validation.json'],cwd=root,capture_output=True,text=True,check=True).stdout.strip()
 if published:
     old=subprocess.run(['git','show',f'{published}:data/phase-3-validation.json'],cwd=root,capture_output=True,check=True).stdout
-    if old!=receipt.read_bytes(): published='' 
+    if old!=receipt.read_bytes(): published=''
 assert r['schema_version']==1 and r['phase']==3
 assert r['status']=='OFFLINE_PASS_LIVE_PENDING'
 assert len(r['tasks'])==10 and all(v['offline']=='PASS' for v in r['tasks'].values())
@@ -20,6 +20,7 @@ assert r['runtime']['owned_live_transactions_sent']==0
 assert r['checks']['rust_workspace']['failed']==0
 assert r['checks']['typescript_tests']['passed']==3
 assert r['checks']['developer_flow']['status']=='PASS'
+assert r['checks']['clean_checkout']['status']=='PASS'
 assert r['checks']['alerts']['rules_fired_once']==5
 assert r['checks']['all_target_clippy']=='PASS' and r['checks']['format']=='PASS'
 for path,digest in r['code_sha256'].items():
