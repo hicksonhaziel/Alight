@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "bin/alight", "bin/alightd"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -14,6 +14,7 @@ alight-store = { path = "crates/alight-store" }
 alight-canary = { path = "crates/alight-canary" }
 alight-model = { path = "crates/alight-model" }
 alight-sim = { path = "crates/alight-sim" }
+alight-forecast = { path = "crates/alight-forecast" }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = { version = "=1.0.150", features = ["float_roundtrip"] }
 thiserror = "=2.0.18"
@@ -46,3 +47,9 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 unwrap_used = "deny"
+
+# Bootstrap/regression loops stay fast in offline CLI runs and focused acceptance tests.
+[profile.dev.package.alight-model]
+opt-level = 2
+[profile.dev.package.alight-canary]
+opt-level = 1

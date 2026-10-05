@@ -1,5 +1,11 @@
 //! Owned-canary M0 cells. No network, signing, passive observations, or prior-only recommendations.
 mod beta;
+pub mod latency;
+pub mod pooled;
+pub mod quote;
+pub mod regression;
+pub mod scoring;
+pub mod signal;
 use alight_types::{
     CONTRACT_VERSION, CanaryConfig, CurveContext, CurveSnapshot, Evidence, Outcome, TrainingCanary,
 };
@@ -29,10 +35,50 @@ pub fn methodology_hash() -> String {
     )
 }
 
-fn utc(text: &str) -> Result<DateTime<Utc>, ModelError> {
+pub(crate) fn utc(text: &str) -> Result<DateTime<Utc>, ModelError> {
     DateTime::parse_from_rfc3339(text)
         .map(|t| t.with_timezone(&Utc))
         .map_err(|_| ModelError::Invalid)
+}
+
+pub(crate) fn label(
+    sample: &TrainingCanary,
+    context: &CurveContext,
+    horizon: u32,
+) -> Result<Option<(f64, f64)>, ModelError> {
+    let c = &sample.canary;
+    if c.source != context.source || c.regime_id != context.regime_id {
+        return Ok(None);
+    }
+    let as_of = utc(&context.as_of_utc)?;
+    let sent = utc(&c.send_wall_utc)?;
+    if sent > as_of {
+        return Ok(None);
+    }
+    if !c.assignment_prob.is_finite() || c.assignment_prob <= 0.0 || c.assignment_prob > 1.0 {
+        return Err(ModelError::Invalid);
+    }
+    let resolved = c.resolved_at_utc.as_deref().map(utc).transpose()?;
+    if resolved.is_some_and(|t| t < sent) {
+        return Err(ModelError::Invalid);
+    }
+    if !sample.finalized || resolved.is_none_or(|t| t > as_of) {
+        return Ok(None);
+    }
+    let y = match c.outcome {
+        Some(Outcome::LandedOk | Outcome::LandedFailed) => f64::from(
+            c.landed_slot
+                .and_then(|s| s.checked_sub(c.sent_slot))
+                .ok_or(ModelError::Invalid)?
+                <= u64::from(horizon),
+        ),
+        Some(Outcome::Expired | Outcome::Rejected | Outcome::LandedThenDropped) => 0.0,
+        _ => return Ok(None),
+    };
+    Ok(Some((
+        y,
+        (-((as_of - sent).num_milliseconds() as f64 / 1000.0) / HALF_LIFE_S).exp2(),
+    )))
 }
 
 /// Estimates P(finalized landing within H slots) for one exact configuration/regime.

@@ -254,6 +254,15 @@ async fn canary_loop(
     }
 }
 
+async fn model_loop(store: Store, mut stop: watch::Receiver<bool>) -> Result<(), StoreError> {
+    loop {
+        let now = stream::utc_now();
+        tokio::select! { _=stop.changed()=>return Ok(()),result=alight_forecast::tick(&store,Source::Live,"local",&now)=>{ result?; } }
+        tokio::select! { _=stop.changed()=>return Ok(()),result=alight_forecast::daily(&store,Source::Live,&now)=>{ result?; } }
+        tokio::select! { _=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(300))=>{} }
+    }
+}
+
 async fn retention_loop(
     config: Arc<Config>,
     store: Store,
@@ -562,6 +571,7 @@ async fn run() -> Result<(), Error> {
         rx.clone(),
     ));
     workers.spawn(retention_loop(config.clone(), store.clone(), rx.clone()));
+    workers.spawn(model_loop(store.clone(), rx.clone()));
     if mode == RunMode::Live {
         // Load keys only in this worker's private configuration, never in observer state.
         let signing = Arc::new(Config::load().map_err(|_| Error::Configuration)?);

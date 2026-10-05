@@ -21,11 +21,13 @@ dependencies = [
 name = "alight"
 version = "0.0.0"
 dependencies = [
+ "alight-forecast",
  "alight-ingest",
  "alight-model",
  "alight-sim",
  "alight-store",
  "alight-types",
+ "chrono",
  "serde",
  "serde_json",
  "tempfile",
@@ -37,6 +39,7 @@ name = "alight-canary"
 version = "0.0.0"
 dependencies = [
  "alight-ingest",
+ "alight-model",
  "alight-store",
  "alight-types",
  "base64",
@@ -57,6 +60,19 @@ dependencies = [
  "thiserror",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "alight-forecast"
+version = "0.0.0"
+dependencies = [
+ "alight-model",
+ "alight-store",
+ "alight-types",
+ "chrono",
+ "serde_json",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]
@@ -113,6 +129,7 @@ dependencies = [
  "chrono",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror",
 ]
 
@@ -138,6 +155,7 @@ version = "0.0.0"
 dependencies = [
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -145,6 +163,7 @@ name = "alightd"
 version = "0.0.0"
 dependencies = [
  "alight-canary",
+ "alight-forecast",
  "alight-ingest",
  "alight-store",
  "alight-types",

@@ -26,6 +26,7 @@ fn context() -> CurveContext {
 }
 fn sample(id: usize, outcome: Outcome) -> TrainingCanary {
     TrainingCanary {
+        covariates: Default::default(),
         finalized: true,
         canary: Canary {
             id: format!("sample-{id}"),

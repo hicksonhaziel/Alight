@@ -308,3 +308,78 @@ no transaction is signed or submitted. `replay-model` recalculates those same
 snapshots and rejects disagreement or methodology-version drift. Replay execution
 preserves the dataset's original sim source rather than relabeling synthetic
 evidence as live. Shared JSON enables exact float round trips for reproducibility.
+
+## Phase 2 forecasting contracts
+
+`TrainingCanary.covariates` is an additive field with unknown defaults. Congestion
+is dimensionless in [0,5], and absent values remain unknown. Simulator parameters
+can independently disable fee effects and failure mass for null/coverage checks;
+an optional continuous receive-latency mode retains integer landing slots.
+
+`ModelFit` freezes coefficients, covariance, support, evaluation context and held-out
+M0/M1 losses. M1 uses nonnegative tip/fee coefficients, global leader/congestion
+effects and penalized route deviations. M2's M1 weight is logistic(50 times the
+held-out M0 minus M1 loss), computed using an earlier fit and later outcomes.
+`CurvePrediction` adds interpolation/extrapolation flags; extrapolated intervals
+are [0,1] and cannot authorize a recommendation. Sparse, stale and unresolved
+evidence remains insufficient. Blend intervals enclose both component intervals.
+
+`ModelQuoteRequest` carries candidate configurations, source/regime/region/as-of,
+congestion, upcoming leader classes and a tagged probability or latency-quantile
+target. Probability targets use a positive slot horizon. Latency targets specify
+exactly one positive slot or millisecond ceiling. `ModelQuote` recommends the
+lowest nominal fee-plus-tip candidate whose lower probability bound or upper
+latency bound meets the target. Economics remain separate. An insufficient result
+has no recommendation and states a sample requirement/reason. `LatencyEstimate`
+uses null for infinity or unidentifiable intervals; it never drops failure mass.
+Milliseconds require valid same-clock observer measurements, not a slot conversion.
+
+Migration 0005 adds frozen model documents, per-source forecast chains and heads,
+append-only grade APIs, daily Signal documents and owned-canary covariates. The
+chain hashes a version domain, source, sequence, previous hash and canonical sorted
+JSON. The stored head detects missing tails; SQL triggers reject forecast updates
+and deletions. An externally published/anchored head is needed to protect against
+someone rewriting the entire database. A grade never alters a forecast.
+
+`Forecast` contains the complete request/quote, expiry, source/regime, methodology
+hash, frozen model hash and B1–B4 alternatives. `ForecastGrade` includes reliability,
+Brier, natural-log loss, rate interval coverage and separate through-change scores.
+Only finalized same-source/config outcomes sent strictly later than creation and
+before expiry are scored. No-claim forecasts and straddling regimes are voided;
+pending/late outcomes remain visible. Expired forecasts with no later matched
+outcomes are voided with that reason. B3 takes distinct same-source passive tape
+observations from the previous five minutes, ignores future/stale observations,
+and stores the window, count and integer median. Without these inputs it stays
+unavailable; simulations supply a clearly artificial tape. Verification also
+checks the referenced frozen model documents.
+
+`SignalReport` carries source/day/as-of, methodology hash and nine route/size
+cohorts and `completed_utc_day`; manual same-day reports are provisional. Each cohort publishes uniform-arm primary and IPW sensitivity effects,
+99% family bands, exclusions, and DISCRIMINATING/FLAT/INCONCLUSIVE. Regression
+slopes are unrestricted; identified hour/congestion interactions are included.
+See the prospective v2 clarification in the existing methodology document.
+
+The sender and all observers now share `process_clock_origin()` in one process.
+Restart changes its UUID. Historical records retain their old independent clocks
+and cannot retrospectively become comparable millisecond samples. Policy v1's
+fixed RNG consumption permits O(1) seeded restart at the durable draw; it never
+re-sends a prepared transaction. Live local fees are measured after configuration
+selection, so its pre-selection nominal cost uses zero for the unknown fee price.
+The governor still reserves the actual quoted fee plus tip before any signing.
+
+The CLI accepts these JSON requests using `alight quote --database PATH --request
+PATH`; this command writes an immutable forecast but sends no transaction. For
+example, a small RPC candidate with unknown congestion and leaders:
+
+```json
+{"context":{"source":"live","region":"local","regime_id":"phase1-unclassified","as_of_utc":"2026-10-05T06:00:00Z"},"candidates":[{"route":"rpc","tip_lamports":"0","cu_price_micro_lamports":"0","cu_limit":25000,"fee_bucket":"zero","tip_tier":"none","size_class":"small"}],"covariates":{"congestion":null},"leader_class_next":[],"target":{"kind":"probability","target_p":0.9,"horizon_slots":2}}
+```
+
+Empty live training returns `INSUFFICIENT`, no recommendation and a sample
+requirement. A latency target replaces `target` with
+`{"kind":"latency_quantile","quantile":0.9,"max_slots":4.0,"max_ms":null}`.
+`ledger verify`, `grade`, `model-tick`, and `signal` take an explicit database and
+source. Tick/grading/Signal take an explicit as-of UTC timestamp. They never load
+`.env`. `sim --phase2` runs quotes, frozen baselines, grading, history and Signal
+against later synthetic canaries; replay verifies those outputs as well as M0.
+Outputs refuse to overwrite a different historical report.

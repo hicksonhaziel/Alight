@@ -262,6 +262,8 @@ pub struct Canary {
 pub struct TrainingCanary {
     pub canary: Canary,
     pub finalized: bool,
+    #[serde(default)]
+    pub covariates: crate::ModelCovariates,
 }
 
 /// Source, vantage point, regime and evaluation clock of a probability curve.

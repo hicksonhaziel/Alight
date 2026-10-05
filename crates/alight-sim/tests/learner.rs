@@ -57,6 +57,7 @@ fn registered_convergence_and_adaptation_thresholds() {
                 .iter()
                 .cloned()
                 .map(|canary| TrainingCanary {
+                    covariates: Default::default(),
                     canary,
                     finalized: true,
                 })

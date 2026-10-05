@@ -1,5 +1,5 @@
 //! Seeded artificial landing environment. No keys, provider calls, signing or SOL spend.
-use alight_canary::policy::Policy;
+use alight_canary::policy::{Assignment, Policy};
 use alight_types::{
     Canary, CanaryConfig, IndexScope, LeaderClass, ObserverKind, Outcome, ReceiveTime, Route,
     SizeClass, Source, Tercile,
@@ -29,6 +29,15 @@ pub struct Parameters {
     pub congestion: f64,
     pub tip_slope: f64,
     pub shift: Option<Shift>,
+    #[serde(default = "default_fee_slope")]
+    pub fee_slope: f64,
+    #[serde(default)]
+    pub never_land_mass: Option<f64>,
+    #[serde(default)]
+    pub continuous_latency: bool,
+}
+fn default_fee_slope() -> f64 {
+    0.18
 }
 impl Default for Parameters {
     fn default() -> Self {
@@ -40,6 +49,9 @@ impl Default for Parameters {
             congestion: 0.0,
             tip_slope: 0.45,
             shift: None,
+            fee_slope: 0.18,
+            never_land_mass: None,
+            continuous_latency: false,
         }
     }
 }
@@ -50,7 +62,12 @@ impl Parameters {
                 && congestion.is_finite()
                 && (0.0..=5.0).contains(&congestion)
         };
-        if self.version != 1
+        if !self.fee_slope.is_finite()
+            || !(0.0..=2.0).contains(&self.fee_slope)
+            || self
+                .never_land_mass
+                .is_some_and(|v| !v.is_finite() || !(0.0..=0.5).contains(&v))
+            || self.version != 1
             || !(1..=100_000).contains(&self.canaries)
             || !environment(self.slot_ms, self.congestion)
             || !self.tip_slope.is_finite()
@@ -99,7 +116,13 @@ impl Random {
 fn utc(t: DateTime<Utc>) -> String {
     t.to_rfc3339_opts(SecondsFormat::Millis, true)
 }
-fn hazard(config: &CanaryConfig, congestion: f64, leader: i32, tip_slope: f64) -> f64 {
+fn hazard(
+    config: &CanaryConfig,
+    congestion: f64,
+    leader: i32,
+    tip_slope: f64,
+    fee_slope: f64,
+) -> f64 {
     let route = match config.route {
         Route::BeamQuic => 0.2,
         Route::BeamHttp => -0.05,
@@ -111,7 +134,9 @@ fn hazard(config: &CanaryConfig, congestion: f64, leader: i32, tip_slope: f64) -
         SizeClass::Large => 0.5,
     };
     let log_tip = (config.tip_lamports as f64 / 100_000.0).max(1.0).ln();
-    (route + tip_slope * log_tip + 0.18 * (config.cu_price_micro_lamports as f64 / 1000.0).ln_1p()
+    (route
+        + tip_slope * log_tip
+        + fee_slope * (config.cu_price_micro_lamports as f64 / 1000.0).ln_1p()
         - size
         + f64::from(leader) * 0.2
         - congestion * 0.7)
@@ -133,7 +158,7 @@ pub fn probability(
             (1.0 - never_land(congestion))
                 * (1.0
                     - (-f64::from(horizon_slots.min(16))
-                        * hazard(config, congestion, leader, tip_slope))
+                        * hazard(config, congestion, leader, tip_slope, 0.18))
                     .exp())
         })
         .sum::<f64>()
@@ -142,8 +167,35 @@ pub fn probability(
 
 /// Produces finalized synthetic canaries in the live Canary schema, explicitly source=sim.
 pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
+    generate_inner(parameters, None)
+}
+/// Focused uniform experiment for discrimination/null validation, still normal synthetic canaries.
+pub fn generate_focused(
+    parameters: &Parameters,
+    route: Route,
+    size: SizeClass,
+) -> Result<Dataset, SimError> {
+    generate_inner(parameters, Some((route, size)))
+}
+fn generate_inner(
+    parameters: &Parameters,
+    focus: Option<(Route, SizeClass)>,
+) -> Result<Dataset, SimError> {
     parameters.validate()?;
+    // Isolate runs that share a seed but differ in environment or focused cohort.
+    use sha2::{Digest, Sha256};
+    let namespace = format!(
+        "{:x}",
+        Sha256::digest(serde_json::to_vec(&(parameters, focus)).map_err(|_| SimError)?)
+    );
     let mut policy = Policy::new(parameters.seed, 0.30).map_err(|_| SimError)?;
+    let mut focused_rng = Random(parameters.seed ^ 0xa0761d6478bd642f);
+    let focused_cells: Vec<_> = policy
+        .cells()
+        .iter()
+        .filter(|c| focus.is_none_or(|(r, s)| c.route == r && c.size_class == s))
+        .cloned()
+        .collect();
     let mut outcomes = Random(parameters.seed ^ 0xd1b54a32d192ed03);
     let start = DateTime::parse_from_rfc3339("2026-10-05T00:00:00Z")
         .map_err(|_| SimError)?
@@ -156,21 +208,51 @@ pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
             .map_or(("sim-r0", parameters.slot_ms, parameters.congestion), |s| {
                 ("sim-r1", s.slot_ms, s.congestion)
             });
-        let assignment = policy.assign(1000, 5000);
+        let assignment = if focus.is_some() {
+            let mut config = focused_cells[((focused_rng.unit() * focused_cells.len() as f64)
+                as usize)
+                .min(focused_cells.len() - 1)]
+            .clone();
+            config.cu_price_micro_lamports = match config.fee_bucket {
+                alight_types::FeeBucket::Zero => 0,
+                alight_types::FeeBucket::LocalMedian => 1000,
+                alight_types::FeeBucket::LocalP90 => 5000,
+            };
+            Assignment {
+                config,
+                policy_id: "focused-uniform-sim",
+                seed: parameters.seed,
+                draw: u64::from(draw),
+                assignment_prob: 1.0 / focused_cells.len() as f64,
+                uniform_arm: true,
+            }
+        } else {
+            policy.assign(1000, 5000)
+        };
         let sent = start + Duration::milliseconds(elapsed_ms as i64);
         let sent_slot = 1_000_000 + u64::from(draw);
         let leader = (outcomes.unit() * 3.0).floor() as i32 - 1;
-        let never = outcomes.unit() < never_land(congestion);
-        let distance = ((-outcomes.unit().ln()
-            / hazard(&assignment.config, congestion, leader, parameters.tip_slope))
-        .ceil() as u64)
-            .max(1);
+        let never = outcomes.unit() < parameters.never_land_mass.unwrap_or(never_land(congestion));
+        let continuous_distance = -outcomes.unit().ln()
+            / hazard(
+                &assignment.config,
+                congestion,
+                leader,
+                parameters.tip_slope,
+                parameters.fee_slope,
+            );
+        let distance = (continuous_distance.ceil() as u64).max(1);
         let landed = !never && distance <= 16;
         let delay_ms = if landed { distance } else { 17 } * u64::from(slot_ms);
+        let delay_ns = if landed && parameters.continuous_latency {
+            (continuous_distance * f64::from(slot_ms) * 1_000_000.0).round() as u64
+        } else {
+            delay_ms * 1_000_000
+        };
         let received = ReceiveTime {
             clock_id: "sim-clock-v1".into(),
-            mono_ns: (elapsed_ms + delay_ms) * 1_000_000,
-            wall_utc: utc(sent + Duration::milliseconds(delay_ms as i64)),
+            mono_ns: elapsed_ms * 1_000_000 + delay_ns,
+            wall_utc: utc(sent + Duration::nanoseconds(delay_ns as i64)),
         };
         let observer_first_seen = if landed {
             BTreeMap::from([(ObserverKind::Grpc, received.clone())])
@@ -183,7 +265,7 @@ pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
             _ => Tercile::High,
         };
         canaries.push(Canary {
-            id: format!("sim-{}-{draw}", parameters.seed),
+            id: format!("sim-{namespace}-{draw}"),
             source: Source::Sim,
             config: assignment.config,
             policy_id: assignment.policy_id.into(),
@@ -225,7 +307,7 @@ pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
                 .map(|s| ("sim-r1", s.slot_ms, s.congestion)),
         );
     for (regime_id, slot_ms, congestion) in environments {
-        for cell in policy.cells() {
+        for cell in &focused_cells {
             let mut config = cell.clone();
             config.cu_price_micro_lamports = match config.fee_bucket {
                 alight_types::FeeBucket::Zero => 0,
@@ -236,9 +318,9 @@ pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
                 regime_id: regime_id.into(),
                 slot_ms,
                 congestion,
-                p_within_1_slot: probability(&config, congestion, parameters.tip_slope, 1),
-                p_within_2_slots: probability(&config, congestion, parameters.tip_slope, 2),
-                p_within_4_slots: probability(&config, congestion, parameters.tip_slope, 4),
+                p_within_1_slot: probability_with(parameters, &config, congestion, 1),
+                p_within_2_slots: probability_with(parameters, &config, congestion, 2),
+                p_within_4_slots: probability_with(parameters, &config, congestion, 4),
                 config,
             });
         }
@@ -252,4 +334,47 @@ pub fn generate(parameters: &Parameters) -> Result<Dataset, SimError> {
         ground_truth,
         canaries,
     })
+}
+
+impl Dataset {
+    pub fn training(&self) -> Result<Vec<alight_types::TrainingCanary>, SimError> {
+        if self.source != Source::Sim || self.canaries.iter().any(|c| c.source != Source::Sim) {
+            return Err(SimError);
+        }
+        Ok(self
+            .canaries
+            .iter()
+            .cloned()
+            .map(|canary| {
+                let congestion = if canary.regime_id == "sim-r1" {
+                    self.parameters
+                        .shift
+                        .as_ref()
+                        .map_or(self.parameters.congestion, |s| s.congestion)
+                } else {
+                    self.parameters.congestion
+                };
+                alight_types::TrainingCanary {
+                    canary,
+                    finalized: true,
+                    covariates: alight_types::ModelCovariates {
+                        congestion: Some(congestion),
+                    },
+                }
+            })
+            .collect())
+    }
+}
+pub fn probability_with(p: &Parameters, config: &CanaryConfig, congestion: f64, h: u32) -> f64 {
+    [-1, 0, 1]
+        .into_iter()
+        .map(|l| {
+            (1.0 - p.never_land_mass.unwrap_or(never_land(congestion)))
+                * (1.0
+                    - (-f64::from(h.min(16))
+                        * hazard(config, congestion, l, p.tip_slope, p.fee_slope))
+                    .exp())
+        })
+        .sum::<f64>()
+        / 3.0
 }

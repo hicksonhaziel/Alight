@@ -1,5 +1,5 @@
 //! Equal-tail Beta intervals via Lanczos log-gamma, incomplete-beta continued fraction, and bisection.
-fn log_gamma(z: f64) -> f64 {
+pub(crate) fn log_gamma(z: f64) -> f64 {
     let coefficients = [
         676.5203681218851,
         -1259.1392167224028,

@@ -32,10 +32,8 @@ impl Default for ReceiveClock {
 }
 impl ReceiveClock {
     pub fn new() -> Self {
-        Self {
-            id: uuid::Uuid::new_v4().to_string(),
-            start: Instant::now(),
-        }
+        let (id, start) = alight_types::process_clock_origin();
+        Self { id, start }
     }
     pub fn receive(&self) -> ReceiveTime {
         ReceiveTime {

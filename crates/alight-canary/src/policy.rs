@@ -5,6 +5,7 @@ use thiserror::Error;
 
 pub const POLICY_ID: &str = "stratified-v0-splitmix64";
 pub const MIN_TIP_LAMPORTS: u64 = 100_000;
+pub const ADAPTIVE_POLICY_ID: &str = "thompson-cost-v1-splitmix64";
 #[derive(Debug, Error)]
 #[error("invalid assignment policy configuration")]
 pub struct PolicyError;
@@ -155,6 +156,124 @@ impl Policy {
             self.assign(0, 0);
         }
         Ok(())
+    }
+}
+
+/// Approximate Beta Thompson draws using posterior mean/variance, with a fixed draw count.
+/// The Monte Carlo proposal is frozen before choosing the arm; its conditional propensity is exact.
+#[derive(Clone)]
+pub struct AdaptivePolicy {
+    cells: Vec<CanaryConfig>,
+    seed: u64,
+    draw: u64,
+    state: u64,
+    uniform_fraction: f64,
+}
+impl AdaptivePolicy {
+    const PROPOSALS: usize = 32;
+    pub fn new(seed: u64, uniform_fraction: f64) -> Result<Self, PolicyError> {
+        if !uniform_fraction.is_finite() || !(0.30..=1.0).contains(&uniform_fraction) {
+            return Err(PolicyError);
+        }
+        Ok(Self {
+            cells: Policy::new(seed, uniform_fraction)?.cells,
+            seed,
+            draw: 0,
+            state: seed,
+            uniform_fraction,
+        })
+    }
+    pub fn cells(&self) -> &[CanaryConfig] {
+        &self.cells
+    }
+    fn random(&mut self) -> f64 {
+        self.state = self.state.wrapping_add(0x9e3779b97f4a7c15);
+        let mut z = self.state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+        ((z ^ (z >> 31)) >> 11) as f64 / (1u64 << 53) as f64
+    }
+    /// Fixed random draw count makes resume O(1), independent of changing resolved outcomes.
+    pub fn resume(&mut self, draw: u64) -> Result<(), PolicyError> {
+        if draw > 10_000_000 {
+            return Err(PolicyError);
+        }
+        self.draw = draw;
+        let per_draw = (Self::PROPOSALS * self.cells.len() * 2 + 2) as u64;
+        self.state = self
+            .seed
+            .wrapping_add(draw.wrapping_mul(per_draw).wrapping_mul(0x9e3779b97f4a7c15));
+        Ok(())
+    }
+    pub fn assign(
+        &mut self,
+        median: u64,
+        p90: u64,
+        posterior: &[(f64, f64)],
+    ) -> Result<Assignment, PolicyError> {
+        if posterior.len() != self.cells.len()
+            || posterior
+                .iter()
+                .any(|(a, b)| !a.is_finite() || !b.is_finite() || *a < 1.0 || *b < 1.0)
+        {
+            return Err(PolicyError);
+        }
+        let mut cells = self.cells.clone();
+        for c in &mut cells {
+            c.cu_price_micro_lamports = match c.fee_bucket {
+                FeeBucket::Zero => 0,
+                FeeBucket::LocalMedian => median,
+                FeeBucket::LocalP90 => p90,
+            };
+        }
+        let mut wins = vec![0u32; cells.len()];
+        for _ in 0..Self::PROPOSALS {
+            let mut best = 0;
+            let mut best_utility = f64::NEG_INFINITY;
+            for (i, (a, b)) in posterior.iter().enumerate() {
+                let normal = (-2.0 * self.random().max(f64::MIN_POSITIVE).ln()).sqrt()
+                    * (std::f64::consts::TAU * self.random()).cos();
+                let mean = a / (a + b);
+                let sd = (a * b / ((a + b).powi(2) * (a + b + 1.0))).sqrt();
+                let p = (mean + sd * normal).clamp(0.0, 1.0);
+                let utility = p - alight_model::quote::nominal_cost(&cells[i]) as f64 / 500_000.0;
+                if utility > best_utility {
+                    best = i;
+                    best_utility = utility;
+                }
+            }
+            wins[best] += 1;
+        }
+        let probabilities: Vec<_> = wins
+            .iter()
+            .map(|w| {
+                self.uniform_fraction / cells.len() as f64
+                    + (1.0 - self.uniform_fraction) * f64::from(*w) / Self::PROPOSALS as f64
+            })
+            .collect();
+        let uniform_arm = self.random() < self.uniform_fraction;
+        let random = self.random();
+        let index = if uniform_arm {
+            ((random * cells.len() as f64) as usize).min(cells.len() - 1)
+        } else {
+            let mut sum = 0.0;
+            wins.iter()
+                .position(|w| {
+                    sum += f64::from(*w) / Self::PROPOSALS as f64;
+                    sum > random
+                })
+                .unwrap_or(cells.len() - 1)
+        };
+        let assignment = Assignment {
+            config: cells[index].clone(),
+            policy_id: ADAPTIVE_POLICY_ID,
+            seed: self.seed,
+            draw: self.draw,
+            assignment_prob: probabilities[index],
+            uniform_arm,
+        };
+        self.draw += 1;
+        Ok(assignment)
     }
 }
 #[cfg(test)]

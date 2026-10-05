@@ -1,8 +1,10 @@
 //! SQLite WAL persistence. Event evidence and cursors commit in the same transaction.
 mod curves;
+mod ledger;
 use alight_types::{
     BudgetLimits, BudgetReservation, Canary, IngestEvent, ObserverEvent, ObserverKind, Source,
 };
+pub use ledger::{canonical, content_hash};
 use serde::Serialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};

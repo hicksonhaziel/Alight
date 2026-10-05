@@ -1,6 +1,7 @@
 use alight_ingest::{Config, HttpProbe};
 use alight_types::Verdict;
 use std::process::ExitCode;
+mod forecasting;
 mod simulation;
 
 #[tokio::main]
@@ -18,13 +19,20 @@ async fn run() -> Result<u8, String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if matches!(
         args.first().map(String::as_str),
+        Some("quote" | "ledger" | "model-tick" | "grade" | "signal")
+    ) {
+        return forecasting::run(&args).await;
+    }
+
+    if matches!(
+        args.first().map(String::as_str),
         Some("sim" | "replay-model")
     ) {
         return simulation::run(&args).await;
     }
     if args.first().map(String::as_str) != Some("doctor") {
         eprintln!(
-            "Usage: alight doctor [--network] [--output PATH]\n       alight sim [--seed N] [--canaries N] [--slot-ms N] [--congestion X] [--flat-tip]\n                  [--shift-at N --shift-slot-ms N --shift-congestion X] [--output PATH] [--database PATH]\n       alight replay-model --input PATH [--output PATH] [--database PATH]\nDoctor defaults to configuration presence only; --network runs read-only probes. Sim/replay need no environment, keys or network."
+            "Usage: alight doctor [--network] [--output PATH]\n       alight sim [--seed N] [--canaries N] [--slot-ms N] [--congestion X] [--flat-tip]\n                  [--shift-at N --shift-slot-ms N --shift-congestion X] [--output PATH] [--database PATH]\n       alight replay-model --input PATH [--output PATH] [--database PATH]\nalight quote --database PATH --request JSON [--ttl S] [--frozen-model HASH] [--tape JSON]\n       alight ledger verify --database PATH --source live|sim|replay\n       alight model-tick|grade --database PATH --source MODE --as-of UTC [--region NAME]\n       alight signal --database PATH --source MODE --day YYYY-MM-DD --as-of UTC\nDoctor defaults to configuration presence only; --network runs read-only probes. Sim/replay need no environment, keys or network."
         );
         return Ok(2);
     }

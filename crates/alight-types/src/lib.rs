@@ -1,7 +1,17 @@
 //! Version 1 wire contracts shared by the collector, storage, and canary engine.
 mod contracts;
+mod phase2;
 pub use contracts::*;
+pub use phase2::*;
 use serde::{Deserialize, Serialize};
+
+/// Same-process senders/observers share one monotonic origin; each restart gets a new identity.
+pub fn process_clock_origin() -> (String, std::time::Instant) {
+    static ORIGIN: std::sync::OnceLock<(String, std::time::Instant)> = std::sync::OnceLock::new();
+    ORIGIN
+        .get_or_init(|| (uuid::Uuid::new_v4().to_string(), std::time::Instant::now()))
+        .clone()
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -80,6 +90,13 @@ impl SlotWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn one_process_has_one_comparable_monotonic_origin() {
+        let (a, start) = process_clock_origin();
+        let (b, second) = process_clock_origin();
+        assert_eq!(a, b);
+        assert_eq!(start, second);
+    }
 
     #[test]
     fn expiry_needs_both_strict_height_and_absence() {

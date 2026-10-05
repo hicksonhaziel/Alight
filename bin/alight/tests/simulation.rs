@@ -8,7 +8,15 @@ fn offline_cli_replays_identical_snapshots_and_rejects_tampering() {
     let database = dir.path().join("sim.db");
     let executable = env!("CARGO_BIN_EXE_alight");
     let result = Command::new(executable)
-        .args(["sim", "--canaries", "81", "--seed", "42", "--output"])
+        .args([
+            "sim",
+            "--phase2",
+            "--canaries",
+            "8100",
+            "--seed",
+            "42",
+            "--output",
+        ])
         .arg(&report)
         .arg("--database")
         .arg(&database)
@@ -41,6 +49,31 @@ fn offline_cli_replays_identical_snapshots_and_rejects_tampering() {
     );
     let mut data: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&report).expect("read")).expect("json");
+    assert_eq!(data["phase2"]["verified_entries"], 2);
+    for forecast in data["phase2"]["forecasts"].as_array().expect("forecasts") {
+        assert_ne!(
+            forecast["forecast"]["quote"]["recommendation"],
+            serde_json::Value::Null
+        );
+        assert_eq!(
+            forecast["forecast"]["baselines"]
+                .as_array()
+                .expect("baselines")
+                .len(),
+            4
+        );
+    }
+    assert_eq!(
+        data["phase2"]["grades"].as_array().expect("grades").len(),
+        2
+    );
+    assert!(
+        data["phase2"]["grades"]
+            .as_array()
+            .expect("grades")
+            .iter()
+            .all(|g| g["status"] == "SCORED")
+    );
     data["snapshots"][0]["p_hat"] = serde_json::json!(0.1234567);
     std::fs::write(&report, serde_json::to_vec(&data).expect("encode")).expect("tamper");
     let result = Command::new(executable)

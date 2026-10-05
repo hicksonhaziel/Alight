@@ -56,7 +56,7 @@ impl Store {
     ) -> Result<Vec<TrainingCanary>, StoreError> {
         use sqlx::Row;
         let rows =
-            sqlx::query("SELECT finalized,payload_json FROM canaries WHERE source=? ORDER BY id")
+            sqlx::query("SELECT c.finalized,c.payload_json,COALESCE(m.payload_json,'{}') AS covariates FROM canaries c LEFT JOIN canary_model_context m ON m.canary_id=c.id WHERE c.source=? ORDER BY c.id")
                 .bind(label(source)?)
                 .fetch_all(&self.pool)
                 .await?;
@@ -64,6 +64,7 @@ impl Store {
             .map(|row| {
                 let text: String = row.try_get("payload_json")?;
                 Ok(TrainingCanary {
+                    covariates: serde_json::from_str(&row.try_get::<String, _>("covariates")?)?,
                     canary: serde_json::from_str(&text)?,
                     finalized: row.try_get("finalized")?,
                 })

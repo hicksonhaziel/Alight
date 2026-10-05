@@ -2,7 +2,7 @@
 use crate::{
     builder::{BuildError, Wallet},
     governor::{BudgetError, Governor},
-    policy::{Policy, PolicyError},
+    policy::{AdaptivePolicy, PolicyError},
     resolver,
     routes::{Routes, SendResult},
 };
@@ -36,7 +36,7 @@ pub struct Engine {
     store: Store,
     governor: Governor,
     wallet: Wallet,
-    policy: Policy,
+    policy: AdaptivePolicy,
     policy_key: String,
     routes: Routes,
     http: HttpProbe,
@@ -67,8 +67,11 @@ impl Engine {
             .unwrap_or("0.30")
             .parse()
             .map_err(|_| EngineError::Configuration)?;
-        let mut policy = Policy::new(seed, fraction)?;
-        let policy_key = format!("{}:{seed}:{fraction:.17}", crate::policy::POLICY_ID);
+        let mut policy = AdaptivePolicy::new(seed, fraction)?;
+        let policy_key = format!(
+            "{}:{seed}:{fraction:.17}",
+            crate::policy::ADAPTIVE_POLICY_ID
+        );
         policy.resume(store.next_policy_draw(&policy_key).await?)?;
         let governor = Governor::new(
             store.clone(),
@@ -90,6 +93,7 @@ impl Engine {
         if reserve_balance < 1_000_000 || !(1..=32).contains(&max_pending) {
             return Err(EngineError::Configuration);
         }
+        let (clock_id, started) = alight_types::process_clock_origin();
         Ok(Self {
             store,
             governor,
@@ -99,8 +103,8 @@ impl Engine {
             routes: Routes::new().map_err(|_| EngineError::Configuration)?,
             http: HttpProbe::new()?,
             leaders: None,
-            clock_id: uuid::Uuid::new_v4().to_string(),
-            started: Instant::now(),
+            clock_id,
+            started,
             reserve_balance,
             max_pending,
         })
@@ -186,7 +190,17 @@ impl Engine {
             .ok_or(ProbeError::Format)?;
         // Determine the exact writable account set before measuring local fee buckets.
         let mut next = self.policy.clone();
-        let mut assignment = next.assign(0, 0);
+        let samples = self.store.training_canaries(Source::Live).await?;
+        let context = CurveContext {
+            source: Source::Live,
+            regime_id: "phase1-unclassified".into(),
+            region: "local".into(),
+            as_of_utc: Utc::now().to_rfc3339(),
+        };
+        let posterior =
+            alight_model::pooled::policy_posteriors(&samples, next.cells(), &context, 2)
+                .map_err(|_| EngineError::Configuration)?;
+        let mut assignment = next.assign(0, 0, &posterior)?;
         let chosen_tip = if assignment.config.route == Route::Rpc {
             None
         } else {
