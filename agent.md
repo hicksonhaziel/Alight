@@ -10,9 +10,11 @@
   proof of current provider capabilities. Validate external assumptions in Phase 0.
 - If the local briefs are absent in a fresh clone, use the committed project docs
   and request missing requirements only when they are necessary for the task.
-- Work within the user's current request. Phase 1 implementation is authorized.
+- Work within the user's current request. Phase 2 implementation is authorized.
   Hickson explicitly permits reading and editing project environment files for
   debugging, including reusing Aftershock's Solami configuration in Alight.
+- Keep live collection paused to save data until Hickson asks to resume it.
+  Prefer offline simulation/replay for Phase 2. The dedicated wallet is unfunded.
 
 ## Git and context rules
 
