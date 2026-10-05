@@ -126,6 +126,43 @@ Actual payloads are in `data/fixtures/`, with hashes in the Phase 0 receipt.
 Files marked live are historical captures, not active streams; a future replay
 adapter emits `source=replay` while retaining original provenance.
 
+## Phase 3 economics contracts (tasks 3.1–3.3)
+
+`MarketTrade` normalizes the captured Blur REST trades and authoritative WS
+`raw_json`: pool/base mint, source, slot, Unix-second block time, provider-scoped
+transaction/instruction indices (including signed `inner_ix_index: -1`), USD
+price text and exact token quantities.
+REST mint identity comes from the requested pool metadata; WS supplies it.
+Replay always changes the source to `replay`. Connected/control frames cannot
+refresh pool data. Candle prices remain separate; minute candles never supply
+sub-second delay evidence. No database migration is required for this in-memory
+slice; persisted economics/quote integration follows in task 3.5.
+
+`DelayCostSnapshot` reports the rolling window, measured slot duration in ms,
+trade/slot counts, market age, stale/sparse flags, and points with median/p90
+absolute USD-price returns in bps. Pairs require an exact observed slot distance;
+delay_ms is that distance times the supplied measured slot duration. This is a
+clock conversion, not an exact sub-second trade timestamp. Disconnections split
+the series; pairs cannot cross a gap. Split-half relative median change is a
+descriptive stability metric, not a confidence interval or an independence claim.
+
+`EconomicCandidate` combines a scoped `CurvePrediction` with unconditional
+landing-latency masses and nonlanding mass. Masses sum to one and the mass within
+the quote horizon must equal p_hat. `EconomicsInputs` shows size USD, edge bps,
+lambda, SOL/USD conversion, base fee lamports and choice of median/p90 delay
+cost. All USD values are decimal strings; estimates use floating-point arithmetic
+only after preserving/validating provider price text and integer quantities.
+`EconomicsQuote` retains the model quote, evaluated costs, Pareto frontier, knee
+and named baseline differences. Stale/sparse/gapped/mismatched market evidence
+preserves the probability-only quote with an explicit reason. The recommendation
+must still meet the model's lower probability bound or upper latency bound.
+
+Example normalized historical trade (abridged quantities):
+
+```json
+{"source":"replay","pool":"EgUV2hrWfsgfFyftxCx4ut82811ygWFbWYNPdv3cRWQA","mint":"CTMV7yXV1mpucM7svPEtmVFBB8g6hqHGVPczmbYrj9Jb","slot":"453068193","block_time_unix_s":1791066584,"tx_index":260,"ix_index":3,"inner_ix_index":3,"price_usd":"0.00013739913814689506","base_amount":"145561320614819","base_reserve":"210847950099700846"}
+```
+
 ## Migration from the local brief
 
 No database or public API is deployed, so no data migration exists yet.

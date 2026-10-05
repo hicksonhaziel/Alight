@@ -80,6 +80,23 @@ trading recommendations. Record provider prices/USD decimals as strings and
 raw token quantities as exact integers. Blur WebSocket fixtures retain `raw_json`
 because JavaScript's parsed number preview can lose precision above 2^53−1.
 
+## 2026-10-05: Blur instruction index and delay resolution
+
+Phase 3 fixture replay found `inner_ix_index: -1` in two captured swaps. Preserve
+this provider value as a signed optional index; REST omits the field. Do not
+equate the missing REST scope with the WS sentinel or collapse multiple swaps
+in one signature. Deduplication includes signature, outer and inner indices.
+
+Captured Blur block times have second precision. Slot-scale delay returns use
+exact observed slot distances, converted with the caller's measured regime
+clock. They do not create sub-second timestamps from `indexed_at` or one-minute
+candles. Pair counts overlap and are descriptive; at least 30 pairs per requested
+positive delay and a price within 30 seconds are required by default. Gaps split
+coverage, and insufficient market evidence leaves the probability quote intact.
+The optimizer follows the brief's nominal upfront fee/tip objective, displaying
+that assumption rather than claiming realized on-chain spend or validated swap
+savings. Live market integration remains paused at the owner's request.
+
 ## 2026-10-03: Observer evidence
 
 gRPC and Mirage are separate transport observations from the same provider;

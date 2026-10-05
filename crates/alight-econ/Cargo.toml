@@ -1,0 +1,24 @@
+[package]
+name = "alight-econ"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alight-types.workspace = true
+alight-model.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+chrono.workspace = true
+futures-util.workspace = true
+tokio-tungstenite.workspace = true
+rustls.workspace = true
+
+[dev-dependencies]
+axum = { workspace = true, features = ["query"] }
+
+[lints]
+workspace = true
