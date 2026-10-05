@@ -4,7 +4,7 @@ use alight_model::{estimate, pooled, quote, scoring, signal};
 use alight_store::{Store, StoreError, content_hash};
 use alight_types::*;
 use chrono::{DateTime, Duration, Utc};
-pub use service::issue_combined;
+pub use service::{issue_combined, preview_combined};
 use std::collections::BTreeMap;
 
 fn utc(text: &str) -> Result<DateTime<Utc>, StoreError> {
@@ -98,6 +98,7 @@ pub async fn tick(
         .collect::<Vec<_>>();
     let ctx = context.clone();
     let now = as_of.to_owned();
+    let grading_samples = store.grading_canaries(source).await?;
     let (models, curves, grades) = tokio::task::spawn_blocking(move || -> Result<_, StoreError> {
         let mut models = Vec::new();
         let mut curves = Vec::new();
@@ -112,7 +113,7 @@ pub async fn tick(
         }
         let grades = entries
             .iter()
-            .map(|e| scoring::grade(e, &samples, &now).map_err(|_| StoreError::Invalid))
+            .map(|e| scoring::grade(e, &grading_samples, &now).map_err(|_| StoreError::Invalid))
             .collect::<Result<Vec<_>, _>>()?;
         Ok((models, curves, grades))
     })
@@ -149,23 +150,7 @@ async fn issue_inner(
     if !(1..=86400).contains(&ttl_s) {
         return Err(StoreError::Invalid);
     }
-    let samples = store.training_canaries(request.context.source).await?;
-    let work_request = request.clone();
-    let (samples, models, response) =
-        tokio::task::spawn_blocking(move || -> Result<_, StoreError> {
-            let models = [1, 2, 4]
-                .into_iter()
-                .map(|h| {
-                    pooled::fit_blend(&samples, &work_request.context, h)
-                        .map_err(|_| StoreError::Invalid)
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            let response =
-                quote::quote(&samples, &work_request, &models).map_err(|_| StoreError::Invalid)?;
-            Ok((samples, models, response))
-        })
-        .await
-        .map_err(|_| StoreError::Invalid)??;
+    let (samples, models, response) = compute(store, &request).await?;
     let model_hash = store.save_models(&models).await?;
     let frozen = if let Some(hash) = frozen_hash {
         Some(store.load_models(hash).await?)
@@ -249,6 +234,26 @@ async fn issue_inner(
             Err(error)
         }
     }
+}
+async fn compute(
+    store: &Store,
+    request: &ModelQuoteRequest,
+) -> Result<(Vec<TrainingCanary>, Vec<ModelFit>, ModelQuote), StoreError> {
+    let samples = store.training_canaries(request.context.source).await?;
+    let request = request.clone();
+    tokio::task::spawn_blocking(move || {
+        let models = [1, 2, 4]
+            .into_iter()
+            .map(|h| {
+                pooled::fit_blend(&samples, &request.context, h).map_err(|_| StoreError::Invalid)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let response =
+            quote::quote(&samples, &request, &models).map_err(|_| StoreError::Invalid)?;
+        Ok((samples, models, response))
+    })
+    .await
+    .map_err(|_| StoreError::Invalid)?
 }
 /// Report a completed UTC day once under the registered methodology; manual reports can be refreshed.
 pub async fn daily(

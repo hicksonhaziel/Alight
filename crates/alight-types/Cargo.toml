@@ -6,6 +6,7 @@ rust-version.workspace = true
 
 [dependencies]
 serde.workspace = true
+schemars.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]

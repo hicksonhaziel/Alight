@@ -2,7 +2,7 @@
 use crate::{
     builder::{BuildError, Wallet},
     governor::{BudgetError, Governor},
-    policy::{AdaptivePolicy, PolicyError},
+    policy::{AdaptivePolicy, Assignment, PolicyError},
     resolver,
     routes::{Routes, SendResult},
 };
@@ -111,6 +111,46 @@ impl Engine {
     }
     /// Returns a sanitized status. Every network send has a durable signature and reservation.
     pub async fn step(&mut self, config: &Config) -> Result<Value, EngineError> {
+        self.step_inner(config, None).await
+    }
+    /// Sends one prospective held-out attempt with exact frozen numeric settings.
+    /// It uses the same observer/funding preflight, durable governor and sender as exploration.
+    pub async fn step_prove(
+        &mut self,
+        config: &Config,
+        lock: &ProveLock,
+    ) -> Result<Value, EngineError> {
+        let stored = self
+            .store
+            .prove(Source::Live, &lock.id)
+            .await?
+            .ok_or(EngineError::Configuration)?;
+        if lock.source != Source::Live || alight_store::content_hash(lock)? != stored.lock_hash {
+            return Err(EngineError::Configuration);
+        }
+        if matches!(stored.state, ProveState::Complete | ProveState::Voided)
+            || Utc::now()
+                >= chrono::DateTime::parse_from_rfc3339(&lock.expires_at_utc)
+                    .map_err(|_| EngineError::Configuration)?
+        {
+            return Ok(json!({"status":"PROVE_CLOSED","prove_id":lock.id}));
+        }
+        if self
+            .store
+            .prove_canaries(Source::Live, &lock.id)
+            .await?
+            .len()
+            >= lock.n as usize
+        {
+            return Ok(json!({"status":"WAITING_PROVE_OUTCOMES","prove_id":lock.id}));
+        }
+        self.step_inner(config, Some(lock)).await
+    }
+    async fn step_inner(
+        &mut self,
+        config: &Config,
+        locked: Option<&ProveLock>,
+    ) -> Result<Value, EngineError> {
         let health = self
             .store
             .observer_health(ObserverKind::Grpc, Source::Live)
@@ -197,10 +237,23 @@ impl Engine {
             region: "local".into(),
             as_of_utc: Utc::now().to_rfc3339(),
         };
-        let posterior =
-            alight_model::pooled::policy_posteriors(&samples, next.cells(), &context, 2)
-                .map_err(|_| EngineError::Configuration)?;
-        let mut assignment = next.assign(0, 0, &posterior)?;
+        let policy_key =
+            locked.map_or_else(|| self.policy_key.clone(), |l| format!("prove/{}", l.id));
+        let mut assignment = if let Some(lock) = locked {
+            Assignment {
+                config: lock.config.clone(),
+                policy_id: "prove-held-out-v1",
+                seed: 0,
+                draw: self.store.next_policy_draw(&policy_key).await?,
+                assignment_prob: 1.0,
+                uniform_arm: false,
+            }
+        } else {
+            let posterior =
+                alight_model::pooled::policy_posteriors(&samples, next.cells(), &context, 2)
+                    .map_err(|_| EngineError::Configuration)?;
+            next.assign(0, 0, &posterior)?
+        };
         let chosen_tip = if assignment.config.route == Route::Rpc {
             None
         } else {
@@ -215,25 +268,30 @@ impl Engine {
             .iter()
             .map(ToString::to_string)
             .collect();
-        let fees = self
-            .http
-            .rpc(config, "getRecentPrioritizationFees", json!([writable]))
-            .await?;
-        let mut values: Vec<u64> = fees
-            .as_array()
-            .ok_or(ProbeError::Format)?
-            .iter()
-            .map(|s| s["prioritizationFee"].as_u64().ok_or(ProbeError::Format))
-            .collect::<Result<_, _>>()?;
-        if values.is_empty() {
-            return Err(ProbeError::Format.into());
-        }
-        values.sort_unstable();
-        assignment.config.cu_price_micro_lamports = match assignment.config.fee_bucket {
-            FeeBucket::Zero => 0,
-            FeeBucket::LocalMedian => values[(values.len() - 1) / 2],
-            FeeBucket::LocalP90 => values[(9 * (values.len() - 1)).div_ceil(10)],
+        let fees = if locked.is_some() {
+            Value::Null
+        } else {
+            self.http
+                .rpc(config, "getRecentPrioritizationFees", json!([writable]))
+                .await?
         };
+        if locked.is_none() {
+            let mut values: Vec<u64> = fees
+                .as_array()
+                .ok_or(ProbeError::Format)?
+                .iter()
+                .map(|s| s["prioritizationFee"].as_u64().ok_or(ProbeError::Format))
+                .collect::<Result<_, _>>()?;
+            if values.is_empty() {
+                return Err(ProbeError::Format.into());
+            }
+            values.sort_unstable();
+            assignment.config.cu_price_micro_lamports = match assignment.config.fee_bucket {
+                FeeBucket::Zero => 0,
+                FeeBucket::LocalMedian => values[(values.len() - 1) / 2],
+                FeeBucket::LocalP90 => values[(9 * (values.len() - 1)).div_ceil(10)],
+            };
+        }
         let message = self
             .wallet
             .message(&assignment.config, &id, blockhash, chosen_tip)?;
@@ -266,6 +324,25 @@ impl Engine {
             return Ok(json!({"status":"WAITING_EPOCH"}));
         }
         let now = Utc::now();
+        let fresh = self
+            .store
+            .observer_health(ObserverKind::Grpc, Source::Live)
+            .await?;
+        let age = fresh["last_receive_utc"]
+            .as_str()
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+            .map(|t| (now - t.with_timezone(&Utc)).num_milliseconds());
+        if fresh["open_gaps"].as_i64() != Some(0) || !age.is_some_and(|ms| (0..3000).contains(&ms))
+        {
+            return Ok(json!({"status":"WAITING_OBSERVER"}));
+        }
+        if let Some(lock) = locked
+            && now
+                >= chrono::DateTime::parse_from_rfc3339(&lock.expires_at_utc)
+                    .map_err(|_| EngineError::Configuration)?
+        {
+            return Ok(json!({"status":"PROVE_CLOSED","prove_id":lock.id}));
+        }
         let utc_ms =
             u64::try_from(now.timestamp_millis()).map_err(|_| EngineError::Configuration)?;
         let permit = match self
@@ -297,7 +374,7 @@ impl Engine {
             policy_id: assignment.policy_id.into(),
             assignment_prob: assignment.assignment_prob,
             uniform_arm: assignment.uniform_arm,
-            regime_id: "phase1-unclassified".into(),
+            regime_id: locked.map_or_else(|| "phase1-unclassified".into(), |l| l.regime_id.clone()),
             sent_slot,
             clock_id: self.clock_id.clone(),
             send_mono_ns: u64::try_from(self.started.elapsed().as_nanos())
@@ -315,15 +392,31 @@ impl Engine {
             observer_first_seen: BTreeMap::new(),
             resolved_at_utc: None,
         };
-        self.store
-            .prepare_send(
-                &canary,
-                &self.policy_key,
-                assignment.draw,
-                &serde_json::to_value(&assignment).map_err(|_| EngineError::Configuration)?,
-                &format!("sha256:{:x}", Sha256::digest(wire)),
-            )
-            .await?;
+        let assignment_json =
+            serde_json::to_value(&assignment).map_err(|_| EngineError::Configuration)?;
+        let wire_hash = format!("sha256:{:x}", Sha256::digest(wire));
+        if let Some(lock) = locked {
+            self.store
+                .prepare_prove_send(
+                    &canary,
+                    &policy_key,
+                    assignment.draw,
+                    &assignment_json,
+                    &wire_hash,
+                    &lock.id,
+                )
+                .await?;
+        } else {
+            self.store
+                .prepare_send(
+                    &canary,
+                    &policy_key,
+                    assignment.draw,
+                    &assignment_json,
+                    &wire_hash,
+                )
+                .await?;
+        }
         self.store.save_evidence(&json!({"canary_id":id,"fee_samples":fees,"fee_for_message":fee_check,"blockhash_context":block["context"],"leader_epoch":leaders.epoch.to_string(),"tip_accounts":tip_addresses,"tip_recipient":chosen_tip.map(|p|p.to_string())})).await?;
         self.policy = next;
         let result = self.routes.send(config, assignment.config.route, &tx).await;

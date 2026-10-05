@@ -6,7 +6,7 @@ pub const CONTRACT_VERSION: u32 = 1;
 
 macro_rules! contract_enum {
     ($name:ident, $case:literal, $($variant:ident),+ $(,)?) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, schemars::JsonSchema)]
         #[serde(rename_all = $case)]
         pub enum $name { $($variant),+ }
     };
@@ -72,36 +72,40 @@ contract_enum!(
 );
 
 /// RPC evidence is checked against this exact signature, source, and commitment.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct RpcCheck {
     pub signature: String,
     pub source: Source,
     pub required_commitment: Commitment,
     pub checked_commitment: Commitment,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub checked_block_height: u64,
     pub searched_history: bool,
     #[serde(default)]
     pub history_covers_sent_slot: bool,
     #[serde(default, with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub context_slot: u64,
     pub checked_at_utc: String,
     pub landing: Option<RpcLanding>,
     pub raw_ref: String,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct RpcLanding {
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub slot: u64,
     pub block_id: String,
     pub success: bool,
     pub commitment: Commitment,
 }
 /// Canonical RPC block membership, required before classifying a provisional landing as dropped.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CanonicalBlock {
     pub source: Source,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub slot: u64,
     pub block_id: String,
     pub commitment: Commitment,
@@ -109,7 +113,7 @@ pub struct CanonicalBlock {
     pub signature_present: bool,
     pub raw_ref: String,
 }
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ResolutionEvidence {
     pub observations: Vec<ObserverEvent>,
     pub rpc: Option<RpcCheck>,
@@ -118,40 +122,49 @@ pub struct ResolutionEvidence {
 }
 
 /// Worst-case lamports reserved before signing; window_ms is a rolling burst window.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct BudgetLimits {
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub daily_lamports: u64,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub burst_lamports: u64,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub window_ms: u64,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct BudgetReservation {
     pub id: String,
     pub source: Source,
     pub route: Route,
     pub day: String,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub created_ms: u64,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub lamports: u64,
 }
 
 /// A provider's candidate-block metadata; chain times are Unix seconds.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct BlockMetaEvent {
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub slot: u64,
     pub block_id: String,
     #[serde(with = "optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
     pub parent_slot: Option<u64>,
     pub parent_block_id: Option<String>,
     pub block_time_unix_s: Option<i64>,
     #[serde(with = "optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
     pub block_height: Option<u64>,
     #[serde(with = "optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
     pub executed_transactions: Option<u64>,
     pub received: ReceiveTime,
     pub source: Source,
@@ -159,7 +172,7 @@ pub struct BlockMetaEvent {
 }
 
 /// Normalized ingest shapes; provider evidence stays separately addressable.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", content = "data", rename_all = "snake_case")]
 pub enum IngestEvent {
     Slot(SlotEvent),
@@ -205,12 +218,14 @@ pub mod optional_decimal_u64 {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CanaryConfig {
     pub route: Route,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub tip_lamports: u64,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub cu_price_micro_lamports: u64,
     pub cu_limit: u32,
     pub fee_bucket: FeeBucket,
@@ -218,7 +233,7 @@ pub struct CanaryConfig {
     pub size_class: SizeClass,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct LeaderClass {
     pub leader: String,
     pub skip_rate_tercile: Tercile,
@@ -226,7 +241,7 @@ pub struct LeaderClass {
 }
 
 /// A durable send attempt. Monotonic times are comparable only within clock_id.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Canary {
     pub id: String,
     pub source: Source,
@@ -236,18 +251,22 @@ pub struct Canary {
     pub uniform_arm: bool,
     pub regime_id: String,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub sent_slot: u64,
     pub clock_id: String,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub send_mono_ns: u64,
     pub send_wall_utc: String,
     pub signature: Option<String>,
     pub blockhash: String,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub last_valid_block_height: u64,
     pub leader_class_next: Vec<LeaderClass>,
     pub outcome: Option<Outcome>,
     #[serde(with = "optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
     pub landed_slot: Option<u64>,
     pub landed_block_id: Option<String>,
     pub landed_index: Option<u32>,
@@ -258,7 +277,7 @@ pub struct Canary {
 }
 
 /// Training eligibility includes finalization; provisional landings are not labels.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct TrainingCanary {
     pub canary: Canary,
     pub finalized: bool,
@@ -267,7 +286,7 @@ pub struct TrainingCanary {
 }
 
 /// Source, vantage point, regime and evaluation clock of a probability curve.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CurveContext {
     pub source: Source,
     pub regime_id: String,
@@ -276,7 +295,7 @@ pub struct CurveContext {
 }
 
 /// M0 probability within horizon_slots, with discounted sample mass (not prior counts).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CurveSnapshot {
     pub contract_version: u32,
     pub estimator: String,
@@ -347,17 +366,19 @@ impl CurveSnapshot {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ReceiveTime {
     pub clock_id: String,
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub mono_ns: u64,
     pub wall_utc: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct SlotEvent {
     #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub slot: u64,
     pub block_id: Option<String>,
     pub status: SlotStatus,
@@ -367,11 +388,12 @@ pub struct SlotEvent {
     pub raw_ref: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ObserverEvent {
     pub observer: ObserverKind,
     pub signature: String,
     #[serde(with = "optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
     pub slot: Option<u64>,
     pub block_id: Option<String>,
     pub index_in_block: Option<u32>,
@@ -383,7 +405,7 @@ pub struct ObserverEvent {
 }
 
 /// Gaps are distinct records; they never fabricate a signature or transaction outcome.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ObserverGap {
     pub observer: ObserverKind,
     pub source: Source,
@@ -392,7 +414,7 @@ pub struct ObserverGap {
     pub reason: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct QuoteRequest {
     pub route_set: Vec<Route>,
     pub target_p: f64,
@@ -428,19 +450,19 @@ impl QuoteRequest {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct RegimeRef {
     pub id: String,
     pub slot_ms: f64,
     pub since: String,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct LatencyQuantiles {
     pub p50: f64,
     pub p90: f64,
     pub p99: f64,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Recommendation {
     pub config: CanaryConfig,
     pub region: String,
@@ -452,12 +474,12 @@ pub struct Recommendation {
     pub evidence: Evidence,
     pub data_age_s: f64,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct LedgerRef {
     pub hash: String,
     pub prev_hash: String,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Economics {
     /// Decimal USD estimate, conditional on explicitly published assumptions.
     pub expected_cost_usd: String,
@@ -465,7 +487,7 @@ pub struct Economics {
     pub data_age_s: f64,
     pub stale: bool,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct QuoteResponse {
     pub contract_version: u32,
     pub source: Source,

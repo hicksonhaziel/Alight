@@ -1,9 +1,10 @@
-# Phase 3 — economics and persisted quote service
+# Phase 3 — economics, quotes and Prove backend
 
 5 October 2026. Tasks **3.1–3.5** pass offline acceptance: Blur economics,
-passive tape and immutable combined quotes. Phase 3 remains open: API, Prove,
-SDKs, CLI completion and alerts (3.6–3.10) follow. No owned live outcomes or
-market savings are established by these checks.
+passive tape and immutable combined quotes. The Prove backend now passes Sim
+acceptance. Phase 3 remains open: API/Prove endpoints, SDKs, CLI completion,
+alerts and funded live acceptance follow. No owned live outcomes or market
+savings are established by these checks.
 
 The Blur REST/WS client follows the recorded paths, queries and payloads, uses
 bounded responses and pool filters, retries disconnects with capped backoff,
@@ -111,3 +112,34 @@ new tape/combined-service tests. Both historical Phase 2 and economics receipts
 verify. Collection remains paused, the live database and README remain untouched,
 and no transactions were signed or sent. API/Prove/SDK/CLI/alerts and funded live
 acceptance remain pending.
+
+## Prove backend and read-only preview
+
+`alight-prove` locks an existing supported forecast, model/methodology hashes,
+exact configuration, source/regime and requested N. Membership is committed
+before broadcast and permanently excluded from fitting. The existing governed
+canary engine can schedule the frozen live configuration; this path has not been
+run on mainnet. The methodology in `docs/prove-methodology.md` was registered
+before funded Prove results. Wilson intervals and all three verdicts are tested;
+partial runs, missing clocks and unresolved outcomes remain inconclusive.
+
+The 40-attempt Sim test covers quote, lock, durable budget, held-out membership,
+grading, ledger verification and restart. It retains 100 training samples and
+40 held-out members, reserving exactly 8,201,040 synthetic lamports. Two crash
+windows resume without duplicate reservations or prepared rebroadcast. Smaller
+caps stop at two members, and expiry never creates the missing 38 outcomes.
+Stale reports cannot undo progress or revive a voided claim. These are synthetic
+and persistence checks; they establish no live landing probability.
+
+`preview_combined` computes the complete response without saving model snapshots
+or forecasts; its bytes match the frozen operator response. Source-scoped ledger
+pagination is bounded. Shared contracts now derive JSON schemas with lossless
+u64 string fields. The HTTP/WS routes, operator authentication and schema contract
+tests are still task 3.6, so none of those endpoints are claimed as served.
+
+`data/phase-3-prove-validation.json` records this batch. Formatting and all-target
+workspace Clippy with Beam pass; **76 workspace tests pass, 0 fail**. The final
+Prove changes also pass the six focused tests. Repository scanning, historical
+Phase 2 receipts and exact economics replay pass. No web package exists yet.
+Collection remains paused; no live transaction was signed or sent. Phase 3's
+CLI/SDK quote and funded live N=40 Prove exit condition remains open.

@@ -10,6 +10,7 @@ alight-store.workspace = true
 alight-types.workspace = true
 alight-canary.workspace = true
 alight-forecast.workspace = true
+alight-prove.workspace = true
 tokio.workspace = true
 serde_json.workspace = true
 serde.workspace = true

@@ -1,4 +1,4 @@
-use alight_forecast::issue_combined;
+use alight_forecast::{issue_combined, preview_combined};
 use alight_store::{Store, canonical};
 use alight_types::*;
 
@@ -139,6 +139,86 @@ async fn populate(store: &Store) -> Vec<TrainingCanary> {
         }
     }
     samples
+}
+
+#[tokio::test]
+async fn public_preview_is_read_only_and_matches_the_frozen_operator_response() {
+    let dir = tempfile::tempdir().expect("dir");
+    let store = Store::open(&dir.path().join("preview.db"), 16 * 1024 * 1024)
+        .await
+        .expect("store");
+    populate(&store).await;
+    store.save_market_snapshot(&market()).await.expect("market");
+    let before = canonical(&store.counts(Source::Sim).await.expect("counts")).expect("canonical");
+    let preview = preview_combined(&store, request()).await.expect("preview");
+    assert!(
+        preview
+            .economics
+            .as_ref()
+            .expect("economics")
+            .economics
+            .is_some()
+    );
+    assert_eq!(
+        store
+            .verify_ledger(Source::Sim)
+            .await
+            .expect("empty ledger"),
+        0
+    );
+    assert!(
+        store
+            .load_models(&preview.model_snapshot_hash)
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        before,
+        canonical(&store.counts(Source::Sim).await.expect("counts")).expect("canonical")
+    );
+    let entry = issue_combined(&store, request()).await.expect("freeze");
+    assert_eq!(
+        preview.model_snapshot_hash,
+        entry.forecast.model_snapshot_hash
+    );
+    assert_eq!(
+        canonical(&preview.quote).expect("preview"),
+        canonical(&entry.forecast.quote).expect("frozen")
+    );
+    assert_eq!(
+        canonical(&preview.economics).expect("preview"),
+        canonical(&entry.forecast.economics).expect("frozen")
+    );
+    assert_eq!(
+        canonical(&preview.baselines).expect("preview"),
+        canonical(&entry.forecast.baselines).expect("frozen")
+    );
+    assert_eq!(
+        canonical(&preview.requested_economics).expect("preview inputs"),
+        canonical(&entry.forecast.requested_economics).expect("frozen inputs")
+    );
+    assert_eq!(
+        store
+            .forecast_page(Source::Sim, 0, 1)
+            .await
+            .expect("page")
+            .len(),
+        1
+    );
+    assert!(
+        store
+            .forecast_page(Source::Sim, entry.sequence, 1)
+            .await
+            .expect("next")
+            .is_empty()
+    );
+    assert!(
+        store
+            .forecast_page(Source::Live, 0, 1)
+            .await
+            .expect("isolated")
+            .is_empty()
+    );
 }
 
 #[tokio::test]

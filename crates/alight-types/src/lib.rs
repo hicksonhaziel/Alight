@@ -3,10 +3,12 @@ mod contracts;
 mod economics;
 mod phase2;
 mod phase3;
+mod schema;
 pub use contracts::*;
 pub use economics::*;
 pub use phase2::*;
 pub use phase3::*;
+pub use schema::DecimalU64;
 use serde::{Deserialize, Serialize};
 
 /// Same-process senders/observers share one monotonic origin; each restart gets a new identity.
@@ -17,7 +19,7 @@ pub fn process_clock_origin() -> (String, std::time::Instant) {
         .clone()
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Source {
     Live,
@@ -25,7 +27,7 @@ pub enum Source {
     Replay,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Route {
     BeamQuic,
@@ -33,7 +35,7 @@ pub enum Route {
     Rpc,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Outcome {
     LandedOk,
@@ -44,7 +46,7 @@ pub enum Outcome {
     Unresolved,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Verdict {
     Pass,

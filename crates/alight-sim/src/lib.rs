@@ -177,6 +177,114 @@ pub fn generate_focused(
 ) -> Result<Dataset, SimError> {
     generate_inner(parameters, Some((route, size)))
 }
+
+/// One prospective synthetic attempt with exact locked settings; no keys or network.
+/// Send spacing and latency use the frozen synthetic slot_ms, never a live clock claim.
+pub fn simulate_locked(
+    lock: &alight_types::ProveLock,
+    ordinal: u32,
+) -> Result<alight_types::TrainingCanary, SimError> {
+    if lock.source != Source::Sim || ordinal >= lock.n {
+        return Err(SimError);
+    }
+    let env = lock.simulation.as_ref().ok_or(SimError)?;
+    let params = Parameters {
+        seed: lock.seed.ok_or(SimError)?,
+        canaries: 1,
+        slot_ms: env.slot_ms,
+        congestion: env.congestion,
+        tip_slope: env.tip_slope,
+        fee_slope: env.fee_slope,
+        never_land_mass: env.never_land_mass,
+        continuous_latency: env.continuous_latency,
+        shift: None,
+        version: 1,
+    };
+    params.validate()?;
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(format!(
+        "alight.prove.sim.v1:{}:{}:{}",
+        lock.id, params.seed, ordinal
+    ));
+    let mut rng = Random(u64::from_le_bytes(
+        digest[..8].try_into().map_err(|_| SimError)?,
+    ));
+    let leader = (rng.unit() * 3.0).floor() as i32 - 1;
+    let never = rng.unit()
+        < params
+            .never_land_mass
+            .unwrap_or(never_land(params.congestion));
+    let continuous = -rng.unit().ln()
+        / hazard(
+            &lock.config,
+            params.congestion,
+            leader,
+            params.tip_slope,
+            params.fee_slope,
+        );
+    let distance = (continuous.ceil() as u64).max(1);
+    let landed = !never && distance <= 16;
+    let elapsed = u64::from(ordinal + 1) * u64::from(env.slot_ms);
+    let start = DateTime::parse_from_rfc3339(&lock.locked_at_utc)
+        .map_err(|_| SimError)?
+        .with_timezone(&Utc);
+    let sent = start + Duration::milliseconds(elapsed as i64);
+    let delay_ns = if landed && env.continuous_latency {
+        (continuous * f64::from(env.slot_ms) * 1e6).round() as u64
+    } else {
+        (if landed { distance } else { 17 }) * u64::from(env.slot_ms) * 1_000_000
+    };
+    let clock = format!("sim-prove-{}", lock.id);
+    let received = ReceiveTime {
+        clock_id: clock.clone(),
+        mono_ns: elapsed * 1_000_000 + delay_ns,
+        wall_utc: utc(sent + Duration::nanoseconds(delay_ns as i64)),
+    };
+    let c = Canary {
+        id: format!("{}-{ordinal}", lock.id),
+        source: Source::Sim,
+        config: lock.config.clone(),
+        policy_id: "prove-held-out-v1".into(),
+        assignment_prob: 1.0,
+        uniform_arm: false,
+        regime_id: lock.regime_id.clone(),
+        sent_slot: 1_000_000 + u64::from(ordinal),
+        clock_id: clock,
+        send_mono_ns: elapsed * 1_000_000,
+        send_wall_utc: utc(sent),
+        signature: None,
+        blockhash: format!("synthetic-prove-blockhash-{ordinal}"),
+        last_valid_block_height: 1_000_016 + u64::from(ordinal),
+        leader_class_next: vec![],
+        outcome: Some(if landed {
+            Outcome::LandedOk
+        } else {
+            Outcome::Expired
+        }),
+        landed_slot: landed.then_some(1_000_000 + u64::from(ordinal) + distance),
+        landed_block_id: landed.then(|| {
+            format!(
+                "synthetic-prove-block-{}",
+                1_000_000 + u64::from(ordinal) + distance
+            )
+        }),
+        landed_index: landed.then_some(0),
+        landed_index_scope: landed.then_some(IndexScope::Unknown),
+        observer_first_seen: if landed {
+            BTreeMap::from([(ObserverKind::Grpc, received.clone())])
+        } else {
+            BTreeMap::new()
+        },
+        resolved_at_utc: Some(received.wall_utc),
+    };
+    Ok(alight_types::TrainingCanary {
+        canary: c,
+        finalized: true,
+        covariates: alight_types::ModelCovariates {
+            congestion: Some(env.congestion),
+        },
+    })
+}
 fn generate_inner(
     parameters: &Parameters,
     focus: Option<(Route, SizeClass)>,

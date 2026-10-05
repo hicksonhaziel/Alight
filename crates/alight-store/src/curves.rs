@@ -54,10 +54,25 @@ impl Store {
         &self,
         source: Source,
     ) -> Result<Vec<TrainingCanary>, StoreError> {
+        self.owned_canaries(source, true).await
+    }
+    /// Grading includes held-out Prove membership while model fitting excludes it.
+    pub async fn grading_canaries(
+        &self,
+        source: Source,
+    ) -> Result<Vec<TrainingCanary>, StoreError> {
+        self.owned_canaries(source, false).await
+    }
+    async fn owned_canaries(
+        &self,
+        source: Source,
+        training: bool,
+    ) -> Result<Vec<TrainingCanary>, StoreError> {
         use sqlx::Row;
         let rows =
-            sqlx::query("SELECT c.finalized,c.payload_json,COALESCE(m.payload_json,'{}') AS covariates FROM canaries c LEFT JOIN canary_model_context m ON m.canary_id=c.id WHERE c.source=? ORDER BY c.id")
+            sqlx::query("SELECT c.finalized,c.payload_json,COALESCE(m.payload_json,'{}') AS covariates FROM canaries c LEFT JOIN canary_model_context m ON m.canary_id=c.id WHERE c.source=? AND (?=0 OR NOT EXISTS(SELECT 1 FROM prove_attempts p WHERE p.canary_id=c.id)) ORDER BY c.id")
                 .bind(label(source)?)
+                .bind(training)
                 .fetch_all(&self.pool)
                 .await?;
         rows.iter()

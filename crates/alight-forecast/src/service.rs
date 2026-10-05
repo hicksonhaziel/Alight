@@ -1,4 +1,4 @@
-use crate::{issue_inner, utc};
+use crate::{compute, issue_inner, utc};
 use alight_model::{latency, pooled, quote};
 use alight_store::{Store, StoreError};
 use alight_types::*;
@@ -9,10 +9,79 @@ pub async fn issue_combined(
     store: &Store,
     request: QuoteServiceRequest,
 ) -> Result<ForecastEntry, StoreError> {
-    let end = &request.model.context.as_of_utc;
+    let tape = read_tape(store, &request.model.context).await?;
+    issue_inner(
+        store,
+        request.model,
+        request.ttl_s,
+        request.frozen_model_hash.as_deref(),
+        &tape,
+        request.economics.as_ref(),
+    )
+    .await
+}
+
+/// Computes a complete conditional quote without saving models, forecasts or market data.
+pub async fn preview_combined(
+    store: &Store,
+    request: QuoteServiceRequest,
+) -> Result<QuotePreview, StoreError> {
+    if !(1..=86400).contains(&request.ttl_s) {
+        return Err(StoreError::Invalid);
+    }
+    let tape = read_tape(store, &request.model.context).await?;
+    let (samples, models, response) = compute(store, &request.model).await?;
+    let frozen = if let Some(hash) = &request.frozen_model_hash {
+        Some(store.load_models(hash).await?)
+    } else {
+        None
+    };
+    let (economics, baselines) = if let Some(inputs) = &request.economics {
+        let (e, b) = combine(
+            store,
+            &samples,
+            &request.model,
+            &models,
+            &response,
+            inputs,
+            &tape,
+            request.frozen_model_hash.as_deref().zip(frozen.as_deref()),
+        )
+        .await?;
+        (Some(e), b)
+    } else {
+        (
+            None,
+            quote::baselines(
+                &samples,
+                &request.model,
+                &models,
+                response.recommendation.as_ref().map(|r| &r.config),
+                &tape,
+                request.frozen_model_hash.as_deref().zip(frozen.as_deref()),
+            )
+            .map_err(|_| StoreError::Invalid)?,
+        )
+    };
+    Ok(QuotePreview {
+        quote: economics
+            .as_ref()
+            .map_or(response.clone(), |e| e.model_quote.clone()),
+        economics,
+        baselines,
+        requested_economics: request.economics,
+        model_snapshot_hash: alight_store::content_hash(&models)?,
+    })
+}
+
+async fn read_tape(
+    store: &Store,
+    context: &CurveContext,
+) -> Result<Vec<TipTapeObservation>, StoreError> {
+    let end = &context.as_of_utc;
     let start = (utc(end)? - chrono::Duration::minutes(5)).to_rfc3339();
     let rows = store
-        .passive_tips(request.model.context.source, &start, end, 10_000)
+        .passive_tips(context.source, &start, end, 10_000)
         .await?;
     // One total per signature. Ambiguous forks, unknown payments and observer conflicts
     // exclude the transaction from B3 while remaining in the passive evidence table.
@@ -60,20 +129,12 @@ pub async fn issue_combined(
         }
         tape.push(TipTapeObservation {
             id: signature,
-            source: request.model.context.source,
+            source: context.source,
             observed_at_utc: observed,
             tip_lamports: tip,
         });
     }
-    issue_inner(
-        store,
-        request.model,
-        request.ttl_s,
-        request.frozen_model_hash.as_deref(),
-        &tape,
-        request.economics.as_ref(),
-    )
-    .await
+    Ok(tape)
 }
 
 fn candidate(

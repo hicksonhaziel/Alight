@@ -2,7 +2,7 @@
 use crate::{CanaryConfig, CurveContext, CurvePrediction, LatencyEstimate, ModelQuote, Source};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct BlurPool {
     pub pool: String,
     pub mint: String,
@@ -13,12 +13,13 @@ pub struct BlurPool {
 }
 
 /// Indices retain Blur's provider scope; block_time_unix_s has second precision.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct MarketTrade {
     pub source: Source,
     pub pool: String,
     pub mint: String,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub slot: u64,
     pub block_time_unix_s: i64,
     pub signature: String,
@@ -28,19 +29,24 @@ pub struct MarketTrade {
     pub price_usd: String,
     pub candle_ok: bool,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub base_amount: u64,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub quote_amount: u64,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub base_reserve: u64,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub quote_reserve: u64,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub fee_amount: u64,
 }
 
 /// Captured one-minute candles are retained separately from slot-based estimates.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct MarketCandle {
     pub source: Source,
     pub pool: String,
@@ -54,7 +60,7 @@ pub struct MarketCandle {
     pub trades: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum BlurEvent {
     Connected {
@@ -71,7 +77,7 @@ pub enum BlurEvent {
 }
 
 /// Return magnitudes are basis points, delay_ms uses the supplied measured slot clock.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct DelayCostPoint {
     pub delay_slots: u32,
     pub delay_ms: f64,
@@ -80,7 +86,7 @@ pub struct DelayCostPoint {
     pub pairs: u32,
     pub split_half_relative_change: Option<f64>,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct DelayCostSnapshot {
     pub source: Source,
     pub regime_id: String,
@@ -103,12 +109,12 @@ pub struct DelayCostSnapshot {
 }
 
 /// Unconditional masses, including nonlanding. They are scoped to owned canary evidence.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct LandingMass {
     pub delay_slots: u32,
     pub probability: f64,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct LandingDistribution {
     pub context: CurveContext,
     pub n_effective: f64,
@@ -116,13 +122,13 @@ pub struct LandingDistribution {
     pub masses: Vec<LandingMass>,
     pub nonlanding_probability: f64,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicCandidate {
     pub prediction: CurvePrediction,
     pub latency: Option<LatencyEstimate>,
     pub distribution: LandingDistribution,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicBaseline {
     pub id: String,
     pub candidate: Option<EconomicCandidate>,
@@ -130,7 +136,7 @@ pub struct EconomicBaseline {
 }
 
 /// USD size/conversion are decimal text; edge is bps; lambda is dimensionless.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicsInputs {
     pub pool: String,
     pub size_usd: String,
@@ -138,15 +144,17 @@ pub struct EconomicsInputs {
     pub edge_bps: f64,
     pub lambda: f64,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub base_fee_lamports: u64,
     pub use_upper_quantile: bool,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicCost {
     pub prediction: CurvePrediction,
     pub latency: Option<LatencyEstimate>,
     pub qualifies: bool,
     #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
     pub nominal_lamports: u64,
     pub nominal_spend_usd: String,
     pub delay_cost_usd: String,
@@ -155,7 +163,7 @@ pub struct EconomicCost {
     pub expected_cost_usd: String,
     pub upper_cost_usd: String,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct BaselineCostComparison {
     pub id: String,
     pub cost: Option<EconomicCost>,
@@ -163,7 +171,7 @@ pub struct BaselineCostComparison {
     pub savings_usd: Option<String>,
     pub unavailable_reason: Option<String>,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicsSummary {
     pub inputs: EconomicsInputs,
     pub market: DelayCostSnapshot,
@@ -174,7 +182,7 @@ pub struct EconomicsSummary {
     pub recommendation: EconomicCost,
     pub baselines: Vec<BaselineCostComparison>,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EconomicsQuote {
     pub model_quote: ModelQuote,
     pub economics: Option<EconomicsSummary>,

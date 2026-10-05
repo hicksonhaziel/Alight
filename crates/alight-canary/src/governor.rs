@@ -60,6 +60,26 @@ impl Permit {
     }
 }
 impl Governor {
+    /// Restores only an already charged Sim authorization, which cannot sign a live transaction.
+    pub async fn resume_sim(
+        &self,
+        id: &str,
+        route: Route,
+        lamports: u64,
+    ) -> Result<Option<Permit>, BudgetError> {
+        if self.mode != RunMode::Sim {
+            return Err(BudgetError::ReadOnly);
+        }
+        let reservation = self.store.budget_reservation(id).await?;
+        reservation
+            .map(|r| {
+                if r.source != Source::Sim || r.route != route || r.lamports != lamports {
+                    return Err(BudgetError::Invalid);
+                }
+                Ok(Permit { reservation: r })
+            })
+            .transpose()
+    }
     /// Caps are worst-case lamports; burst_window_ms is a rolling interval in ms.
     pub fn new(
         store: Store,

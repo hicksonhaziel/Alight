@@ -1,5 +1,33 @@
 # Alight contracts v1
 
+## Phase 3 Prove backend and planned API contracts (3.6–3.7)
+
+The Prove backend and read-only quote preview are implemented. The HTTP/WS
+routes and their authentication/rate-limit wiring below remain task 3.6; this
+section specifies that boundary and does not claim the endpoints are served yet.
+
+`GET /v1/quote?request=JSON` previews a `QuoteServiceRequest` without a database
+write; authenticated `POST /v1/quote` freezes it and returns `ForecastEntry`.
+`POST /v1/prove` accepts `ProveRequest` with an idempotency `request_id`, a locked
+`forecast_hash`, `n` (1–400, normally 40), and optional decimal-string sim seed.
+Observe and replay modes reject new Prove runs. Only live mode can construct the
+existing governed sender; simulation requires no network, environment or keys.
+Example operator request: `{"request_id":"demo-40","forecast_hash":"sha256:...","n":40,"seed":"42"}`.
+
+`ProveLock` is immutable: source, forecast/model/methodology hashes, exact numeric
+tip and CU price/limit, target, claim, regime, creation/expiry and requested N.
+`ProveReport` contains the lock, run state, attempts, resolved/success/unresolved
+counts, observed rate, Wilson 95% interval and CONSISTENT/INCONSISTENT/INCONCLUSIVE.
+Only linked held-out attempts count. They never enter owned training queries;
+the claim never refits. A regime change voids the run; expiry stops new sends
+without converting pending transactions into failures. Unknown prepared sends
+are resolved after restart, never rebroadcast. See `docs/prove-methodology.md`.
+
+The API must bound and rate-limit public REST and WebSocket reads. Writes require
+`Authorization: Bearer <ALIGHT_OPERATOR_KEY>`; secrets never appear in query
+strings, schemas, exported payloads or stream messages. An unset key disables
+operator actions. Responses and stream snapshots carry their data source.
+
 The shared Rust types in `crates/alight-types/src/contracts.rs` freeze the
 Phase 0 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries; quote APIs are still planned.
 Call `validate()` at API boundaries; serde decoding alone is not validation.

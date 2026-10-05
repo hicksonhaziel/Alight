@@ -30,6 +30,29 @@ fn time(text: &str) -> Result<chrono::DateTime<chrono::Utc>, StoreError> {
 }
 
 impl Store {
+    /// Bounded ledger page by sequence, preserving source and each row's hash/link.
+    pub async fn forecast_page(
+        &self,
+        source: Source,
+        after: u64,
+        limit: u32,
+    ) -> Result<Vec<ForecastEntry>, StoreError> {
+        if limit == 0 || limit > 100 {
+            return Err(StoreError::Invalid);
+        }
+        let after = i64::try_from(after).map_err(|_| StoreError::Invalid)?;
+        let ids:Vec<String>=sqlx::query_scalar("SELECT hash FROM forecast_ledger WHERE source=? AND sequence>? ORDER BY sequence LIMIT ?")
+            .bind(label(source)?).bind(after).bind(limit).fetch_all(&self.pool).await?;
+        let mut entries = Vec::new();
+        for id in ids {
+            entries.push(
+                self.forecast(source, &id)
+                    .await?
+                    .ok_or(StoreError::Invalid)?,
+            );
+        }
+        Ok(entries)
+    }
     /// Reads one source-scoped forecast by its ID or chain hash and checks its payload/link.
     pub async fn forecast(
         &self,

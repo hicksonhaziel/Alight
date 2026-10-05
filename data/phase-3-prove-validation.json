@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "scope": "phase-3-prove-backend-and-read-only-preview",
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-05T19:09:24.773074+00:00",
+  "base_commit": "52f4400df2647f083847e070234d68193197741c",
+  "checks": {
+    "cargo_fmt": "PASS",
+    "cargo_clippy_workspace_all_targets_beam": "PASS",
+    "cargo_test_workspace_beam": "PASS",
+    "workspace_tests_passed": 76,
+    "new_tests_passed": 7,
+    "focused_final_prove_tests_passed": 6,
+    "repository_secret_scan": "PASS",
+    "phase2_historical_receipt": "PASS",
+    "phase3_economics_historical_replay": "PASS"
+  },
+  "implemented": [
+    "immutable Prove locks and prospective held-out membership",
+    "same governed live engine integration (unexercised on mainnet)",
+    "keyless N=40 prospective simulation",
+    "Wilson interval and three verdicts",
+    "durable reservation/prepared/report restart checks",
+    "read-only combined preview and bounded source-scoped ledger pages",
+    "shared JSON schema derivation"
+  ],
+  "sim_acceptance": {
+    "source": "sim",
+    "requested_n": 40,
+    "held_out_members": 40,
+    "training_samples_before": 100,
+    "training_samples_after": 100,
+    "budget_reserved_lamports": "8201040",
+    "duplicate_spend_after_restart": "0",
+    "smaller_cap_attempts": 2,
+    "smaller_cap_reserved_lamports": "410052",
+    "wilson_reference_36_of_40": [
+      0.7694822477247762,
+      0.9604204713173937
+    ],
+    "full_and_partial_verdicts_tested": true,
+    "unknown_clock_not_counted_as_failure": true,
+    "expiry_not_counted_as_outcome": true,
+    "permanent_void_and_stale_report_checks": "PASS"
+  },
+  "preview": {
+    "database_writes": 0,
+    "matches_frozen_operator_quote": true,
+    "source_isolated_pagination": true
+  },
+  "runtime": {
+    "resumed_live_collection": false,
+    "live_database_modified": false,
+    "transactions_signed": 0,
+    "transactions_sent": 0,
+    "external_provider_requests_for_validation": 0
+  },
+  "remaining": [
+    "3.6 REST/WS endpoints, operator authentication, rate limits and schema contract tests",
+    "3.7 Prove endpoint and funded live N=40 acceptance",
+    "3.8 Rust and TypeScript SDKs and example",
+    "3.9 CLI completion",
+    "3.10 alert rules and formatters"
+  ],
+  "limitations": [
+    "No Prove HTTP endpoint is served in this batch.",
+    "Live sender integration is implemented but has no funded live evidence.",
+    "Sim outcomes and lamport reservations are synthetic.",
+    "Shared schema derivation is preparation for API contract tests, not proof of served API correctness."
+  ],
+  "validated_files_sha256": {
+    "Cargo.lock": "0932ae2caf287aca970bbde2bcba4237c58841b2c41f34e35902f8234fffcba5",
+    "Cargo.toml": "8938aa8f8dcbf3b4ac3691e2470c56bed8869b7983e494540737c7eba96b49ef",
+    "bin/alightd/Cargo.toml": "49a8e1485732db265a7c43d0d920a1bd88892ea2653530acbc8c8e857f7a5bfd",
+    "bin/alightd/src/main.rs": "611dc87e56fe8886aa4d44546c456c739b5c402b6a6373ae070d09becdfd95e7",
+    "crates/alight-canary/src/engine.rs": "c9b293d0dbd872e04865f8fd5b19707d28fc1fa4bc8a49fd8d68b219edfa6f8d",
+    "crates/alight-canary/src/governor.rs": "630d7ed0aa8c6146dda6750c01cf3cbcbecc719abe726b3f039f5b0866c51824",
+    "crates/alight-forecast/src/lib.rs": "c46d034c92426834ed09944f8b3d9901fb15befcb947d50fe3acd1ab0bb6ebbb",
+    "crates/alight-forecast/src/service.rs": "2c02a6cba39b4528cc5623abe4713efed22ba23206321a8bfbb979fe812faec7",
+    "crates/alight-forecast/tests/combined.rs": "c6ff3c4648319a11005dd258676dc6235977ccb6a728f81c824391f29ba152f2",
+    "crates/alight-prove/Cargo.toml": "063e5848b50a1df5498300955a6c9b7085f91f60820cc0875cd4234786c870b1",
+    "crates/alight-prove/src/lib.rs": "91f7e54397ca99d0c4d64bbb141d21cc7983a94c0a166da6b372751f965e3d60",
+    "crates/alight-prove/tests/prepared.rs": "722fbaa5d278f2e705148223124ad0d8becad8f161f040881cc3be4b9467ff69",
+    "crates/alight-prove/tests/prove.rs": "663109d7f1af97f94d3ed1ad2051040f419db0e16d1cf03501518a09b6fc036b",
+    "crates/alight-sim/src/lib.rs": "c049d4aafc6e4b4fa6ed16660d7801e208687ce88c4ca625fe1b2141e7a9af10",
+    "crates/alight-store/migrations/0007_prove.sql": "910afbb053302215a8e7f35c9b40834b6b43eee785a5d36ea36fd1f3877883e3",
+    "crates/alight-store/src/curves.rs": "e666f3c53328c4deb55abc9d0c8428b7aaa5adcf3f22ee77da3051e7ba3af103",
+    "crates/alight-store/src/ledger.rs": "f9cb8e69f0ac80a75805d3f6fd72eff1ec0cfec846d608803389f76dfafcadc3",
+    "crates/alight-store/src/lib.rs": "4c1f84d0b2d79eeae80c53b3f8a15a893b588660dc0b2b851d4f6bcfa36b0140",
+    "crates/alight-store/src/prove.rs": "398492f8b85fa7af5ee330b0f7bb9cd294219e276e206536474b9eef933170f6",
+    "crates/alight-types/Cargo.toml": "92e6a0a8435759fda8338264b97d783ef9388b131557cf79319f1b77cd75ff08",
+    "crates/alight-types/src/contracts.rs": "885fc107a80a40a183920d5fead8ce504ee6d21093e10183f3b98645b20fdb6b",
+    "crates/alight-types/src/economics.rs": "de2c636aacd2daecfbd278ba933fbd6f366e343d9ecb437b2c8d05fafbd9189b",
+    "crates/alight-types/src/lib.rs": "dae7c41de81735c46eb28e2912272e2f260c06eaf0f51edac6f904adecb2f5a1",
+    "crates/alight-types/src/phase2.rs": "f89bb24bdb74e72e0533db228f715f141a0abbaf37137b6e7bb71de68d222c39",
+    "crates/alight-types/src/phase3.rs": "4f9f4f9747506c989e15af096af4bd064c205387f04db6522b07273bc7c0b7e0",
+    "crates/alight-types/src/schema.rs": "085e3d8401f30bea9e39624ed8406728b62052d636c168423ca7d04cd04cf331",
+    "docs/prove-methodology.md": "fc81279e286ca10c19bec722584cd501a65962e94173c4ff1029a0d7af6c5b07"
+  }
+}

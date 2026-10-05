@@ -1,0 +1,24 @@
+[package]
+name = "alight-prove"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alight-types.workspace = true
+alight-store.workspace = true
+alight-model.workspace = true
+alight-canary.workspace = true
+alight-sim.workspace = true
+chrono.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+alight-forecast.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

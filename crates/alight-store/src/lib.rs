@@ -2,6 +2,7 @@
 mod curves;
 mod ledger;
 mod phase3;
+mod prove;
 use alight_types::{
     BudgetLimits, BudgetReservation, Canary, IngestEvent, ObserverEvent, ObserverKind, Source,
 };
@@ -357,6 +358,31 @@ impl Store {
         .await?;
         Ok(())
     }
+    /// Reads one durable reservation by identity; amounts and clock are exact lamports/ms.
+    pub async fn budget_reservation(
+        &self,
+        id: &str,
+    ) -> Result<Option<BudgetReservation>, StoreError> {
+        let row = sqlx::query(
+            "SELECT source,route,day,created_ms,lamports FROM budget_reservations WHERE id=?",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+        row.map(|r| {
+            Ok(BudgetReservation {
+                id: id.into(),
+                source: serde_json::from_value(Value::String(r.try_get("source")?))?,
+                route: serde_json::from_value(Value::String(r.try_get("route")?))?,
+                day: r.try_get("day")?,
+                created_ms: u64::try_from(r.try_get::<i64, _>("created_ms")?)
+                    .map_err(|_| StoreError::Invalid)?,
+                lamports: u64::try_from(r.try_get::<i64, _>("lamports")?)
+                    .map_err(|_| StoreError::Invalid)?,
+            })
+        })
+        .transpose()
+    }
     /// Atomically persists the signed identity and assignment before any broadcast.
     pub async fn prepare_send(
         &self,
@@ -365,6 +391,38 @@ impl Store {
         draw: u64,
         assignment: &Value,
         wire_sha256: &str,
+    ) -> Result<(), StoreError> {
+        self.prepare_send_inner(canary, policy_key, draw, assignment, wire_sha256, None)
+            .await
+    }
+    /// The held-out link is durable before any broadcast, together with the prepared identity.
+    pub async fn prepare_prove_send(
+        &self,
+        canary: &Canary,
+        policy_key: &str,
+        draw: u64,
+        assignment: &Value,
+        wire_sha256: &str,
+        prove_id: &str,
+    ) -> Result<(), StoreError> {
+        self.prepare_send_inner(
+            canary,
+            policy_key,
+            draw,
+            assignment,
+            wire_sha256,
+            Some(prove_id),
+        )
+        .await
+    }
+    async fn prepare_send_inner(
+        &self,
+        canary: &Canary,
+        policy_key: &str,
+        draw: u64,
+        assignment: &Value,
+        wire_sha256: &str,
+        prove_id: Option<&str>,
     ) -> Result<(), StoreError> {
         let draw = i64::try_from(draw).map_err(|_| StoreError::Invalid)?;
         let mut tx = self.pool.begin().await?;
@@ -400,6 +458,34 @@ impl Store {
         .await?;
         sqlx::query("INSERT INTO send_attempts(canary_id,policy_key,draw,assignment_json,wire_sha256,prepared_utc,status) VALUES(?,?,?,?,?,?,'PREPARED')")
             .bind(&canary.id).bind(policy_key).bind(draw).bind(serde_json::to_string(assignment)?).bind(wire_sha256).bind(&canary.send_wall_utc).execute(&mut *tx).await?;
+        if let Some(prove_id) = prove_id {
+            let row=sqlx::query("SELECT p.lock_hash,p.lock_json FROM prove_sessions p JOIN prove_cells c ON c.session_id=p.id WHERE p.id=? AND p.source=?")
+                .bind(prove_id).bind(label(canary.source)?).fetch_one(&mut *tx).await?;
+            let lock: alight_types::ProveLock =
+                serde_json::from_str(&row.try_get::<String, _>("lock_json")?)?;
+            let sent = chrono::DateTime::parse_from_rfc3339(&canary.send_wall_utc)
+                .map_err(|_| StoreError::Invalid)?;
+            if content_hash(&lock)? != row.try_get::<String, _>("lock_hash")?
+                || lock.config != canary.config
+                || lock.regime_id != canary.regime_id
+                || policy_key != format!("prove/{prove_id}")
+                || draw >= i64::from(lock.n)
+                || sent
+                    <= chrono::DateTime::parse_from_rfc3339(&lock.locked_at_utc)
+                        .map_err(|_| StoreError::Invalid)?
+                || sent
+                    > chrono::DateTime::parse_from_rfc3339(&lock.expires_at_utc)
+                        .map_err(|_| StoreError::Invalid)?
+            {
+                return Err(StoreError::Invalid);
+            }
+            sqlx::query("INSERT INTO prove_attempts(session_id,ordinal,canary_id) VALUES(?,?,?)")
+                .bind(prove_id)
+                .bind(draw)
+                .bind(&canary.id)
+                .execute(&mut *tx)
+                .await?;
+        }
         tx.commit().await?;
         Ok(())
     }

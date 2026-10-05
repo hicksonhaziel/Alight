@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "bin/alight", "bin/alightd"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "crates/alight-prove", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -17,6 +17,11 @@ alight-sim = { path = "crates/alight-sim" }
 alight-forecast = { path = "crates/alight-forecast" }
 alight-econ = { path = "crates/alight-econ" }
 alight-tape = { path = "crates/alight-tape" }
+alight-prove = { path = "crates/alight-prove" }
+schemars = "=1.2.2"
+tower = { version = "=0.5.3", features = ["util"] }
+subtle = "=2.6.1"
+serde_urlencoded = "=0.7.1"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = { version = "=1.0.150", features = ["float_roundtrip"] }
 thiserror = "=2.0.18"
@@ -35,7 +40,7 @@ prost = "=0.14.4"
 base64 = "=0.22.1"
 rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std"] }
 tokio-tungstenite = { version = "=0.28.0", default-features = false, features = ["connect", "rustls-tls-native-roots"] }
-axum = { version = "=0.8.6", default-features = false, features = ["http1", "json", "tokio"] }
+axum = { version = "=0.8.6", default-features = false, features = ["http1", "json", "tokio", "query", "ws"] }
 bincode = "=1.3.3"
 flate2 = "=1.1.10"
 solana-message = "=4.4.1"

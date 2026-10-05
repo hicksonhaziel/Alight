@@ -227,14 +227,34 @@ async fn canary_loop(
         .ok()
         .filter(|s| (30..=3600).contains(s))
         .ok_or(StoreError::Invalid)?;
-    let mut engine = alight_canary::engine::Engine::new(&config, store)
+    let mut engine = alight_canary::engine::Engine::new(&config, store.clone())
         .await
         .map_err(|error| {
             eprintln!("live engine startup failed: {error}");
             StoreError::Invalid
         })?;
     loop {
-        let result = tokio::select! {_=stop.changed()=>return Ok(()),r=engine.step(&config)=>r};
+        let now = stream::utc_now();
+        let context = alight_forecast::current_context(&store, Source::Live, "local", &now).await?;
+        let reports = store.proves(Source::Live, 100, true).await?;
+        let mut queue = Vec::new();
+        for report in reports {
+            let report = alight_prove::refresh(&store, &report, &now, &context.regime_id)
+                .await
+                .map_err(|_| StoreError::Invalid)?;
+            if !matches!(report.state, ProveState::Complete | ProveState::Voided) {
+                queue.push(report);
+            }
+        }
+        let proving = !queue.is_empty();
+        let scheduled = queue.iter().find(|r| r.attempts < r.lock.n);
+        let result = if let Some(report) = scheduled {
+            tokio::select! {_=stop.changed()=>return Ok(()),r=engine.step_prove(&config,&report.lock)=>r}
+        } else if proving {
+            Ok(json!({"status":"WAITING_PROVE_OUTCOMES"}))
+        } else {
+            tokio::select! {_=stop.changed()=>return Ok(()),r=engine.step(&config)=>r}
+        };
         let value = match result {
             Ok(status) => status,
             // Database errors terminate the daemon; stale/no-response preflight never signs.
@@ -244,7 +264,30 @@ async fn canary_loop(
             )) => return Err(e),
             Err(e) => json!({"status":"PREFLIGHT_UNAVAILABLE","error_category":e.to_string()}),
         };
-        let delay = if value["canary_id"].is_string() {
+        if let Some(report) = scheduled {
+            let mut next =
+                alight_prove::refresh(&store, report, &stream::utc_now(), &context.regime_id)
+                    .await
+                    .map_err(|_| StoreError::Invalid)?;
+            if !matches!(next.state, ProveState::Complete | ProveState::Voided) {
+                next.state = match value["status"].as_str() {
+                    Some("WAITING_FUNDS") => ProveState::WaitingFunds,
+                    Some("BUDGET_CAPPED") => ProveState::BudgetCapped,
+                    Some(
+                        "WAITING_OBSERVER"
+                        | "WAITING_EPOCH"
+                        | "PENDING_LIMIT"
+                        | "PREFLIGHT_UNAVAILABLE",
+                    ) => ProveState::WaitingObserver,
+                    _ => ProveState::Running,
+                };
+                next.reason = value["status"].as_str().map(str::to_owned);
+                store.save_prove_report(&next).await?;
+            }
+        }
+        let delay = if proving {
+            1
+        } else if value["canary_id"].is_string() {
             interval
         } else {
             interval.min(15)
@@ -337,7 +380,17 @@ async fn resolve_loop(
     let clock = stream::ReceiveClock::new();
     let mut last_id = String::new();
     loop {
-        tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(5))=>{}}
+        let delay = if store
+            .proves(Source::Live, 8, true)
+            .await?
+            .iter()
+            .any(|p| !matches!(p.state, ProveState::Complete | ProveState::Voided))
+        {
+            1
+        } else {
+            5
+        };
+        tokio::select! {_=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(delay))=>{}}
         let mut pending = store.pending_canaries().await?;
         pending.retain(|c| c.source == Source::Live);
         pending.sort_by_key(|c| c.id.clone());
