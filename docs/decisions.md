@@ -201,3 +201,23 @@ choice does not establish endpoint-region latency or uninterrupted VPS hosting.
 The dedicated wallet's confirmed balance was zero. All funded route and real
 mid-flight canary gates remain pending; simulated recovery and ambient observer
 traffic are identified as such.
+
+## Beam HTTP clarification — 5 October 2026
+
+Hickson relayed the team's reply: “For http. Use the rpc endpoint with a tip”.
+The separate `beam-http.solami.dev` hostname was a mistaken transport assumption;
+its earlier DNS failure remains historical evidence, not a current route blocker.
+Both HTTP experimental arms now submit standard `sendTransaction` requests using
+`SOLAMI_RPC_URL` and `SOLAMI_RPC_TOKEN`. The governed builder includes a published
+Beam-recipient tip for `beam_http` and no tip for plain `rpc`. QUIC keeps its SDK
+transport and identity. The deprecated HTTP URL/token settings were removed.
+
+These HTTP arms share an endpoint and differ in transaction treatment; results
+must not describe them as independent HTTP backends or isolate a pure transport
+effect. The owner's relayed reply establishes the intended integration; a funded,
+observed tipped submission is still required to verify Beam handling and landing.
+The collector remains paused and no transaction was sent for this correction.
+Verification passed: all 13 canary tests (including the 81 transaction-wire
+configurations), formatting, Clippy and the repository credential check. One
+read-only `getGenesisHash` request returned Solana mainnet's expected hash in an
+80-byte response; this confirms RPC reachability, not tipped transaction landing.

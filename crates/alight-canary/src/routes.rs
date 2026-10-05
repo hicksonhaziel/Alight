@@ -87,14 +87,9 @@ impl Routes {
                 }
             };
         }
-        let (url, token) = if route == Route::BeamHttp {
-            (
-                config.get("SOLAMI_BEAM_HTTP"),
-                config.get("SOLAMI_BEAM_HTTP_TOKEN"),
-            )
-        } else {
-            (config.get("SOLAMI_RPC_URL"), config.get("SOLAMI_RPC_TOKEN"))
-        };
+        // Provider clarification: HTTP Beam uses the normal RPC endpoint with a tip.
+        // The governed builder includes a Beam tip for BeamHttp and none for Rpc.
+        let (url, token) = (config.get("SOLAMI_RPC_URL"), config.get("SOLAMI_RPC_TOKEN"));
         let Some(url) = url.and_then(|s| Url::parse(s).ok()).filter(|u| {
             u.scheme() == "https"
                 && u.username().is_empty()

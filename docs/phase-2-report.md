@@ -2,8 +2,9 @@
 
 Verified 5 October 2026. All Phase 2 software tasks (2.1–2.14) are implemented
 and pass offline acceptance. The formal live exit condition remains open: the
-wallet is unfunded, no owned live canary has been sent, and Beam HTTP needs
-provider confirmation. The collector, proxy and legacy service remain stopped.
+wallet is unfunded and no owned live canary has been sent. The team subsequently
+clarified the HTTP integration: use the RPC endpoint with a tip. The collector,
+proxy and legacy service remain stopped.
 The live database was not modified. No network stream was resumed.
 
 ## Delivered
@@ -125,6 +126,8 @@ zero canaries sent. The build context now includes only the public methodology
 file from `docs/`, needed by the model; private files remain excluded. Compose
 uses `alight-collector:phase2`, and its configuration validated. The new image is
 ready locally, while the existing collector/proxy containers remain stopped.
+Rebuild the image from current `main` before the next authorized resume to include
+the subsequent Beam HTTP endpoint correction.
 
 ## Use and remaining live acceptance
 
@@ -143,8 +146,11 @@ historical report with different bytes. Runtime artifacts stay under ignored
 `.alight/`, outside `docs/`.
 
 Funded, resolved owned canaries are still needed to validate live quotes and
-scoring. The last recorded Beam HTTP DNS check on 5 October returned NXDOMAIN;
-QUIC resolved. Solami must confirm the supported HTTP endpoint/auth/request
-format before an HTTP send can be validated. No support message was sent.
+scoring. Hickson relayed the team’s reply on 5 October: use the RPC endpoint with
+a tip for HTTP. The adapter now shares Solami RPC URL/authentication, with a
+Beam tip in the HTTP transaction and none in plain RPC. The old hostname’s DNS
+failure remains historical; endpoint selection is resolved. Funded tipped
+submission and observed landing remain pending. No support message was sent
+by the agent. Historical validation receipts retain their original state.
 The collector stays paused until Hickson asks to resume it. Phase 3 is next:
 economics, passive tape ingestion, the REST/WebSocket API and SDKs.

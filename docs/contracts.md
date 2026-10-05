@@ -383,3 +383,9 @@ source. Tick/grading/Signal take an explicit as-of UTC timestamp. They never loa
 `.env`. `sim --phase2` runs quotes, frozen baselines, grading, history and Signal
 against later synthetic canaries; replay verifies those outputs as well as M0.
 Outputs refuse to overwrite a different historical report.
+
+Beam HTTP transport clarification (5 October): `beam_http` submits a transaction
+with a Beam tip through the same configured Solami RPC endpoint/authentication
+used by `rpc`; the latter carries no Beam tip. The enum values stay unchanged,
+including historical simulation and forecast records. They identify experimental
+submission treatments, not independent HTTP endpoints. QUIC remains separate.

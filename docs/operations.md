@@ -94,7 +94,11 @@ restart and are resolved through chain evidence; they are never re-broadcast.
 
 Beam QUIC uses the pinned official SDK and the live published tip list. The SDK's
 embedded list is older, so its local scan is bypassed after Alight validates the
-recipient itself. The published Beam HTTP hostname failed DNS resolution during
-setup; its JSON-RPC adapter remains unverified by a funded provider send. A
-connection failure is retained as uncertainty. Do not use it as a successful
-route in reports until a real canary lands and observers confirm it.
+recipient itself. Beam HTTP uses the configured Solami RPC URL and RPC
+authentication, per the team's reply relayed by Hickson on 5 October: use the
+RPC endpoint with a tip.
+There is no separate HTTP URL/token setting. Its governed transaction carries a
+published Beam-recipient tip; plain RPC carries none. These arms share an endpoint.
+The earlier hostname failure is historical. Funded tipped submission and landing
+remain unverified; a connection failure is retained as uncertainty. Do not report
+a successful live route until a real canary lands and observers confirm it.
