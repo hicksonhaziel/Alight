@@ -10,7 +10,8 @@ receipt = json.loads((root / 'data/phase-2-foundation-validation.json').read_tex
 assert receipt['scope'] == 'model-and-simulator-foundation'
 assert receipt['phase_complete'] is False
 methodology = receipt['methodology']
-digest = hashlib.sha256((root / methodology['path']).read_bytes()).hexdigest()
+registered_v1 = (root / methodology['path']).read_bytes().split(b'\n## Prospective amendment v2', 1)[0]
+digest = hashlib.sha256(registered_v1).hexdigest()
 assert digest == methodology['sha256']
 assert datetime.fromisoformat(methodology['registered_at_utc']) < datetime.fromisoformat(receipt['validated_at_utc'])
 assert methodology['live_signal_reports'] == 0

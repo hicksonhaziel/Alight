@@ -147,3 +147,43 @@ B1 chooses the published minimum tip, B2 five times minimum, B3 the previous
 five-minute tape median (unavailable if no tape), and B4 the stored frozen model
 snapshot. Freeze B4 before an injected shift. All use comparable route/size/fees,
 held-out data and cost assumptions. Preserve unfavorable comparisons.
+
+## Prospective amendment v2 — finite-sample latency intervals
+
+Registered 5 October 2026 after offline implementation checks, before any live
+Signal publication or analysis of owned live outcomes. The v1 text above remains
+unchanged; historical v1 reports retain its original hash. New reports hash this
+complete v2 document. The fixed 100-dataset coverage check initially observed
+88/100 coverage for p50 and 95/100 for p90 with percentile bootstrap alone.
+Those failed p50 results are disclosed rather than changing the test seeds or
+acceptance bound.
+
+Latency intervals now conservatively enclose both the registered 2,000-replicate
+percentile bootstrap and the equal-tail binomial order-statistic interval at the
+discounted effective sample count. The order-statistic bounds include the upper
+rank's required +1 correction. This controls finite-sample rank/Monte Carlo
+instability; under decay/nonstationarity the interval remains approximate, not a
+guaranteed frequentist interval. Failure mass and unidentifiable upper bounds
+continue to yield INSUFFICIENT. The 90–99/100 coverage acceptance range, fixed
+seeds 0–99 and p50/p90 endpoints remain unchanged. These checks are regression
+benchmarks used during development, not independent live validation.
+
+Signal implementation uses an unrestricted ridge-stabilized logistic fit and a
+cluster score bootstrap (one-step coefficient updates), with 2,000 paired draws
+of 16-slot clusters. Exact constant/collinear covariates are removed, not assigned
+precise coefficients. Report primary effects at the observed covariate reference;
+include identified congestion/hour interactions scaled to the observed covariate
+range. Confidence bands are simultaneous within each horizon/quantile family,
+using bootstrap maximum standardized deviations and the registered five-family
+Bonferroni budget. FLAT requires every reported identifiable effect inside its
+practical equivalence band; missing/unidentifiable tails remain inconclusive.
+
+The exploration benchmark's utility is P(landing within one slot) minus nominal
+fee-plus-tip/500,000 lamports. Report mean per-decision regret versus the best
+grid utility at exactly 2 SOL synthetic cumulative spend, linearly interpolating
+the final budget point. Also disclose decision counts and cumulative regret;
+more cheap probes can increase cumulative regret while reducing mean regret.
+Policy v1 uses approximate Beta Thompson draws from posterior mean/variance and
+32 frozen proposal draws; its logged propensity is conditional on that proposal.
+It keeps at least 30% uniform exploration. None of these synthetic costs or
+probabilities is a live performance claim.
