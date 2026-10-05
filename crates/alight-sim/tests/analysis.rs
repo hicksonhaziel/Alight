@@ -140,5 +140,21 @@ fn registered_continuous_latency_coverage_and_failure_mass() {
     assert_eq!(q.evidence, Evidence::Insufficient);
     assert!(q.slots.is_none());
     assert!(q.ms.is_none());
+    let request = ModelQuoteRequest {
+        context: context.clone(),
+        candidates: vec![dataset.ground_truth[0].config.clone()],
+        covariates: Default::default(),
+        leader_class_next: vec![],
+        target: PredictionTarget::LatencyQuantile {
+            quantile: 0.99,
+            max_slots: Some(16.0),
+            max_ms: None,
+        },
+    };
+    let response =
+        alight_model::quote::quote(&dataset.training().expect("training"), &request, &[])
+            .expect("sparse p99 quote");
+    assert_eq!(response.evidence, Evidence::Insufficient);
+    assert!(response.samples_needed.is_some_and(|n| n > 1000));
     assert!(probability_with(&params, &dataset.ground_truth[0].config, 0.0, 16) < 0.9);
 }

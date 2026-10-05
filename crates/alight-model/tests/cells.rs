@@ -113,6 +113,20 @@ fn owned_final_known_samples_only_and_unresolved_share_is_visible() {
 
 #[test]
 fn no_prior_recommendation_duplicates_rejected_and_exact_horizon() {
+    let request = alight_types::ModelQuoteRequest {
+        context: context(),
+        candidates: vec![config()],
+        covariates: Default::default(),
+        leader_class_next: vec![],
+        target: alight_types::PredictionTarget::LatencyQuantile {
+            quantile: 0.99,
+            max_slots: Some(16.0),
+            max_ms: None,
+        },
+    };
+    let quote = alight_model::quote::quote(&[], &request, &[]).expect("empty p99 quote");
+    assert_eq!(quote.evidence, Evidence::Insufficient);
+    assert_eq!(quote.samples_needed, Some(2000));
     let empty = estimate(&[], &config(), &context(), 1).expect("empty");
     assert_eq!(empty.evidence, Evidence::Insufficient);
     assert_eq!(empty.samples_needed, Some(30));

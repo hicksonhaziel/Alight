@@ -74,39 +74,60 @@ pub fn quote(
             &request.leader_class_next,
             &request.covariates,
         )?;
-        needed = needed.min(prediction.samples_needed.unwrap_or(1));
+        let q = match request.target {
+            PredictionTarget::LatencyQuantile { quantile, .. } => Some(latency::estimate_quantile(
+                samples,
+                &config,
+                &request.context,
+                quantile,
+                latency::cluster_seed(&request.context.as_of_utc),
+            )?),
+            _ => None,
+        };
+        let latency_needed = q.as_ref().map_or(0, |q| {
+            q.samples_needed.unwrap_or(
+                if matches!(
+                    request.target,
+                    PredictionTarget::LatencyQuantile {
+                        max_ms: Some(_),
+                        ..
+                    }
+                ) && q.ms_interval_95[1].is_none()
+                {
+                    30
+                } else {
+                    0
+                },
+            )
+        });
+        needed = needed.min(
+            prediction
+                .samples_needed
+                .unwrap_or(0)
+                .max(latency_needed)
+                .max(1),
+        );
         if prediction.evidence == Evidence::Insufficient
             || prediction.evidence == Evidence::Extrapolated
         {
             continue;
         }
-        let mut q = None;
         let qualifies = match request.target {
             PredictionTarget::Probability { target_p, .. } => {
                 prediction.p_interval_95[0] >= target_p
             }
             PredictionTarget::LatencyQuantile {
-                quantile,
-                max_slots,
-                max_ms,
+                max_slots, max_ms, ..
             } => {
-                let estimate = latency::estimate_quantile(
-                    samples,
-                    &config,
-                    &request.context,
-                    quantile,
-                    latency::cluster_seed(&request.context.as_of_utc),
-                )?;
-                let okay = estimate.evidence == Evidence::Measured
+                let estimate = q.as_ref().ok_or(ModelError::Invalid)?;
+                estimate.evidence == Evidence::Measured
                     && if let Some(max) = max_slots {
                         estimate.slots_interval_95[1].is_some_and(|v| v <= max)
                     } else {
                         estimate.ms_interval_95[1]
                             .zip(max_ms)
                             .is_some_and(|(v, max)| v <= max)
-                    };
-                q = Some(estimate);
-                okay
+                    }
             }
         };
         if qualifies {
@@ -119,7 +140,11 @@ pub fn quote(
         }
     }
     if result.recommendation.is_none() {
-        result.samples_needed = Some(needed.clamp(1, 30));
+        result.samples_needed = Some(if needed == u32::MAX {
+            30
+        } else {
+            needed.max(1)
+        });
     }
     Ok(result)
 }

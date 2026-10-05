@@ -1,0 +1,342 @@
+{
+  "phase": 2,
+  "scope": "models-ledger-simulator",
+  "implementation_complete": true,
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-05T06:47:03.917192+00:00",
+  "implementation_commit_base": "13db9a0cd5528b0a93c2fba684a0e0648a46ae7c",
+  "validated_rust_source_sha256": "4e0dffb9b73da76c3c6a106164aaa5047681894de460d99c87eb993385045901",
+  "methodology": {
+    "path": "docs/methodology.md",
+    "sha256": "0da0241b9ce652df77f7b9ee40a713f7bfa93e3c62207c28e290da3d1c9a3f86",
+    "registered_commit": "88a77fb2313e6b848c9a5102f8ae150b567107fd",
+    "registered_at_utc": "2026-10-05T06:46:09+01:00",
+    "live_signal_reports": 0
+  },
+  "checks": {
+    "cargo_fmt": "PASS",
+    "cargo_clippy_workspace_all_targets": "PASS",
+    "cargo_test_workspace": "PASS",
+    "tests_passed": 47,
+    "repository_secret_scan": "PASS",
+    "phase0_receipt": "PASS",
+    "phase1_receipt": "PASS",
+    "hand_computed_scores": "PASS",
+    "forecast_and_frozen_model_tamper_rejected": true,
+    "p99_sample_requirement_not_capped_at_30": true,
+    "private_test_log_sha256": "413af22d898e538f309cd4985fd679f38530ca22f38e84a618cf48fef5a0c339",
+    "github_implementation_ci": "PASS",
+    "github_implementation_ci_run": "https://github.com/hicksonhaziel/Alight/actions/runs/37271319093"
+  },
+  "simulation": {
+    "source": "sim",
+    "parameters": {
+      "version": 1,
+      "seed": "42",
+      "canaries": 8100,
+      "slot_ms": 250,
+      "congestion": 0.0,
+      "tip_slope": 0.45,
+      "shift": null,
+      "fee_slope": 0.18,
+      "never_land_mass": null,
+      "continuous_latency": false
+    },
+    "canaries": 8100,
+    "measured_snapshots": 243,
+    "stored_curve_history_rows": 659,
+    "locked_forecasts": 2,
+    "graded_forecasts": 2,
+    "forecast_hashes": [
+      "sha256:71a5b410650b9ad1c752ffc1d369d3f5afed4e2dc403a14e899854756d048d4d",
+      "sha256:6ca54b736b5911a23c1f4ad8fee80b623cd2ccedddcee9e54ed106f89a91872b"
+    ],
+    "model_hashes": [
+      "sha256:54bbcf1dbd67a6d76d2dc36e6748efc089ad29048aef7507673c39756bfa7a11",
+      "sha256:54bbcf1dbd67a6d76d2dc36e6748efc089ad29048aef7507673c39756bfa7a11"
+    ],
+    "replay_bytes_equal": true,
+    "private_report_sha256": "5d3fa9ca006768cb874340a8cc04d036f166b470e4c9c9165b8216e1dfd06dbb",
+    "sqlite_quick_check": "ok",
+    "network_requests": 0,
+    "transactions_sent": 0
+  },
+  "m1_heldout": [
+    {
+      "seed": 7,
+      "heldout_predictions": 6000,
+      "m0_log_loss": 0.317141,
+      "m1_log_loss": 0.309355
+    },
+    {
+      "seed": 42,
+      "heldout_predictions": 6000,
+      "m0_log_loss": 0.327095,
+      "m1_log_loss": 0.318817
+    },
+    {
+      "seed": 2026,
+      "heldout_predictions": 6000,
+      "m0_log_loss": 0.337159,
+      "m1_log_loss": 0.328876
+    }
+  ],
+  "policy_equal_spend": [
+    {
+      "seed": 7,
+      "synthetic_spend_lamports": "2000000000",
+      "mean_regret_v0": 0.669065,
+      "mean_regret_v1": 0.21631,
+      "decisions_v0": 4862.9,
+      "decisions_v1": 14377.8,
+      "approx_cumulative_regret_v0": 3253.6,
+      "approx_cumulative_regret_v1": 3110.1
+    },
+    {
+      "seed": 42,
+      "synthetic_spend_lamports": "2000000000",
+      "mean_regret_v0": 0.659923,
+      "mean_regret_v1": 0.229789,
+      "decisions_v0": 4949.4,
+      "decisions_v1": 12788.0,
+      "approx_cumulative_regret_v0": 3266.2,
+      "approx_cumulative_regret_v1": 2938.5
+    },
+    {
+      "seed": 2026,
+      "synthetic_spend_lamports": "2000000000",
+      "mean_regret_v0": 0.668154,
+      "mean_regret_v1": 0.216795,
+      "decisions_v0": 4877.9,
+      "decisions_v1": 10992.7,
+      "approx_cumulative_regret_v0": 3259.2,
+      "approx_cumulative_regret_v1": 2383.2
+    }
+  ],
+  "policy_utility": "P(landing within 1 slot) - nominal_fee_plus_tip_lamports/500000; final spend point linearly interpolated; cumulative values approximate from rounded logged means/counts",
+  "baselines": {
+    "forecast_hash": "sha256:71a5b410650b9ad1c752ffc1d369d3f5afed4e2dc403a14e899854756d048d4d",
+    "route": "beam_http",
+    "size_class": "small",
+    "horizon_slots": 2,
+    "selected": {
+      "n": 34,
+      "observed_rate": 0.8529411764705882,
+      "brier": 0.12564611810972992,
+      "log_loss": 0.4183812918839729,
+      "interval_coverage": true,
+      "expected_calibration_error": 0.014614792443713442,
+      "reliability": [
+        {
+          "lower": 0.8,
+          "upper": 0.9,
+          "n": 34,
+          "predicted": 0.8383263840268748,
+          "observed": 0.8529411764705882
+        }
+      ]
+    },
+    "alternatives": [
+      {
+        "id": "B1",
+        "tip_lamports": "100000",
+        "p_hat": 0.838326384026875,
+        "scores": {
+          "n": 34,
+          "observed_rate": 0.8529411764705882,
+          "brier": 0.12564611810972992,
+          "log_loss": 0.4183812918839729,
+          "interval_coverage": null,
+          "expected_calibration_error": 0.014614792443713442,
+          "reliability": [
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 34,
+              "predicted": 0.8383263840268748,
+              "observed": 0.8529411764705882
+            }
+          ]
+        },
+        "model_snapshot_hash": null,
+        "tape": null
+      },
+      {
+        "id": "B2",
+        "tip_lamports": "500000",
+        "p_hat": 0.9525653284436211,
+        "scores": {
+          "n": 38,
+          "observed_rate": 0.8947368421052632,
+          "brier": 0.09752695931695024,
+          "log_loss": 0.36436556300892625,
+          "interval_coverage": null,
+          "expected_calibration_error": 0.05782848633835813,
+          "reliability": [
+            {
+              "lower": 0.9,
+              "upper": 1.0,
+              "n": 38,
+              "predicted": 0.9525653284436213,
+              "observed": 0.8947368421052632
+            }
+          ]
+        },
+        "model_snapshot_hash": null,
+        "tape": null
+      },
+      {
+        "id": "B3",
+        "tip_lamports": "200000",
+        "p_hat": 0.9063000416809657,
+        "scores": {
+          "n": 33,
+          "observed_rate": 0.9393939393939394,
+          "brier": 0.05802817208971186,
+          "log_loss": 0.23591653342453917,
+          "interval_coverage": null,
+          "expected_calibration_error": 0.03309389771297422,
+          "reliability": [
+            {
+              "lower": 0.9,
+              "upper": 1.0,
+              "n": 33,
+              "predicted": 0.9063000416809652,
+              "observed": 0.9393939393939394
+            }
+          ]
+        },
+        "model_snapshot_hash": null,
+        "tape": {
+          "window": [
+            "2026-10-05T00:17:30+00:00",
+            "2026-10-05T00:22:30+00:00"
+          ],
+          "samples": 3,
+          "median_lamports": "200000"
+        }
+      },
+      {
+        "id": "B4",
+        "tip_lamports": "100000",
+        "p_hat": 0.827793599000505,
+        "scores": {
+          "n": 34,
+          "observed_rate": 0.8529411764705882,
+          "brier": 0.12606492660417098,
+          "log_loss": 0.41988409158621737,
+          "interval_coverage": null,
+          "expected_calibration_error": 0.025147577470083782,
+          "reliability": [
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 34,
+              "predicted": 0.8277935990005044,
+              "observed": 0.8529411764705882
+            }
+          ]
+        },
+        "model_snapshot_hash": "sha256:78b63a8080a782811b8092978746dbf544a95d055ede20a930f3d6c1cd7cbb68",
+        "tape": null
+      }
+    ],
+    "comparison": "Each configuration has its own later canary denominator; this is a seeded model/scoring comparison, not a causal estimate of market returns.",
+    "tape_source": "explicit artificial source=sim tape"
+  },
+  "latency": {
+    "datasets": 100,
+    "seeds": "0..99",
+    "canaries_per_dataset": 4800,
+    "bootstrap_replicates": 2000,
+    "acceptable_coverage": [
+      90,
+      99
+    ],
+    "covered_p50": 91,
+    "covered_p90": 97,
+    "p99_minimum_effective_tail_samples": 20,
+    "quote_quantile": {
+      "quantile": 0.5,
+      "slots": 1.0,
+      "slots_interval_95": [
+        1.0,
+        2.0
+      ],
+      "ms": 250.0,
+      "ms_interval_95": [
+        250.0,
+        500.0
+      ],
+      "n_effective": 60.414165190105834,
+      "evidence": "MEASURED",
+      "samples_needed": null
+    },
+    "failure_mass_refuses_unidentifiable_quote": true
+  },
+  "signal": {
+    "seed": 42,
+    "canaries_per_focused_cohort": 100000,
+    "bootstrap_replicates": 2000,
+    "route": "beam_http",
+    "size_class": "small",
+    "known_slope": 0.45,
+    "known_slope_verdict": "DISCRIMINATING",
+    "null_tip_and_fee_slope": 0.0,
+    "null_failure_mass": 0.0,
+    "null_verdict": "FLAT",
+    "missing_cohorts_verdict": "INCONCLUSIVE"
+  },
+  "cli": {
+    "probability": "PASS",
+    "latency_slots": "PASS",
+    "latency_ms": "PASS",
+    "latency_ms_interval": [
+      250.0,
+      500.0
+    ],
+    "empty_live_refuses": "PASS",
+    "empty_live_samples_needed": 30,
+    "ledger_sim": 3,
+    "ledger_live_empty_evidence": 1,
+    "cli_grade": "PASS",
+    "cli_signal": "PASS",
+    "network_requests": 0,
+    "transactions_sent": 0
+  },
+  "jobs": {
+    "curve_and_grader_interval_s": 300,
+    "daily_signal": "previous completed UTC day; per source/day/methodology; stored locally",
+    "running": false
+  },
+  "runtime": {
+    "collector": "stopped",
+    "proxy": "stopped",
+    "legacy_collector": "inactive",
+    "resumed_live_collection": false,
+    "live_canaries_sent": 0,
+    "live_database_modified": false
+  },
+  "remaining": [
+    "Funded owned live-canary quote/scoring validation",
+    "Provider confirmation and validation of supported Beam HTTP endpoint"
+  ],
+  "provider_evidence": "Prior Phase 0/1 receipt: Beam HTTP hostname unresolved on 2026-10-05; no new provider probing or support message during this offline work.",
+  "container": {
+    "image": "alight-collector:phase2",
+    "image_id": "sha256:5e3ab1f0db8dcb755b2064b00b9d9d6d9bad5739d41e069d6c0836792157c808",
+    "cargo_build_offline": true,
+    "methodology_in_build_context": true,
+    "compose_config": "PASS",
+    "replay_network_disabled": true,
+    "replay": {
+      "source": "replay",
+      "slot_events": 24,
+      "blocks": 8,
+      "canaries_sent": 0,
+      "network_requests": 0
+    },
+    "live_services_started": false,
+    "private_build_log_sha256": "d756ccf63ff4f5b4ff8678eebcf32e06ee0bc620389ac80813fe6e9d3cb26658"
+  }
+}

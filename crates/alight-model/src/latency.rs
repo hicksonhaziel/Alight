@@ -198,7 +198,8 @@ pub fn estimate_quantile(
         } else {
             Some(
                 cell.samples_needed
-                    .unwrap_or((tail_needed - cell.n_effective).ceil().max(1.0) as u32),
+                    .unwrap_or(0)
+                    .max((tail_needed - cell.n_effective).ceil().max(1.0) as u32),
             )
         },
     })

@@ -10,6 +10,7 @@ COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY crates ./crates
 COPY bin ./bin
 COPY data/fixtures ./data/fixtures
+COPY docs/methodology.md ./docs/methodology.md
 ARG BUILD_JOBS=2
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/target \

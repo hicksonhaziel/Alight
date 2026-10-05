@@ -24,7 +24,7 @@ docker build --build-arg BUILD_IMAGE=node:22.22.0-bookworm-slim \
   --build-arg GIT_REVISION="$(git rev-parse HEAD)" --build-arg BUILD_JOBS=4 \
   --build-context local_toolchain="$HOME/.rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu" \
   --build-context local_registry="$HOME/.cargo/registry" \
-  --tag alight-collector:phase1 -f deploy/Dockerfile .
+  --tag alight-collector:phase2 -f deploy/Dockerfile .
 docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
 ```
 

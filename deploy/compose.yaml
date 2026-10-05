@@ -1,7 +1,7 @@
 name: alight
 services:
   collector:
-    image: alight-collector:phase1
+    image: alight-collector:phase2
     build:
       context: ..
       dockerfile: deploy/Dockerfile

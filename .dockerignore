@@ -6,6 +6,8 @@
 !crates/**
 !bin/
 !bin/**
+!docs/
+!docs/methodology.md
 !data/
 !data/fixtures/
 !data/fixtures/**
