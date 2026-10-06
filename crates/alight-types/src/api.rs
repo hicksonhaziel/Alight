@@ -156,3 +156,63 @@ pub struct ForecastLedgerExport {
     pub verified_through_sequence: u64,
     pub entries: Vec<ForecastEntry>,
 }
+
+/// Bounded read-only workbench evidence. A regime label is not a detected network change.
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct WorkbenchEvidence {
+    pub source: Source,
+    pub as_of_utc: String,
+    pub canaries: Vec<WorkbenchCanary>,
+    pub grades: Vec<ForecastGrade>,
+    pub regimes: Vec<WorkbenchRegime>,
+    pub gaps: Vec<ObserverGap>,
+    #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
+    pub daily_cap_lamports: u64,
+    pub limit: u32,
+    pub operator_enabled: bool,
+    pub runway: Vec<LeaderSlot>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct WorkbenchCanary {
+    pub canary: Canary,
+    pub finalized: bool,
+    pub prove_id: Option<String>,
+    pub resolution_reason: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct WorkbenchRegime {
+    pub id: String,
+    pub first_observed_utc: String,
+    pub last_observed_utc: String,
+    #[serde(with = "crate::decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
+    pub canaries: u64,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct CanaryEvidencePage {
+    pub source: Source,
+    pub canary_id: String,
+    pub observations: Vec<ObserverEvent>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct ProveCanaryPage {
+    pub source: Source,
+    pub id: String,
+    /// Ordered prospective members; no coincidentally matching records.
+    pub canaries: Vec<TrainingCanary>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct BrowserLedgerRow {
+    pub entry: ForecastEntry,
+    /// Exact Rust canonical bytes preserve float spelling for independent browser hashing.
+    pub canonical_json: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct BrowserLedgerPage {
+    pub source: Source,
+    pub rows: Vec<BrowserLedgerRow>,
+    #[serde(with = "crate::optional_decimal_u64")]
+    #[schemars(with = "Option<crate::DecimalU64>")]
+    pub next_after: Option<u64>,
+}

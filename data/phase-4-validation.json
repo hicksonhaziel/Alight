@@ -1,0 +1,209 @@
+{
+  "checks": {
+    "all_target_clippy": "PASS",
+    "browser": {
+      "authenticated_post_count": 2,
+      "axe_audits": 14,
+      "axe_violations": 0,
+      "copied_typescript_compiles": true,
+      "failed": 0,
+      "full_suite_duration_s": 49.1,
+      "held_out_attempts": 40,
+      "held_out_resolved": 40,
+      "keyboard_navigation": "PASS",
+      "latest_changed_flow_recheck": "PASS",
+      "market_probability_fallback": "PASS",
+      "mixed_source_rejected": true,
+      "mobile_width_px": 390,
+      "offline_state": "PASS",
+      "page_errors": 0,
+      "passed": 5,
+      "public_gets_omit_authorization": true,
+      "reduced_motion": "PASS",
+      "source": "sim",
+      "tampered_export_rejected": true,
+      "themes": [
+        "dark",
+        "light"
+      ]
+    },
+    "compose_config": "PASS",
+    "developer_regression": {
+      "provider_requests": 0,
+      "sdk_and_cli": {
+        "cli": {
+          "attempts": 40,
+          "exit_codes": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "quote_prove_export_ledger": "PASS",
+          "resolved": 40
+        },
+        "rust": {
+          "attempts": 40,
+          "ledger_verified": true,
+          "resolved": 40,
+          "verdict": "CONSISTENT"
+        },
+        "typescript": {
+          "attempts": 40,
+          "ledger_verified": true,
+          "resolved": 40,
+          "verdict": "CONSISTENT"
+        }
+      },
+      "source": "sim",
+      "status": "PASS",
+      "transactions_sent": 0
+    },
+    "format": "PASS",
+    "historical_phase3_receipt": "PASS",
+    "openapi_export_comparison": "PASS",
+    "production_proxy": {
+      "browser_console_errors": 0,
+      "compiled_assets": 4,
+      "csp": "PASS",
+      "docker_image_build": "NOT_RUN",
+      "public_source": "sim",
+      "static_write": 405,
+      "status": "PASS",
+      "stream_connected": true,
+      "unauthenticated_prove": 401,
+      "unknown_api": 404
+    },
+    "react_review": "PASS",
+    "repository_scan": "PASS",
+    "rust_workspace": {
+      "failed": 0,
+      "features": "alight-ingest/beam",
+      "passed": 85
+    },
+    "sdk_generator": "PASS",
+    "sdk_lint": "PASS",
+    "sdk_tests": {
+      "failed": 0,
+      "passed": 3
+    },
+    "web_build": "PASS",
+    "web_lint": "PASS",
+    "web_unit_tests": {
+      "failed": 0,
+      "passed": 3
+    }
+  },
+  "code_sha256": {
+    ".dockerignore": "08a7a7cc5630d27bca48b587f2ce215691571f720adda28e37587ce98580825d",
+    ".github/workflows/ci.yml": "58f755d9d86a188d4f8b863bb3a6e86f311285a51a442d2b4aab9465e75d30d3",
+    ".gitignore": "994d42a462f4b316a910c7783c4b0307ef503f1548d18e99d8fe3448f65c7942",
+    "bin/alightd/src/main.rs": "ad8c5ff65dd654dd1f3897aea10130642a63b8404c3352e8e1aa3df2af824f2d",
+    "crates/alight-api/src/lib.rs": "9fff136f4cc3a79f704a195dcc0a7330f6a4bec51c28a8718d07af4d0d24b7da",
+    "crates/alight-api/src/openapi.rs": "4b54a9002fb8c763ac08d715b17d7b0585c571a646c51a97bd47a3f2d08fd210",
+    "crates/alight-api/tests/api.rs": "27bf64d271298084cb2fab90c936b37b8afb8dccc53606b7e21432ab38f26e09",
+    "crates/alight-ingest/src/leaders.rs": "0c98b3d740ed117a9b139fdca6f3dd4399bf71ec2f87733b27a22481849d0083",
+    "crates/alight-store/migrations/0009_workbench_reads.sql": "de84dacdad871acce7935d17f21c6f80fd4653bc4d8dcb8ffe6816b902a4a9a1",
+    "crates/alight-store/src/lib.rs": "4b377ab3a82e78a86e1138c3ea0515d2017d0680ee9443e6f41e87324576a777",
+    "crates/alight-store/src/workbench.rs": "cce2176c2157eef62246cd10496a17fbfd3e33c37744f4edaaf8d05a7e959a3b",
+    "crates/alight-types/src/api.rs": "e63eb43e4e04533f91c8582c82bf54217f6e9e7f12aaa6430b5ec25489053a4f",
+    "crates/alight-types/src/contracts.rs": "81077cdf1d0be3c6413a16173f49058643a76721d1d8b00b2b0ab8a0424cba41",
+    "deploy/Caddyfile": "66d3dadf0eaf10298c708fd81b3251a7a57bc2d980757e3aacb649945cd13dd6",
+    "deploy/Web.Dockerfile": "a151e83452d9e4e83de50aa0ab6cd539c33fd027f9786baa6d15c7d59a2e38f4",
+    "deploy/compose.yaml": "ad3dc747b6499d865a1b5ad6387df5fc01b9b72fdd732aafd8aa843f0d5007e2",
+    "docs/contracts.md": "d3c91ea98d7b113c88f84fc7042fc4365ca6a7bef0f54c011962c7fc82390483",
+    "docs/operations.md": "fe5ac84b8bc17525d39eec5f2dd536c54a221b1fd96b4215ce617e59177763ab",
+    "docs/phase-4-report.md": "b11dbfd4621a36ecf38a2fad86bd6778d4ebac23685ca1ccb6c2d2c38d488b76",
+    "scripts/serve_workbench_test.py": "4a0d495b43a3121d786425f20dba30edae07f4033b5ea46180bc960e0c1b1c7e",
+    "scripts/verify_phase4_receipt.py": "ad245b6327c9b92e998e50c359c7c589f979a61046ad82ec7a4a47f668845695",
+    "sdk/ts/openapi.json": "24886605f118ffee73b5bc3c7bd4c7335ae841af1aaba4de5270b85e30a3c942",
+    "sdk/ts/src/index.ts": "b55d9848f3ed04488738ba8c620b7f08700ac3108c0ccfbecb90ae839897f10b",
+    "sdk/ts/src/schemas.ts": "89166d94597ce7223fa10fe3e936eaa8b2a41cc6f5aedb80b52e8823ab707877",
+    "sdk/ts/src/types.ts": "ab5958101f812ebc8e26c3530724cc85f51f6f66b367454d2b980f85934f0a02",
+    "web/e2e/workbench.spec.ts": "52c80f8eebbd189dc24a16496a9c8deceb6ef309746f1c5726732e222f52e1dd",
+    "web/eslint.config.js": "234dac9038d8dec9ec424491236526c322179cef828a8a86da737eb65f7ea150",
+    "web/index.html": "647425bb91c171c2921a7337fe8c7ba4bc187ca501c577668bf41880e1758d36",
+    "web/package-lock.json": "9db1c15fb90af7f73c8e54e6da4a9c41957c29e7e75eb0700ba6ba5bad87ef02",
+    "web/package.json": "d5e77f61ce28ac65297f70d48aceec7e6997be7307ea06e1c38e42ef8aae21c2",
+    "web/playwright.config.ts": "9051358c61738ca0e8787a7be15b845e23b8ac4b5603b5ac16137704557d384e",
+    "web/public/alight-mark.svg": "9d20acf9910ffab8bf495cb212529f562ea6c5ca2cdfa773052be0e5cbb58894",
+    "web/public/theme.js": "8e92bf85216e3084765ca2ecca35b26bd07767fce540b33a75da83656eb115ec",
+    "web/src/App.tsx": "75fd83170dea4995aa389476c1eab53d40f4dcdf3b5c1d595dd9de7b719222ef",
+    "web/src/charts.tsx": "5c8836b451034243bbed4afe039796e7d68060938514f0d0989241c7531712e2",
+    "web/src/data.ts": "9022f0bd6a3d49d04aeefaacf303effe8fe56e901f7aaa6bd1e62c7a5e886b8d",
+    "web/src/format.ts": "a653cb5cc674780822ba7e87d0b2aaa75fc307c7957c370007b156859b6ddda3",
+    "web/src/ledger.ts": "fc246f50de6d5f3754b5df62fbe67eb18fed0e4a1aeba3406cdb725dcf08ea55",
+    "web/src/main.tsx": "569fbb5e5883fc71ee0df95c9d59e2c9bbba39a8aaac6d33e43b55aa90e988f4",
+    "web/src/pages/Cockpit.tsx": "3b5319980d4a43c756f36847e2ea9c4415cccdb4e6e7fc74c25bb840fe43affc",
+    "web/src/pages/Health.tsx": "418aa8aa0f01e7e91c083883881802e02197a293a6820d47c1bf0021984d62d0",
+    "web/src/pages/Ledger.tsx": "d415972e6fb9f35633ba71798a4e7aed8428d9fd29a49de2db2dd9fd591a1384",
+    "web/src/pages/Prove.tsx": "adb2e1e3113a59cc8bf992b51d27551ff27b7ae68c61516ccb04a7952c3318d1",
+    "web/src/pages/Quote.tsx": "b9a45d9aa35e157737c828139f6c34a280badbda6e9ddf03adc90014b87d39c6",
+    "web/src/pages/Regimes.tsx": "e5d8f04efa3bc5ed31a342c826e21a1fcc61c874e2d117c1dca51c7950d03ccd",
+    "web/src/pages/Tape.tsx": "641e5c6b3f3c28b152c11deb575a5323d7db6793b39f6635a039da04f0c4759b",
+    "web/src/style.css": "1391f6a222905aac27538335c8dc7e53b00752fbeb616fc88bebb130d8caa093",
+    "web/src/ui.tsx": "40620937ab4d9adc9a76b4fa0015d757cdf0dbac34e1fb106f0b3be00c6be51a",
+    "web/src/verification.ts": "28d05f51e66ad4b926c29b76b5a2773ab0dd765700b7d64f5ae426805ec4ba85",
+    "web/test/evidence.ts": "156451a26f0f552cd9ff52cf6202aa9e5bc4937713e8dfd2148c5cbbd0209935",
+    "web/tsconfig.json": "e296c236c02e9b9f96cd4c86354397df5bec4ed1cf2f9a8345b0295304a3c039",
+    "web/vite.config.ts": "f90a9a4c7f8f92515b78f2c55a23e35b12d21a4333bbfc47f566da7aa82ad47e"
+  },
+  "phase": 4,
+  "phase_complete": false,
+  "runtime": {
+    "collection_resumed": false,
+    "live_database_modified": false,
+    "owned_live_transactions_sent": 0,
+    "preview_source": "sim",
+    "provider_requests": 0
+  },
+  "schema_version": 1,
+  "scope": "workbench-and-bounded-read-contracts",
+  "status": "WORKBENCH_OFFLINE_PASS_DEPENDENCIES_PENDING",
+  "tasks": {
+    "4.1": {
+      "offline": "PASS",
+      "real_live_replay_browser": "PENDING"
+    },
+    "4.10": {
+      "ci_integration": "ADDED",
+      "sim_browser_flow": "PASS"
+    },
+    "4.2": {
+      "live_host": "PENDING",
+      "recorded_leader_fixture": "PASS",
+      "sim": "PASS"
+    },
+    "4.3": {
+      "api_card_and_copy": "PASS",
+      "fresh_live_frontier": "PENDING",
+      "missing_market_fallback": "PASS"
+    },
+    "4.4": {
+      "funded_live_n40": "PENDING",
+      "sim_n40": "PASS"
+    },
+    "4.5": {
+      "browser_chain_and_tamper": "PASS",
+      "external_head_provenance": "SEPARATE_PHASE6_DEPENDENCY"
+    },
+    "4.6": {
+      "detector_backfill": "PENDING",
+      "observed_label_view": "PASS"
+    },
+    "4.7": {
+      "freshness_gaps_drilldown_ui": "PASS",
+      "live_disagreement_drilldown": "PENDING",
+      "observer_aggregates": "PENDING"
+    },
+    "4.8": {
+      "bounded_tape_view": "PASS",
+      "real_wallet_receipt": "PENDING"
+    },
+    "4.9": {
+      "axe_mobile_keyboard": "PASS",
+      "human_assistive_technology": "NOT_RUN"
+    }
+  },
+  "validated_at_utc": "2026-10-06T16:28:46.102761+00:00"
+}

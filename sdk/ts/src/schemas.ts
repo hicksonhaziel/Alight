@@ -334,6 +334,195 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "BrowserLedgerPage": {
+    "properties": {
+      "next_after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "rows": {
+        "items": {
+          "$ref": "#/components/schemas/BrowserLedgerRow"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "rows"
+    ],
+    "title": "BrowserLedgerPage",
+    "type": "object"
+  },
+  "BrowserLedgerRow": {
+    "properties": {
+      "canonical_json": {
+        "description": "Exact Rust canonical bytes preserve float spelling for independent browser hashing.",
+        "type": "string"
+      },
+      "entry": {
+        "$ref": "#/components/schemas/ForecastEntry"
+      }
+    },
+    "required": [
+      "entry",
+      "canonical_json"
+    ],
+    "type": "object"
+  },
+  "Canary": {
+    "description": "A durable send attempt. Monotonic times are comparable only within clock_id.",
+    "properties": {
+      "assignment_prob": {
+        "format": "double",
+        "type": "number"
+      },
+      "blockhash": {
+        "type": "string"
+      },
+      "clock_id": {
+        "type": "string"
+      },
+      "config": {
+        "$ref": "#/components/schemas/CanaryConfig"
+      },
+      "id": {
+        "type": "string"
+      },
+      "landed_block_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "landed_index": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "landed_index_scope": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/IndexScope"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "landed_slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "last_valid_block_height": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "leader_class_next": {
+        "items": {
+          "$ref": "#/components/schemas/LeaderClass"
+        },
+        "type": "array"
+      },
+      "observer_first_seen": {
+        "additionalProperties": false,
+        "description": "Each observer has its own clock identity and UTC receive time.",
+        "properties": {
+          "grpc": {
+            "$ref": "#/components/schemas/ReceiveTime"
+          },
+          "mirage": {
+            "$ref": "#/components/schemas/ReceiveTime"
+          },
+          "rpc": {
+            "$ref": "#/components/schemas/ReceiveTime"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/ReceiveTime"
+          }
+        },
+        "type": "object"
+      },
+      "outcome": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "policy_id": {
+        "type": "string"
+      },
+      "regime_id": {
+        "type": "string"
+      },
+      "resolved_at_utc": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "send_mono_ns": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "send_wall_utc": {
+        "type": "string"
+      },
+      "sent_slot": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "signature": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "uniform_arm": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "source",
+      "config",
+      "policy_id",
+      "assignment_prob",
+      "uniform_arm",
+      "regime_id",
+      "sent_slot",
+      "clock_id",
+      "send_mono_ns",
+      "send_wall_utc",
+      "blockhash",
+      "last_valid_block_height",
+      "leader_class_next",
+      "observer_first_seen"
+    ],
+    "type": "object"
+  },
   "CanaryConfig": {
     "properties": {
       "cu_limit": {
@@ -369,6 +558,29 @@ export const schemas: Record<string, Schema> = {
       "tip_tier",
       "size_class"
     ],
+    "type": "object"
+  },
+  "CanaryEvidencePage": {
+    "properties": {
+      "canary_id": {
+        "type": "string"
+      },
+      "observations": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverEvent"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "canary_id",
+      "observations"
+    ],
+    "title": "CanaryEvidencePage",
     "type": "object"
   },
   "ClockWindow": {
@@ -1089,6 +1301,88 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "ForecastGrade": {
+    "properties": {
+      "baselines": {
+        "items": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProbabilityScores"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          ],
+          "type": "array"
+        },
+        "type": "array"
+      },
+      "forecast_hash": {
+        "type": "string"
+      },
+      "graded_at_utc": {
+        "type": "string"
+      },
+      "latency_coverage": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "scores": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ProbabilityScores"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "status": {
+        "$ref": "#/components/schemas/ForecastStatus"
+      },
+      "through_change_scores": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ProbabilityScores"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "unresolved": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "forecast_hash",
+      "graded_at_utc",
+      "status",
+      "unresolved",
+      "baselines"
+    ],
+    "type": "object"
+  },
   "ForecastLedgerExport": {
     "description": "Phase 3 bounded forecast-only export; whole-chain verification is performed before pagination.",
     "properties": {
@@ -1126,6 +1420,14 @@ export const schemas: Record<string, Schema> = {
     ],
     "title": "ForecastLedgerExport",
     "type": "object"
+  },
+  "ForecastStatus": {
+    "enum": [
+      "PENDING",
+      "SCORED",
+      "VOIDED"
+    ],
+    "type": "string"
   },
   "HealthCounts": {
     "properties": {
@@ -1256,6 +1558,22 @@ export const schemas: Record<string, Schema> = {
       "leader",
       "skip_rate_tercile",
       "stake_tercile"
+    ],
+    "type": "object"
+  },
+  "LeaderSlot": {
+    "description": "A scheduled slot, distinct from a leader rotation. Slot identity is lossless decimal text.",
+    "properties": {
+      "class": {
+        "$ref": "#/components/schemas/LeaderClass"
+      },
+      "slot": {
+        "$ref": "#/components/schemas/DecimalU64"
+      }
+    },
+    "required": [
+      "slot",
+      "class"
     ],
     "type": "object"
   },
@@ -1419,6 +1737,97 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "ObserverEvent": {
+    "properties": {
+      "block_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "index_in_block": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "index_scope": {
+        "$ref": "#/components/schemas/IndexScope"
+      },
+      "observer": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "raw_ref": {
+        "type": "string"
+      },
+      "received": {
+        "$ref": "#/components/schemas/ReceiveTime"
+      },
+      "signature": {
+        "type": "string"
+      },
+      "slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "success": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "observer",
+      "signature",
+      "index_scope",
+      "received",
+      "raw_ref",
+      "source"
+    ],
+    "type": "object"
+  },
+  "ObserverGap": {
+    "description": "Gaps are distinct records; they never fabricate a signature or transaction outcome.",
+    "properties": {
+      "end_utc": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "observer": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "start_utc": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "observer",
+      "source",
+      "start_utc",
+      "reason"
+    ],
+    "type": "object"
+  },
   "ObserverHealthPage": {
     "properties": {
       "observers": {
@@ -1493,6 +1902,17 @@ export const schemas: Record<string, Schema> = {
       "mirage",
       "rpc",
       "webhook"
+    ],
+    "type": "string"
+  },
+  "Outcome": {
+    "enum": [
+      "LANDED_OK",
+      "LANDED_FAILED",
+      "LANDED_THEN_DROPPED",
+      "EXPIRED",
+      "REJECTED",
+      "UNRESOLVED"
     ],
     "type": "string"
   },
@@ -1645,6 +2065,76 @@ export const schemas: Record<string, Schema> = {
         "type": "object"
       }
     ]
+  },
+  "ProbabilityScores": {
+    "properties": {
+      "brier": {
+        "format": "double",
+        "type": "number"
+      },
+      "expected_calibration_error": {
+        "format": "double",
+        "type": "number"
+      },
+      "interval_coverage": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "log_loss": {
+        "format": "double",
+        "type": "number"
+      },
+      "n": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "observed_rate": {
+        "format": "double",
+        "type": "number"
+      },
+      "reliability": {
+        "items": {
+          "$ref": "#/components/schemas/ReliabilityBucket"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "n",
+      "observed_rate",
+      "brier",
+      "log_loss",
+      "expected_calibration_error",
+      "reliability"
+    ],
+    "type": "object"
+  },
+  "ProveCanaryPage": {
+    "properties": {
+      "canaries": {
+        "description": "Ordered prospective members; no coincidentally matching records.",
+        "items": {
+          "$ref": "#/components/schemas/TrainingCanary"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "id",
+      "canaries"
+    ],
+    "title": "ProveCanaryPage",
+    "type": "object"
   },
   "ProveLock": {
     "properties": {
@@ -1976,6 +2466,39 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "ReliabilityBucket": {
+    "properties": {
+      "lower": {
+        "format": "double",
+        "type": "number"
+      },
+      "n": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "observed": {
+        "format": "double",
+        "type": "number"
+      },
+      "predicted": {
+        "format": "double",
+        "type": "number"
+      },
+      "upper": {
+        "format": "double",
+        "type": "number"
+      }
+    },
+    "required": [
+      "lower",
+      "upper",
+      "n",
+      "predicted",
+      "observed"
+    ],
+    "type": "object"
+  },
   "Route": {
     "enum": [
       "beam_quic",
@@ -2119,5 +2642,143 @@ export const schemas: Record<string, Schema> = {
       "x10"
     ],
     "type": "string"
+  },
+  "TrainingCanary": {
+    "description": "Training eligibility includes finalization; provisional landings are not labels.",
+    "properties": {
+      "canary": {
+        "$ref": "#/components/schemas/Canary"
+      },
+      "covariates": {
+        "$ref": "#/components/schemas/ModelCovariates",
+        "default": {
+          "congestion": null
+        }
+      },
+      "finalized": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "canary",
+      "finalized"
+    ],
+    "type": "object"
+  },
+  "WorkbenchCanary": {
+    "properties": {
+      "canary": {
+        "$ref": "#/components/schemas/Canary"
+      },
+      "finalized": {
+        "type": "boolean"
+      },
+      "prove_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "resolution_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "canary",
+      "finalized"
+    ],
+    "type": "object"
+  },
+  "WorkbenchEvidence": {
+    "description": "Bounded read-only workbench evidence. A regime label is not a detected network change.",
+    "properties": {
+      "as_of_utc": {
+        "type": "string"
+      },
+      "canaries": {
+        "items": {
+          "$ref": "#/components/schemas/WorkbenchCanary"
+        },
+        "type": "array"
+      },
+      "daily_cap_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "gaps": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverGap"
+        },
+        "type": "array"
+      },
+      "grades": {
+        "items": {
+          "$ref": "#/components/schemas/ForecastGrade"
+        },
+        "type": "array"
+      },
+      "limit": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "operator_enabled": {
+        "type": "boolean"
+      },
+      "regimes": {
+        "items": {
+          "$ref": "#/components/schemas/WorkbenchRegime"
+        },
+        "type": "array"
+      },
+      "runway": {
+        "items": {
+          "$ref": "#/components/schemas/LeaderSlot"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "as_of_utc",
+      "canaries",
+      "grades",
+      "regimes",
+      "gaps",
+      "daily_cap_lamports",
+      "limit",
+      "operator_enabled",
+      "runway"
+    ],
+    "title": "WorkbenchEvidence",
+    "type": "object"
+  },
+  "WorkbenchRegime": {
+    "properties": {
+      "canaries": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "first_observed_utc": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "last_observed_utc": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "first_observed_utc",
+      "last_observed_utc",
+      "canaries"
+    ],
+    "type": "object"
   }
 };

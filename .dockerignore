@@ -13,4 +13,16 @@
 !data/fixtures/**
 !deploy/
 !deploy/Dockerfile
+!deploy/Web.Dockerfile
+!deploy/Caddyfile
+!web/
+!web/**
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+!sdk/
+!sdk/ts/
+!sdk/ts/src/
+!sdk/ts/src/**
 # Private briefs, ENV, runtime databases, README and context never enter the build context.

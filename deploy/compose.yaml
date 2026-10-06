@@ -29,7 +29,10 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
   caddy:
-    image: caddy:2.10.2-alpine
+    image: alight-workbench:phase4
+    build:
+      context: ..
+      dockerfile: deploy/Web.Dockerfile
     restart: unless-stopped
     ports: ["127.0.0.1:8080:80"]
     volumes:

@@ -4,6 +4,7 @@ mod curves;
 mod ledger;
 mod phase3;
 mod prove;
+mod workbench;
 use alight_types::{
     BudgetLimits, BudgetReservation, Canary, IngestEvent, ObserverEvent, ObserverKind, Source,
 };

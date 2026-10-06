@@ -18,6 +18,8 @@
 *.pyc
 /web/dist/
 /sdk/ts/dist/
+/web/playwright-report/
+/web/test-results/
 /data/*.db
 /data/*.db-*
 

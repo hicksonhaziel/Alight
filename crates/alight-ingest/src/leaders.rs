@@ -155,6 +155,21 @@ impl LeaderSchedule {
     pub fn covers(&self, slot: u64) -> bool {
         self.slots.contains_key(&slot)
     }
+    /// Next n assigned slots after the observed cursor; clipped to the recorded epoch.
+    pub fn next_slots(&self, slot: u64, n: usize) -> Vec<alight_types::LeaderSlot> {
+        self.slots
+            .range(slot.saturating_add(1)..)
+            .take(n.min(8))
+            .filter_map(|(slot, identity)| {
+                self.classes
+                    .get(identity)
+                    .map(|class| alight_types::LeaderSlot {
+                        slot: *slot,
+                        class: class.clone(),
+                    })
+            })
+            .collect()
+    }
 
     /// Next n leader rotations strictly after slot, clipped at the recorded epoch boundary.
     pub fn next_leaders(&self, slot: u64, n: usize) -> Vec<LeaderClass> {
@@ -224,6 +239,19 @@ mod tests {
         assert_eq!(schedule.slots[&schedule.first_slot], *first_identity);
         assert!(schedule.covers(schedule.first_slot + schedule.slots_in_epoch - 1));
         assert!(!schedule.covers(schedule.first_slot + schedule.slots_in_epoch));
+        let runway = schedule.next_slots(schedule.first_slot, 8);
+        assert_eq!(runway.len(), 8);
+        for (i, row) in runway.iter().enumerate() {
+            assert_eq!(row.slot, schedule.first_slot + i as u64 + 1);
+            assert_eq!(row.class.leader, schedule.slots[&row.slot]);
+            assert!(serde_json::to_value(row).expect("wire")["slot"].is_string());
+        }
+        assert_eq!(
+            schedule
+                .next_slots(schedule.first_slot + schedule.slots_in_epoch - 2, 8)
+                .len(),
+            1
+        );
         assert_eq!(schedule.next_leaders(schedule.first_slot, 3).len(), 3);
         let mut no_metrics = raw;
         no_metrics["getVoteAccounts"] = Value::Null;

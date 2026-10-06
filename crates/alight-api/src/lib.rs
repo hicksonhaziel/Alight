@@ -313,6 +313,10 @@ pub fn router(state: ApiState) -> Router {
         .route("/v1/proves", get(proves))
         .route("/v1/ledger", get(ledger))
         .route("/v1/ledger/verify", get(verify))
+        .route("/v1/ledger/payloads", get(browser_ledger))
+        .route("/v1/workbench", get(workbench))
+        .route("/v1/canaries/{id}/observations", get(canary_evidence))
+        .route("/v1/prove/{id}/canaries", get(prove_canaries))
         .route("/v1/tape", get(tape))
         .route("/v1/observers", get(observers))
         .route("/v1/openapi.json", get(schema))
@@ -393,6 +397,140 @@ async fn observers(State(s): State<ApiState>) -> Result<Json<ObserverHealthPage>
     Ok(Json(ObserverHealthPage {
         source: s.source,
         observers: observer_views(&s).await?,
+    }))
+}
+async fn workbench(State(s): State<ApiState>) -> Result<Json<WorkbenchEvidence>, ApiError> {
+    let _permit = s.work()?;
+    let now = s.now().await;
+    let canaries = s
+        .store
+        .workbench_canaries(s.source, &now, 100)
+        .await
+        .map_err(|_| s.unavailable())?;
+    let grades = s
+        .store
+        .workbench_grades(s.source, &now)
+        .await
+        .map_err(|_| s.unavailable())?;
+    let regimes = s
+        .store
+        .workbench_regimes(s.source, &now)
+        .await
+        .map_err(|_| s.unavailable())?;
+    let gaps = s
+        .store
+        .workbench_gaps(s.source, &now)
+        .await
+        .map_err(|_| s.unavailable())?;
+    let cap = alight_canary::governor::sol_to_lamports(s.daily.as_deref().unwrap_or("0.20"))
+        .map_err(|_| s.unavailable())?;
+    Ok(Json(WorkbenchEvidence {
+        source: s.source,
+        as_of_utc: now,
+        canaries,
+        grades,
+        regimes,
+        gaps,
+        daily_cap_lamports: cap,
+        limit: 100,
+        operator_enabled: s.operator_digest.is_some()
+            && matches!(s.mode, RunMode::Live | RunMode::Sim),
+        runway: match s.leaders.read().await.get("next_slots") {
+            Some(value) => serde_json::from_value(value.clone()).map_err(|_| s.unavailable())?,
+            None => vec![],
+        },
+    }))
+}
+async fn canary_evidence(
+    State(s): State<ApiState>,
+    Path(id): Path<String>,
+) -> Result<Json<CanaryEvidencePage>, ApiError> {
+    if !short(&id, 128) {
+        return Err(s.invalid());
+    }
+    let _permit = s.work()?;
+    let canary = s
+        .store
+        .workbench_canary(s.source, &id)
+        .await
+        .map_err(|_| s.unavailable())?
+        .ok_or_else(|| s.error(StatusCode::NOT_FOUND, "NOT_FOUND", "Canary does not exist"))?;
+    let now = s.now().await;
+    if utc(&canary.send_wall_utc).map_err(|_| s.unavailable())?
+        > utc(&now).map_err(|_| s.unavailable())?
+    {
+        return Err(s.invalid());
+    }
+    let observations = match canary.signature {
+        Some(sig) => s
+            .store
+            .workbench_observations(s.source, &sig, &now)
+            .await
+            .map_err(|_| s.unavailable())?,
+        None => vec![],
+    };
+    Ok(Json(CanaryEvidencePage {
+        source: s.source,
+        canary_id: id,
+        observations,
+    }))
+}
+async fn prove_canaries(
+    State(s): State<ApiState>,
+    Path(id): Path<String>,
+) -> Result<Json<ProveCanaryPage>, ApiError> {
+    if !short(&id, 100) {
+        return Err(s.invalid());
+    }
+    s.store
+        .prove(s.source, &id)
+        .await
+        .map_err(|_| s.unavailable())?
+        .ok_or_else(|| {
+            s.error(
+                StatusCode::NOT_FOUND,
+                "NOT_FOUND",
+                "Prove run does not exist",
+            )
+        })?;
+    let canaries = s
+        .store
+        .prove_canaries(s.source, &id)
+        .await
+        .map_err(|_| s.unavailable())?;
+    if canaries.len() > 400 {
+        return Err(s.unavailable());
+    }
+    Ok(Json(ProveCanaryPage {
+        source: s.source,
+        id,
+        canaries,
+    }))
+}
+async fn browser_ledger(
+    State(s): State<ApiState>,
+    query: Result<Query<LedgerQuery>, QueryRejection>,
+) -> Result<Json<BrowserLedgerPage>, ApiError> {
+    let Json(page) = ledger(State(s), query).await?;
+    let rows = page
+        .entries
+        .into_iter()
+        .map(|entry| {
+            Ok(BrowserLedgerRow {
+                canonical_json: alight_store::canonical(&entry.forecast).map_err(|_| ApiError {
+                    source: page.source,
+                    status: StatusCode::SERVICE_UNAVAILABLE,
+                    code: "DATA_UNAVAILABLE",
+                    message: "Stored evidence is unavailable",
+                })?,
+                entry,
+            })
+        })
+        .collect::<Result<Vec<_>, ApiError>>()?;
+    Ok(Json(BrowserLedgerPage {
+        source: page.source,
+        rows,
+        next_after: page.next_after,
     }))
 }
 async fn observer_views(s: &ApiState) -> Result<Vec<ObserverHealthView>, ApiError> {
@@ -672,6 +810,11 @@ async fn prove(
                 .await
                 .map_err(|_| s.unavailable())?;
         s.advance(&report.as_of_utc).await?;
+        // Sim has no periodic live model worker. Grade the later held-out outcomes here;
+        // model fitting still excludes every Prove member through the store contract.
+        alight_forecast::tick(&s.store, s.source, &s.region, &report.as_of_utc)
+            .await
+            .map_err(|_| s.unavailable())?;
         report
     } else {
         locked

@@ -220,3 +220,67 @@ retry an uncertain response. A crash after persistence can leave `PENDING` event
 there is no automatic replay or guaranteed external delivery. Discord disables
 mentions; Slack uses plain-text blocks. The induced test delivers all five rules
 to a temporary loopback receiver and checks restart suppression.
+
+## Phase 4 workbench
+
+Use Node 22.22 or later. Install the pinned web dependencies with
+`npm --prefix web ci --ignore-scripts --no-audit --no-fund`. The workbench imports
+the checked-in TypeScript SDK source; it needs no provider credentials.
+
+Start an isolated offline daemon in one terminal:
+
+```sh
+target/debug/alightd --mode sim --seed 42 --sim-canaries 900 --bind 127.0.0.1:8080 --db .alight/workbench-sim.db --operator-key-file .alight/operator.key
+```
+
+The operator key file must contain an existing local API operator key, be private
+to its owner, and contain no wallet/provider key. Omit the key flag for public
+read-only use. Sim does not load project ENV or use providers/signing access.
+In another terminal, run `npm --prefix web run dev`, then open
+`http://127.0.0.1:5173`. For a different daemon port, set `ALIGHT_API_ORIGIN` on
+the Vite process. Vite binds loopback and allows only `web/` and SDK source files.
+
+Cockpit, Quote, Prove, Ledger, Regimes, Health, and Tape all retain the source
+badge. Hash routes can recover an issued forecast or Prove run on reload.
+Operator access is optional, held only in page memory, and cleared on reload or
+disconnect. Public SDK reads omit its Authorization header. Only quote freeze
+and governed Prove send authenticated POSTs; uncertain responses require history
+reconciliation rather than automatic retries. Sim Prove is synchronous: dots
+represent actual members, without staged synthetic progress animation.
+
+The stream reconnects with bounded backoff and pauses when the document is hidden.
+Evidence refreshes every 15 seconds without overlapping requests. Source or
+schema mismatches clear evidence and disable actions. Both themes, native
+dialogs, command navigation (`Ctrl/Cmd K`), keyboard focus, data-table alternatives,
+and reduced-motion preferences are supported. Fonts and the Aftershock logo are
+served locally. Charts show stored evidence; missing market/history services
+produce explicit unavailable states.
+
+`npm --prefix web run build` produces `web/dist`. Compose's Caddy service now
+builds `deploy/Web.Dockerfile` to serve these assets and the allowed API routes
+from one origin, with CSP and no external font/script dependencies. Build only
+the web image with `docker compose -f deploy/compose.yaml build caddy` when
+needed; this command does not resume collection. Starting the stack or resuming
+the collector remains a separate live operation under the standing pause.
+
+Verification:
+
+```sh
+npm --prefix web run lint
+npm --prefix web test
+npm --prefix web run build
+cd web
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+For an already installed Chrome, set `ALIGHT_BROWSER_EXECUTABLE` to its absolute
+path on the E2E command. Browser tests create/stop their own temporary Sim daemon
+on 8082 and Vite on 5180; both ports must be free. No real key, project ENV,
+provider request, wallet funding, or chain send is needed. Reports and screenshots
+are local under `.alight/phase4/`; CI uses bundled Chromium. The test checks
+actual API values, a frozen forecast, 40 held-out members, restart recovery,
+browser SHA-256 verification/tamper rejection, 14 Axe screen/theme audits, mobile
+keyboard navigation, reduced motion, offline/source mismatch, and probability-only
+market fallback. See `docs/phase-4-report.md` for measured scope and remaining
+live/dependency acceptance.

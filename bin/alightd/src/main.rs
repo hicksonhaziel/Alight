@@ -124,7 +124,7 @@ async fn leader_loop(
                 }
             }
             if let Some(schedule) = &schedule {
-                *state.write().await = json!({"status":if schedule.covers(slot){"PASS"}else{"STALE"},"source":"live","epoch":schedule.epoch.to_string(),"at_slot":slot.to_string(),"next_leaders":schedule.next_leaders(slot,3),"classification":"epoch snapshot; fewer than 16 assigned slots means unknown skip rate"});
+                *state.write().await = json!({"status":if schedule.covers(slot){"PASS"}else{"STALE"},"source":"live","epoch":schedule.epoch.to_string(),"at_slot":slot.to_string(),"next_leaders":schedule.next_leaders(slot,3),"next_slots":schedule.next_slots(slot,8),"classification":"epoch snapshot; fewer than 16 assigned slots means unknown skip rate"});
             }
         }
         tokio::select! { _=stop.changed()=>return Ok(()),_=tokio::time::sleep(Duration::from_secs(15))=>{} }
@@ -611,6 +611,8 @@ async fn run() -> Result<(), Error> {
                 args.operator_key_file.as_deref(),
                 config.get("ALIGHT_OPERATOR_KEY"),
             )?,
+            daily_budget_sol: config.get("ALIGHT_DAILY_BUDGET_SOL").map(str::to_owned),
+            burst_budget_sol: config.get("ALIGHT_BURST_BUDGET_SOL").map(str::to_owned),
             ..Default::default()
         },
     )

@@ -195,6 +195,8 @@ async fn public_preview_operator_freeze_forty_prove_restart_and_served_schemas_w
         "/v1/ledger/verify",
         "/v1/tape",
         "/v1/proves",
+        "/v1/workbench",
+        "/v1/ledger/payloads",
     ] {
         let (status, value) = call(&app, "GET", path, Value::Null, None).await;
         assert_eq!(status, 200, "{path}");
@@ -265,6 +267,41 @@ async fn public_preview_operator_freeze_forty_prove_restart_and_served_schemas_w
     assert_eq!(status, 200);
     assert_eq!(read, report);
     capture(&mut cases, &spec, "/v1/prove/{id}", "get", status, read);
+    let (status, members) = call(
+        &app,
+        "GET",
+        &format!("/v1/prove/{id}/canaries"),
+        Value::Null,
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
+    assert_eq!(members["canaries"].as_array().expect("members").len(), 40);
+    capture(
+        &mut cases,
+        &spec,
+        "/v1/prove/{id}/canaries",
+        "get",
+        status,
+        members,
+    );
+    let (status, payloads) = call(&app, "GET", "/v1/ledger/payloads", Value::Null, None).await;
+    assert_eq!(status, 200);
+    let payload: Value = serde_json::from_str(
+        payloads["rows"][0]["canonical_json"]
+            .as_str()
+            .expect("canonical bytes"),
+    )
+    .expect("JSON");
+    assert_eq!(payload, frozen["forecast"]);
+    capture(
+        &mut cases,
+        &spec,
+        "/v1/ledger/payloads",
+        "get",
+        status,
+        payloads,
+    );
     assert_eq!(
         store
             .training_canaries(Source::Sim)
@@ -340,6 +377,66 @@ async fn public_preview_operator_freeze_forty_prove_restart_and_served_schemas_w
             .expect("no duplicate spend")
             .budget_reserved_lamports,
         8201040
+    );
+}
+
+#[tokio::test]
+async fn workbench_reads_are_bounded_source_scoped_and_do_not_expose_future_records() {
+    let dir = tempfile::tempdir().expect("temporary database");
+    let store = setup(&dir.path().join("workbench.db")).await;
+    let base = store
+        .grading_canaries(Source::Sim)
+        .await
+        .expect("rows")
+        .remove(0);
+    let mut future = base.clone();
+    future.canary.id = "future-row".into();
+    future.canary.send_wall_utc = "2026-10-06T01:00:00Z".into();
+    store
+        .import_training(&future)
+        .await
+        .expect("future fixture");
+    let mut replay = base;
+    replay.canary.id = "other-source-row".into();
+    replay.canary.source = Source::Replay;
+    store
+        .import_training(&replay)
+        .await
+        .expect("other source fixture");
+    let app = router(state(store.clone()));
+    let (status, evidence) = call(&app, "GET", "/v1/workbench", Value::Null, None).await;
+    assert_eq!(status, 200);
+    let evidence: WorkbenchEvidence = serde_json::from_value(evidence).expect("contract");
+    assert_eq!(evidence.canaries.len(), 100);
+    assert!(
+        evidence
+            .canaries
+            .iter()
+            .all(|r| r.canary.source == Source::Sim && r.canary.id != "future-row")
+    );
+    assert_eq!(evidence.regimes[0].canaries, 100);
+    assert_eq!(evidence.daily_cap_lamports, 200_000_000);
+    for path in [
+        "/v1/canaries/other-source-row/observations",
+        "/v1/prove/other-source-run/canaries",
+    ] {
+        assert_eq!(call(&app, "GET", path, Value::Null, None).await.0, 404);
+    }
+    assert_eq!(
+        call(
+            &app,
+            "GET",
+            "/v1/canaries/future-row/observations",
+            Value::Null,
+            None
+        )
+        .await
+        .0,
+        400
+    );
+    assert_eq!(
+        store.verify_ledger(Source::Sim).await.expect("read only"),
+        0
     );
 }
 

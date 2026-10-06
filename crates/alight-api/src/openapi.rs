@@ -73,6 +73,10 @@ pub fn document() -> Value {
     add::<ApiStreamSnapshot>(&mut schemas);
     add::<Alert>(&mut schemas);
     add::<ForecastLedgerExport>(&mut schemas);
+    add::<WorkbenchEvidence>(&mut schemas);
+    add::<CanaryEvidencePage>(&mut schemas);
+    add::<ProveCanaryPage>(&mut schemas);
+    add::<BrowserLedgerPage>(&mut schemas);
     // Boundary bounds complement the serde shape; semantic/model gates still run in handlers.
     schemas["ProveRequest"]["properties"]["n"]["minimum"] = json!(1);
     schemas["ProveRequest"]["properties"]["n"]["maximum"] = json!(400);
@@ -88,6 +92,7 @@ pub fn document() -> Value {
         ("/v1/leaders", "ApiTelemetry"),
         ("/v1/observers", "ObserverHealthPage"),
         ("/v1/ledger/verify", "LedgerVerification"),
+        ("/v1/workbench", "WorkbenchEvidence"),
     ] {
         paths.insert(path.into(), json!({"get":operation(name,false,"200")}));
     }
@@ -103,6 +108,14 @@ pub fn document() -> Value {
     let mut report = operation("ProveReport", false, "200");
     report["parameters"] = json!([{"name":"id","in":"path","required":true,"schema":{"type":"string","maxLength":100}}]);
     paths.insert("/v1/prove/{id}".into(), json!({"get":report}));
+    for (path, name, max) in [
+        ("/v1/prove/{id}/canaries", "ProveCanaryPage", 100),
+        ("/v1/canaries/{id}/observations", "CanaryEvidencePage", 128),
+    ] {
+        let mut op = operation(name, false, "200");
+        op["parameters"] = json!([{"name":"id","in":"path","required":true,"schema":{"type":"string","maxLength":max}}]);
+        paths.insert(path.into(), json!({"get":op}));
+    }
     for (path, name, parameters) in [
         (
             "/v1/curve",
@@ -164,6 +177,20 @@ pub fn document() -> Value {
         paths.insert(path.into(), json!({"get":op}));
     }
     paths.insert("/v1/openapi.json".into(),json!({"get":{"security":[],"responses":{"200":{"description":"OpenAPI 3.1 document","content":{"application/json":{"schema":{"type":"object"}}}},"429":response("ApiErrorResponse")}}}));
+    let mut payloads = operation("BrowserLedgerPage", false, "200");
+    payloads["parameters"] = json!([
+        query(
+            "after",
+            json!({"$ref":"#/components/schemas/DecimalU64","default":"0"}),
+            false
+        ),
+        query(
+            "limit",
+            json!({"type":"integer","minimum":1,"maximum":100,"default":50}),
+            false
+        )
+    ]);
+    paths.insert("/v1/ledger/payloads".into(), json!({"get":payloads}));
     paths.insert("/v1/stream".into(),json!({"get":{"security":[],"description":"Read-only source-scoped snapshots each second; 32 connections maximum, 1 MiB output cap, 4 KiB input cap, slow clients disconnect. Text/binary controls are rejected.","responses":{"101":{"description":"WebSocket upgrade"},"429":response("ApiErrorResponse")},"x-websocket-message":{"$ref":"#/components/schemas/ApiStreamSnapshot"}}}));
     json!({"openapi":"3.1.0","jsonSchemaDialect":"https://json-schema.org/draft/2020-12/schema","info":{"title":"Alight API","version":"1","description":"Canary landing forecasts with explicit live/sim/replay evidence. Public reads never sign, send or persist forecasts."},"paths":paths,"components":{"schemas":schemas,"securitySchemes":{"OperatorBearer":{"type":"http","scheme":"bearer","description":"Server-side ALIGHT_OPERATOR_KEY. Never put it in a URL."}}}})
 }

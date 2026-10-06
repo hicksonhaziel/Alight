@@ -248,6 +248,15 @@ pub struct LeaderClass {
     pub stake_tercile: Tercile,
 }
 
+/// A scheduled slot, distinct from a leader rotation. Slot identity is lossless decimal text.
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct LeaderSlot {
+    #[serde(with = "decimal_u64")]
+    #[schemars(with = "crate::DecimalU64")]
+    pub slot: u64,
+    pub class: LeaderClass,
+}
+
 /// A durable send attempt. Monotonic times are comparable only within clock_id.
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Canary {

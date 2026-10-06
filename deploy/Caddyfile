@@ -17,7 +17,7 @@
 :80 {
 	@readonly {
 		method GET HEAD
-		path /v1/health /v1/clock /v1/leaders /v1/curve /v1/quote /v1/prove/* /v1/proves /v1/ledger /v1/ledger/verify /v1/tape /v1/observers /v1/openapi.json /v1/stream
+		path /v1/health /v1/clock /v1/leaders /v1/curve /v1/quote /v1/prove/* /v1/proves /v1/ledger /v1/ledger/verify /v1/ledger/payloads /v1/workbench /v1/canaries/*/observations /v1/tape /v1/observers /v1/openapi.json /v1/stream
 	}
 	handle @readonly {
 		reverse_proxy collector:8080
@@ -30,13 +30,24 @@
 		# The backend validates ALIGHT_OPERATOR_KEY before reading a request body.
 		reverse_proxy collector:8080
 	}
-	handle {
+	handle /v1/* {
 		respond "Not found" 404
+	}
+	@web method GET HEAD
+	handle @web {
+		root * /srv/alight
+		try_files {path} /index.html
+		file_server
+	}
+	handle {
+		respond "Method not allowed" 405
 	}
 	header {
 		X-Content-Type-Options nosniff
 		Cache-Control no-store
 		-Server
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		Referrer-Policy no-referrer
 	}
 	log {
 		format filter {

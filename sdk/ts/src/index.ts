@@ -57,6 +57,10 @@ export class AlightClient {
     finally { clearTimeout(timer); }
   }
   async health(): Promise<T.ApiHealth> { const r=await this.request<T.ApiHealth>('ApiHealth','/v1/health'); this.scope(r.source); return r; }
+  async workbench(): Promise<T.WorkbenchEvidence> { const r=await this.request<T.WorkbenchEvidence>('WorkbenchEvidence','/v1/workbench'); this.scope(r.source); return r; }
+  async canaryEvidence(id: string): Promise<T.CanaryEvidencePage> { if(!/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw new AlightError('CONFIGURATION'); const r=await this.request<T.CanaryEvidencePage>('CanaryEvidencePage',`/v1/canaries/${id}/observations`); this.scope(r.source); return r; }
+  async proveCanaries(id: string): Promise<T.ProveCanaryPage> { if(!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new AlightError('CONFIGURATION'); const r=await this.request<T.ProveCanaryPage>('ProveCanaryPage',`/v1/prove/${id}/canaries`); this.scope(r.source); return r; }
+  async ledgerPayloads(after:T.DecimalU64=decimalU64('0'),limit=100): Promise<T.BrowserLedgerPage> { const r=await this.request<T.BrowserLedgerPage>('BrowserLedgerPage','/v1/ledger/payloads',{after:decimalU64(after),limit:String(limit)}); this.scope(r.source); return r; }
   async clock(): Promise<T.ApiClock> { const r=await this.request<T.ApiClock>('ApiClock','/v1/clock'); this.scope(r.source); return r; }
   async leaders(): Promise<T.ApiTelemetry> { const r=await this.request<T.ApiTelemetry>('ApiTelemetry','/v1/leaders'); this.scope(r.source); return r; }
   async observers(): Promise<T.ObserverHealthPage> { const r=await this.request<T.ObserverHealthPage>('ObserverHealthPage','/v1/observers'); this.scope(r.source); return r; }

@@ -534,3 +534,48 @@ in shared types. Migration 0008 changes no forecast/canary serialization or hash
 For example, an induced budget event has source `sim`, rule `BUDGET`, subject
 `daily_budget` and details `{"reserved_lamports":"90","daily_cap_lamports":
 "100","threshold_fraction":0.9}`. Chat formatters do not interpret mentions.
+
+## Phase 4 workbench reads
+
+The generated OpenAPI contract now includes four public, source-scoped reads.
+They use the existing request/concurrency bounds and never call a provider or
+hold an operator/wallet key. Migration 0009 adds read indexes; it changes no
+stored forecast, outcome, or hash serialization.
+
+| Read | Contract and bounds |
+|---|---|
+| `GET /v1/workbench` | `WorkbenchEvidence`: latest 100 owned canaries and grades, up to 50 observed regime labels and gap episodes, exact daily reservation cap, operator availability, and at most eight assigned leader slots. |
+| `GET /v1/canaries/{id}/observations` | `CanaryEvidencePage`: up to 200 original observer records for an owned same-source canary, received through the observation clock. Unknown/other-source IDs return 404; future canary IDs return 400. |
+| `GET /v1/prove/{id}/canaries` | `ProveCanaryPage`: actual prospective members in assignment order, at most 400. Matching exploration records are never substituted. |
+| `GET /v1/ledger/payloads?after=0&limit=50` | `BrowserLedgerPage`: the existing source ledger page plus exact canonical UTF-8 forecast text. Limits are 1–100; cursors are decimal u64 strings. |
+
+For an empty Sim database, the workbench response has this shape:
+
+```json
+{"source":"sim","as_of_utc":"2026-10-05T01:00:00Z","canaries":[],"grades":[],"regimes":[],"gaps":[],"daily_cap_lamports":"200000000","limit":100,"operator_enabled":true,"runway":[]}
+```
+
+Runway entries are `{"slot":"123","class":LeaderClass}` from the recorded
+epoch schedule. The daemon retains the existing three-rotation `next_leaders`
+field and adds `next_slots`; unknown classifications remain explicit. Sim has
+no mainnet runway. The daily cap uses the same exact configuration as the sender;
+reservations include worst-case uncertainty and are not actual paid spend.
+
+Regimes are observed canary labels with first/last UTC times and decimal counts,
+not detected change points or backfilled network history. Grades are the latest
+stored grade per forecast through the experiment clock; a pending grade stays
+pending even when it contains partial scores. Sim grades its later held-out
+outcomes after Prove because it has no periodic live model worker. Prove members
+remain excluded from model fitting.
+
+`canonical_json` exists because JavaScript can spell the same float differently
+from Rust. Browser verification compares its parsed object with the displayed
+forecast, then hashes the exact bytes with the existing
+`alight.forecast.v1\0source\0sequence\0previous_hash\0canonical_json` domain.
+Browser exports use `kind=alight.browser-ledger.v1`, schema version 1, explicit
+source, decimal `head_sequence`, `head_hash`, and complete `rows` from genesis.
+They are capped at 10,000 rows / 64 MiB. Link, source, payload, sequence, digest,
+and declared-head mismatches fail verification. This establishes integrity of
+the downloaded chain; an uploaded file's self-declared head is not external
+provenance. Independent publication/anchoring and frozen-model verification
+remain separate checks.
