@@ -18,6 +18,24 @@ fn bytes<T: Serialize>(v: &T, limit: usize) -> Result<String, StoreError> {
     Ok(s)
 }
 impl Store {
+    /// Passive transfers in a UTC window, excluding every stored owned signature of this source.
+    pub async fn fidelity_tips(
+        &self,
+        source: Source,
+        from: &str,
+        through: &str,
+        limit: u32,
+    ) -> Result<Vec<PassiveTip>, StoreError> {
+        let (from, through) = (time(from)?, time(through)?);
+        if from > through || !(1..=1000).contains(&limit) {
+            return Err(StoreError::Invalid);
+        }
+        let rows: Vec<String> = sqlx::query_scalar("SELECT p.payload_json FROM passive_tips p WHERE p.source=? AND p.received_ms>=? AND p.received_ms<=? AND NOT EXISTS (SELECT 1 FROM canaries c WHERE c.source=p.source AND c.signature=p.signature) ORDER BY p.received_ms DESC,p.rowid DESC LIMIT ?")
+            .bind(label(source)?).bind(from).bind(through).bind(limit).fetch_all(&self.pool).await?;
+        rows.iter()
+            .map(|s| serde_json::from_str(s).map_err(StoreError::from))
+            .collect()
+    }
     pub async fn diagnostic_alerts(
         &self,
         source: Source,

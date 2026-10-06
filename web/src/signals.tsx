@@ -4,7 +4,7 @@ import { dateTime } from "./format";
 import { Empty } from "./ui";
 export const signalNames: Record<SignalKind, string> = {
   slot_ms: "Mean slot interval",
-  slot_p95_ms: "Slot interval p95",
+  slot_p95_ms: "Slot-time average p95",
   skip_rate: "Skip / dead rate",
   reference_landing_rate: "Reference landing rate",
   block_fullness: "Sampled block fullness",

@@ -24,7 +24,7 @@ providers or running analysis on demand.
 | 5.6 | Persisted conflicts/missing evidence, comparable receive/send lag, pair agreement, incomplete counts and alerts | Dropping one observer from three owned fixture canaries produced visible persisted missing-observer events and a disagreement alert. Different clock origins produced unavailable lag. |
 | 5.7 | Candidate identity keyed by slot and block; conservative LANDED_THEN_DROPPED finalization | Duplicate-slot/different-block replay passed. Finalization requires canonical exclusion of all candidates, finalized covered RPC absence and expiry of the transaction's validity window. |
 | 5.8 | Supervised evidence-driven watch with firing signals in every regime record | Synthetic clock-only detection passed; observer-only movement did not rename a network regime. Epochs annotate events and do not identify Alpenglow or any upgrade. No new Live upgrade claim was made. |
-| 5.9 | Same-hour, equal-paid-tip and identical-scope position comparison with exclusions and displayed limits | Synthetic tests cover deduplication, owned/fork exclusion, incompatible scopes and multiple-recipient totals. Live tape fidelity remains pending. |
+| 5.9 | Same-hour, equal-paid-tip and identical-scope position comparison with exclusions and displayed limits | Synthetic tests cover deduplication, owned/fork exclusion, incompatible scopes and multiple-recipient totals. A regression with 101 owned canaries verifies that owned signatures beyond the latest 100 displayed rows remain excluded. Live tape fidelity remains pending. |
 
 These detector measurements describe the registered synthetic scenarios. They do
 not establish Live sensitivity, predictive performance or validator independence.
@@ -86,7 +86,7 @@ or enable Live exploration.
 
 | Check | Result |
 |---|---|
-| Rust workspace with Beam feature | 97 passed; zero failed |
+| Rust workspace with Beam feature | 98 passed; zero failed |
 | Format and all-target Beam Clippy | PASS |
 | Rust OpenAPI versus generated SDK snapshot | Exact byte match |
 | TypeScript SDK | Lint/generator PASS; four tests passed |

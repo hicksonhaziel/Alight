@@ -27,7 +27,7 @@ assert all(r["tasks"][t]["live_acceptance"] == "PENDING"
 assert r["runtime"]["collection_resumed"] is False
 assert r["runtime"]["owned_live_transactions_sent"] == 0
 assert r["runtime"]["provider_requests"] == 0
-assert r["checks"]["rust_workspace"] == {"passed": 97, "failed": 0}
+assert r["checks"]["rust_workspace"] == {"passed": 98, "failed": 0}
 assert r["checks"]["browser"]["passed"] == 7
 assert r["checks"]["browser"]["failed"] == 0
 assert r["checks"]["browser"]["axe_audits"] == 15

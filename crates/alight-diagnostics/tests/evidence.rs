@@ -274,3 +274,78 @@ fn incomplete_block_meta_and_unverified_compute_capacity_do_not_create_ratios() 
         .is_none()
     );
 }
+
+#[tokio::test]
+async fn fidelity_excludes_owned_signatures_beyond_the_displayed_canary_page() {
+    let dir = tempfile::tempdir().expect("temp");
+    let store = Store::open(&dir.path().join("owned.db"), 64 * 1024 * 1024)
+        .await
+        .expect("store");
+    let base = canaries().remove(0).canary;
+    for i in 0..101 {
+        let mut c = base.clone();
+        c.id = format!("owned-page-{i:03}");
+        c.signature = Some(format!("synthetic-owned-page-{i}"));
+        if i == 0 {
+            c.send_wall_utc = "2026-10-05T00:00:30Z".into();
+        }
+        store
+            .import_training(&TrainingCanary {
+                canary: c,
+                finalized: true,
+                covariates: ModelCovariates::default(),
+            })
+            .await
+            .expect("owned");
+    }
+    let page = store
+        .workbench_canaries(Source::Sim, NOW, 100)
+        .await
+        .expect("page");
+    assert_eq!(page.len(), 100);
+    assert!(page.iter().all(|r| r.canary.id != "owned-page-000"));
+    let owned = PassiveTip {
+        source: Source::Sim,
+        observer: ObserverKind::Grpc,
+        signature: "synthetic-owned-page-0".into(),
+        slot: 101,
+        block_id: Some("synthetic-candidate".into()),
+        index_in_block: Some(0),
+        index_scope: IndexScope::ProviderReported,
+        recipient: "synthetic-recipient".into(),
+        tip_lamports: Some(100000),
+        requested_tip_lamports: 100000,
+        fee_lamports: 5000,
+        cu_price_micro_lamports: None,
+        cu_limit: None,
+        success: true,
+        received: ReceiveTime {
+            clock_id: "shared".into(),
+            mono_ns: 0,
+            wall_utc: NOW.into(),
+        },
+    };
+    let mut market = owned.clone();
+    market.signature = "synthetic-market-only".into();
+    market.index_in_block = Some(20);
+    store
+        .save_passive_tips(&[owned, market], &TapeLimits::default(), NOW)
+        .await
+        .expect("tape");
+    assert_eq!(
+        store
+            .passive_tips(Source::Sim, "2026-10-05T00:00:00Z", NOW, 1000)
+            .await
+            .expect("original tape")
+            .len(),
+        2
+    );
+    let diagnostics = refresh(&store, Source::Sim, NOW, &[])
+        .await
+        .expect("diagnostics");
+    assert_eq!(diagnostics.fidelity.comparisons.len(), 1);
+    let comparison = &diagnostics.fidelity.comparisons[0];
+    assert_eq!(comparison.canaries, 100);
+    assert_eq!(comparison.tape_transfers, 1);
+    assert_eq!(comparison.tape_p50_index, 20.0);
+}

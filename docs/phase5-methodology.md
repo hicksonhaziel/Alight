@@ -14,6 +14,8 @@ Observer comparisons use shared host monotonic clocks. Receive lag is relative t
 
 Slot timing uses sealed 256-slot windows, at least 128 slots and ten chain seconds to limit integer timestamp quantization. Parent gaps and DEAD events are evidence of skipped candidates, not complete network coverage. Block sampling records compute consumption, nullable non-vote share, and fullness only when a verified per-slot compute capacity and its provenance are provided. The [RPC block contract](https://solana.com/docs/rpc/http/getblock) does not provide that capacity. Unavailable signals remain null with a reason.
 
+The clock p95 is the quantile of overlapping averages spanning at least 128 slots. Integer chain timestamps cannot establish the individual slot-duration distribution. Its chart label and window provenance identify this resolution limit.
+
 Backfill is read-only, bounded to 42–56 requested days and 1,024 RPC requests per invocation. Retention coverage, missing timestamps and sampled resolution must be reported. It must not assert historical 400→350→300→250 ms changes unless retained chain timestamps support those detections. Historical Replay/backfill does not set the Live regime.
 
 Workload fidelity compares raw in-block positions only at equal paid tips and identical index scope. Workload, route, block fullness and account contention remain uncontrolled; this comparison does not establish swap performance or causal efficacy. Passive transfers never enter canary training.

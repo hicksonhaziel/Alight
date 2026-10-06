@@ -145,7 +145,7 @@ pub async fn refresh(
         store.save_disagreement(event).await?;
     }
     let start = (utc(as_of)? - Duration::hours(1)).to_rfc3339();
-    let tape = store.passive_tips(source, &start, as_of, 1000).await?;
+    let tape = store.fidelity_tips(source, &start, as_of, 1000).await?;
     let fidelity_canaries: Vec<_> = canaries
         .iter()
         .filter(|r| {
