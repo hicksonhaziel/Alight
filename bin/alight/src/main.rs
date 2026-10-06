@@ -2,6 +2,7 @@ use alight_ingest::{Config, HttpProbe};
 use alight_types::Verdict;
 use std::process::ExitCode;
 mod api;
+mod diagnostics;
 mod forecasting;
 mod simulation;
 
@@ -20,6 +21,12 @@ async fn run() -> Result<u8, String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.first().map(String::as_str) == Some("run") {
         return api::daemon(&args);
+    }
+    if matches!(
+        args.first().map(String::as_str),
+        Some("regime-sim" | "backfill")
+    ) {
+        return diagnostics::run(&args).await;
     }
     if args.iter().any(|a| a == "--api")
         || matches!(args.first().map(String::as_str), Some("prove" | "export"))

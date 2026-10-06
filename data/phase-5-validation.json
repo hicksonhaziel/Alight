@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "phase": 5,
+  "status": "OFFLINE_PASS_LIVE_PENDING",
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-06T23:07:08.046391+00:00",
+  "base_revision": "377460f4c9ddc54feadc6a1aafda60d464c95a6f",
+  "runtime": {
+    "collection_resumed": false,
+    "owned_live_transactions_sent": 0,
+    "provider_requests": 0,
+    "webhooks_registered": 0,
+    "outbound_alert_delivery_tested": false,
+    "wallet_funding_checked": false,
+    "preview_source": "sim",
+    "preview_url": "http://127.0.0.1:8180/#regimes"
+  },
+  "tasks": {
+    "5.1": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Timestamped extractors, null/provenance handling, coarse block times and verified capacity tests"
+    },
+    "5.2": {
+      "offline": "PASS",
+      "live_acceptance": "NOT_REQUIRED_BY_THIS_ACCEPTANCE",
+      "evidence": "Registered detector delay/false-alarm, restart, source isolation and observer-only perturbation tests"
+    },
+    "5.3": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Finite read-only job and synthetic 400/350/300/250 ms chain timestamp reconstruction; real retained history unmeasured"
+    },
+    "5.4": {
+      "offline": "PASS",
+      "live_acceptance": "NOT_REQUIRED_BY_THIS_ACCEPTANCE",
+      "evidence": "All five change actions, immutable claim, Prove voiding, unsupported old cells and ledger verification"
+    },
+    "5.5": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Recorded provider fixture replay and exact-body HMAC/ownership/API tests; complete Live candidate agreement unmeasured"
+    },
+    "5.6": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Drop-one-observer chaos across three canaries persists events and disagreement alert"
+    },
+    "5.7": {
+      "offline": "PASS",
+      "live_acceptance": "NOT_REQUIRED_BY_THIS_ACCEPTANCE",
+      "evidence": "Duplicate-slot different-block replay; finalization requires canonical exclusion, finalized absence and passed last valid height"
+    },
+    "5.8": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Evidence-driven watch, clock-only detection and observer-only rejection; no calendar upgrade claim"
+    },
+    "5.9": {
+      "offline": "PASS",
+      "live_acceptance": "PENDING",
+      "evidence": "Same-hour equal-tip/scope comparisons, recipient totals, duplicates/forks/owned exclusions and UI limits; Live tape unmeasured"
+    }
+  },
+  "detector": {
+    "source": "sim",
+    "seed": "42",
+    "windows": 240,
+    "changes": 2,
+    "delay_windows": [
+      2,
+      2
+    ],
+    "registered_max_delay_windows": 8,
+    "stationary_seeds": 20,
+    "stationary_windows": 12000,
+    "stationary_false_changes": 0,
+    "live_sensitivity_measured": false
+  },
+  "history": {
+    "source": "replay",
+    "origin": "backfill",
+    "synthetic_only": true,
+    "synthetic_timestamps": 321,
+    "synthetic_changes": 3,
+    "synthetic_steps_ms": [
+      400,
+      350,
+      300,
+      250
+    ],
+    "synthetic_status": "RETENTION_OR_SAMPLING_LIMIT",
+    "network_backfill_executed": false,
+    "real_retention_coverage": "UNMEASURED"
+  },
+  "checks": {
+    "format": "PASS",
+    "all_target_clippy": "PASS",
+    "sdk_lint": "PASS",
+    "sdk_generator": "PASS",
+    "web_lint": "PASS",
+    "web_build": "PASS",
+    "openapi_snapshot": "PASS",
+    "repository_scan": "PASS",
+    "historical_phase4_receipt": "PASS",
+    "historical_phase3_receipt": "PASS",
+    "compose_config": "PASS",
+    "developer_regression": "PASS",
+    "rust_workspace": {
+      "passed": 97,
+      "failed": 0
+    },
+    "sdk_tests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "web_unit_tests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 7,
+      "failed": 0,
+      "flaky": 0,
+      "axe_audits": 15,
+      "axe_violations": 0,
+      "held_out_resolved": 40,
+      "tampered_export_rejected": true,
+      "copied_typescript_compiles": true
+    },
+    "production_proxy": {
+      "status": "PASS",
+      "source": "sim",
+      "regimes": 2,
+      "alerts": 2,
+      "bundled_assets": 2,
+      "csp": true,
+      "auth_enforced": true,
+      "webhook_disabled_in_sim": true,
+      "unknown_api_404": true,
+      "static_post_405": true
+    },
+    "collector_image": {
+      "status": "PASS",
+      "image": "sha256:de225c45658e69fe0529433c876563c5a16eb13f828e5c390297c0f5b53d1f3b",
+      "packaging": "Current release binary over previously verified Debian runtime; fresh runtime package download stalled",
+      "smoke_source": "sim",
+      "smoke_network": "none",
+      "regimes": 2,
+      "alerts": 2
+    },
+    "web_image": {
+      "status": "PASS",
+      "image": "sha256:580407ea879fe74daa19105375f48350e4d055a7bc788dbd8c5bfcb4af6b1406",
+      "packaging": "Offline cached public npm dependencies"
+    },
+    "ci": "PENDING_AT_PUBLICATION"
+  },
+  "limits": [
+    "Captured Webhook payload has no block identity or index; complete agreement cannot be inferred from its slot/status alone.",
+    "Live history, four-observer canary acceptance and Live workload fidelity remain pending while collection is paused.",
+    "Detector delay and false-change counts are registered synthetic acceptance results, not Live performance estimates.",
+    "Workload positions are descriptive; bounded tape coverage may truncate recipient totals and passive finalization is uncontrolled.",
+    "Phase 3 funded N=40 acceptance remains pending."
+  ],
+  "local_artifact_sha256": {
+    "regime-sim.json": "41aa656276d4bc55f65400647870b7357147dd6ebab151a5b36746214e4a7029",
+    "e2e.json": "e9dfa3b48cc833f964363343b2eca9d87f5d264e4ba6156a07c4d41a1023c6b8",
+    "production-proxy.json": "392a1fe8ccc3a481c7f4c2024ab31def8b5c9e6d17f13516032cbd959093a135",
+    "collector-smoke.json": "036185ddda4b106f98cd9befe53b3c3486d7b52650a18315b50213ba6ad4d92e"
+  },
+  "code_sha256": {
+    ".dockerignore": "768a01cf029a73c453a3a3d9202b7d50590c1048a91ac18447b36299b0067f87",
+    ".env.example": "3da1cbcef8e02b1da2c76ca513d5f069c4a8eb8277721d7ceeef2e6e5b79f217",
+    ".github/workflows/ci.yml": "9c8b1b08095b4fa0f716364a6a2fa91e783cbfff77026037a6945cd3e740fa59",
+    "Cargo.lock": "77f3afff3d54ba42a9778e3fa10f3812be2a9922dbbd87b213a248433a3687f6",
+    "Cargo.toml": "63a4e2ee43abe964d05fae57c901987f60f73a84635c90565368ea00ac0f545d",
+    "bin/alight/Cargo.toml": "c7c71107d9c3d81b6f2cb6941cc056d6b38f50d698a5b3dc786feb535562ef88",
+    "bin/alight/src/api.rs": "11a3d3583147dea12ba53137b5479b835d4ff2034f5ca38d636a0c0d889b6cde",
+    "bin/alight/src/diagnostics.rs": "f6ba7124b5d9e78a75486c2f0803bf3eadce4906971dd5b2f1bc902fa838ca09",
+    "bin/alight/src/main.rs": "c8d9261a045249d1224a23200ad32988e1583f58139116b8ac11209618ff9fc5",
+    "bin/alightd/Cargo.toml": "a1b47a939077532bbe6f473d28b27da703c800b1de7d48238cace03f40468098",
+    "bin/alightd/src/alerts.rs": "a28ab1f283b08b96aad30e17647ab911aee2a3ea9d08e9d164f30b4c07af4591",
+    "bin/alightd/src/diagnostics.rs": "babf07a04023ae6a831936ebe3cd46297eda96eb9cad846464d41b140ac98e4c",
+    "bin/alightd/src/main.rs": "c67bd8504860e2e55ec746dd71f05d4f45518e212e8f391f1c7f52afeb44f58a",
+    "crates/alight-api/Cargo.toml": "027ea75abbf8988d39d5b4a200fc22ea53d2cf492589d5a615b6d0e641c84648",
+    "crates/alight-api/src/lib.rs": "accd89143d748ecc02dbd2950c5591531ee20f397f3dcb6f90110aee898fc97f",
+    "crates/alight-api/src/openapi.rs": "d80bc8edda34ca9fe0dcb2cd71721dd6c73710051a109e82867d07eaf7aa5697",
+    "crates/alight-api/tests/api.rs": "b828c54c6c7176e386a10321814471de75ab5137ec904cb774b40a81f714db83",
+    "crates/alight-api/tests/webhook.rs": "1ca3ff83773424184dc4f6f13e52ba3e5c3e65e1269735f2cef48db5982cc0a1",
+    "crates/alight-canary/src/engine.rs": "e991223ca34b39e5bbda4eef9810a2f2ec4764feb808dfaf9d36848111cfb053",
+    "crates/alight-canary/src/resolver.rs": "ad6227ff04c30e9b9173035cc5bf1e2799769cd318ffbabf475b5f4fb57eecd4",
+    "crates/alight-canary/tests/safety.rs": "ef073443a5754b6b8f2b76d5da8914085b55afeada8e6baf17f68e190287a94e",
+    "crates/alight-client/src/lib.rs": "49fde454239fe9a02685f9f5e76f3784e8303e4d199516bd3f1d5a12b677e916",
+    "crates/alight-diagnostics/Cargo.toml": "0f58842ef1d75a740378a4bc6ebe01357f51f4416d303a4d7a0b8881fffb9486",
+    "crates/alight-diagnostics/src/backfill.rs": "82be40848769449f16b12bf7e890ed3d90f808e0a29a06825b30a404edde7e12",
+    "crates/alight-diagnostics/src/extraction.rs": "2666afa414057c5a1bda9d639ab2514b37df7ff49cc04ece6069257cf9412417",
+    "crates/alight-diagnostics/src/fidelity.rs": "7048ff0dd43880020f4405884cf9cc9ca55377d45c557ac6b10cba9f4bec676b",
+    "crates/alight-diagnostics/src/lib.rs": "935953a2f82468bcfcbb491e187cb472f2edb89eb938c7039e7a62595eeafdcf",
+    "crates/alight-diagnostics/src/observers.rs": "58d1affdc47d3db955488882aeaf8a21840398ef4495eb322c64b493fd994b3f",
+    "crates/alight-diagnostics/src/simulation.rs": "0bc9bb135d32a93fcea20fb4e0dd70e85379a06b5482144405d26a4c3d877e68",
+    "crates/alight-diagnostics/tests/actions.rs": "39e12ab7216dacc9ec6b9e888d015c5cec03d518dddfff658941ab867dbdd4b9",
+    "crates/alight-diagnostics/tests/backfill.rs": "db0aad65c7b49f79fdf45cfeff4ff03ef2014d56c391b19e3050d27d07b68e12",
+    "crates/alight-diagnostics/tests/detection.rs": "ec5f42ac8ebb8d214532c63ed47bfd166eefface9ece503ca57134aba8d6cc8f",
+    "crates/alight-diagnostics/tests/evidence.rs": "fce359fc9684c4233c013f774edf34687ae75781c8e5503479234fd568718940",
+    "crates/alight-forecast/src/lib.rs": "f81a3b3d47f277b156d6ad8f4afe058983d5eb366d3e1bbf23c40cad51348540",
+    "crates/alight-ingest/Cargo.toml": "c0a7bb17ab5b4460c173cb2b9cb67e18ca29bfac72e86ef6eb19950e2943e9bd",
+    "crates/alight-ingest/src/lib.rs": "1cd52a7209b863be5b5256d496c96af97bf3e11753d9937211a676e2a5e90e2c",
+    "crates/alight-ingest/src/webhook.rs": "f6be86d2980ba6474088508017abc56ae2dfd53c45c6aa020a677ea75c6d8c10",
+    "crates/alight-ingest/tests/webhook.rs": "c53a2043caef03c2c3a44bc5da5a7f26167626a727bbff81f85e700a19b3aa72",
+    "crates/alight-model/Cargo.toml": "ae452aa6de388d264974f49912b41da8a4baecaa86d1e6f28a3730dc5be94f5c",
+    "crates/alight-model/src/lib.rs": "916cec43e422132a93a477bd200893f2ad7f55df27eb59349ed506d1e324582b",
+    "crates/alight-model/src/regime.rs": "1e451eda65a906586ac4bd484a84541e68c0b68dfb630ee19d4b0c6e57f42913",
+    "crates/alight-store/migrations/0010_phase5_diagnostics.sql": "f496e50c8f35f5811356cc80359fadcfb25a323b4723b254492dbecd61b03a96",
+    "crates/alight-store/src/alerts.rs": "e248662ef36ad92bfb93e380cf71e29109bcf84ca7505af70849d3157c0ac4ac",
+    "crates/alight-store/src/diagnostics.rs": "82ee9ddfe10729f49a2e067d09e2e3f858a96cab1e4a6117bc1a848b9cf87984",
+    "crates/alight-store/src/ledger.rs": "d20b9897fc114adb6ae5103c1cb0ca88fbc2071c00a5cef95c651c304d78aabf",
+    "crates/alight-store/src/lib.rs": "ee305074c0da0d5481b79a5684478ae72fa9ceb1511bad630b3fa5eefd2a89db",
+    "crates/alight-types/src/lib.rs": "39a491660ee358eb5ea135066172217c2d9f9c544904498a8d9eb26a3a50fb18",
+    "crates/alight-types/src/phase5.rs": "036244989b47a6a9b55f78158e4c1fd45f7cb14e9b8307d8767294833b39781c",
+    "deploy/Caddyfile": "801e91af5cee0cf98d4c1575de0fb00c92762d075bba1a70d52347c2aa90debd",
+    "deploy/Dockerfile": "1a0389d49e5d9f341e0636c7a4d873c3f41892e96d613a9aca71794cbe7e9f33",
+    "docs/contracts.md": "0af009cca6ed6951da09158f8fb53f3e0d36582f2914076adaf8063de04d31af",
+    "docs/operations.md": "b38cdbabb16bf5ce1be6e3f1d1873c5dc168c0e3ab61a2a10c9128bc0ffef80c",
+    "docs/phase-5-report.md": "18782c5d4248753f43c60cdd6b0439419150e5592996a4053dcfb0ed58f1c69b",
+    "docs/phase5-methodology.md": "b3d8a7cdf11b01249a6df70c78275181b1bed3902d1203acb50b4885dba926ff",
+    "scripts/serve_workbench_test.py": "93203ccdf21c73689d15b97b5a77773fba1e045b848233ef3b0fc3f814ab0f82",
+    "scripts/verify_api_contracts.py": "e1c3f4510c43cf579465b013a633ea57b7c3a03a161aae8a5150f038bd6841b5",
+    "scripts/verify_phase5_receipt.py": "e49bfeeb0cfcb1a1e6e43158d9a133ee765fd3dfbed01f2aab87a56fd97f0aff",
+    "sdk/ts/openapi.json": "5057834938c19a28337f9f61d65bc97f0082b318245d4ef511479aa685bca201",
+    "sdk/ts/src/index.ts": "00b22e78deaa26a839d638795ef5ca0d2cdc544e5d5def200764f091b990cf16",
+    "sdk/ts/src/schemas.ts": "2c279fb3a082aa2778279cbd68e7361a4046d6b9eb5a63efcae11d675bdb3bf3",
+    "sdk/ts/src/types.ts": "b181a0e1032a3ae392fb1553e3502ff1488d8161dbed5c9177654751b620290a",
+    "sdk/ts/test/diagnostics.mjs": "f207c21de1ec5b952f6899b5863ac775d099ef764773709723256a7cd8d5f7db",
+    "web/e2e/diagnostics.spec.ts": "ecee1dbfb942273c3aac15f998cd39a89d49079bdfe560b6012a9db96bf06f7c",
+    "web/e2e/workbench.spec.ts": "0cbdb2c2be1b3bf6165e9332e568cb0de1a1c77938e9af568334120c2d9338fc",
+    "web/playwright.config.ts": "e62cbbe68118e90e4609682a9c6183fb776099f649239dffff15bb792ec49c6d",
+    "web/src/data.ts": "ff09def0c6ed613a88471ec267231ba0c96f7110620d5f83be4d03e8547c2d7f",
+    "web/src/pages/Health.tsx": "3921bef5178946d97ae16935bf510a167c318a3660b91b8eb394873f6c806b02",
+    "web/src/pages/Regimes.tsx": "f2bc9a6c8d566d454a4a85ac34418b6b54239ed5c8f1886900430112f7f7bc5d",
+    "web/src/pages/Tape.tsx": "f6d9da3d3efe899f57572446ec94b4f94a10b5953225f7f00d913659744c1b29",
+    "web/src/signals.tsx": "208def1ccace59d49196f12cf1307a3912dcfafeff04a8aa71a08ee5278069a6",
+    "web/src/style.css": "03c3d448e7a86459447f95a0f4e0c61e5095bea30ba7510065c5d6ce061699b0"
+  }
+}

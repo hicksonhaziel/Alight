@@ -5,8 +5,8 @@ export default defineConfig({
   timeout: 60000,
   workers: 1,
   fullyParallel: false,
-  reporter: [["list"], ["json", { outputFile: "../.alight/phase4/e2e.json" }]],
-  outputDir: "../.alight/phase4/browser-results",
+  reporter: [["list"], ["json", { outputFile: "../.alight/phase5/e2e.json" }]],
+  outputDir: "../.alight/phase5/browser-results",
   use: {
     baseURL: "http://127.0.0.1:5180",
     viewport: { width: 1440, height: 1000 },

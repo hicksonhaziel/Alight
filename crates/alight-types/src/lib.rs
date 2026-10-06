@@ -5,6 +5,7 @@ mod contracts;
 mod economics;
 mod phase2;
 mod phase3;
+mod phase5;
 mod schema;
 pub use alerts::*;
 pub use api::*;
@@ -12,6 +13,7 @@ pub use contracts::*;
 pub use economics::*;
 pub use phase2::*;
 pub use phase3::*;
+pub use phase5::*;
 pub use schema::DecimalU64;
 use serde::{Deserialize, Serialize};
 

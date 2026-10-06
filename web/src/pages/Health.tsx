@@ -100,10 +100,169 @@ export function Health({
         ))}
       </div>
       <Notice>
-        Receive freshness is not transaction landing latency. Latencies below
-        require the same monotonic clock origin. Observer lag distributions and
-        cross-observer agreement aggregates are unavailable on this API.
+        Receive lag is relative to the earliest observer sharing the host
+        monotonic clock. It does not measure network propagation or validator
+        independence. Incomplete block identities remain incomplete; missing
+        evidence never means expired.
       </Notice>
+      <Panel
+        title="Observer comparison"
+        caption={`${data.diagnostics.owned_window_n} recent owned canaries · snapshot ${dateTime(data.diagnostics.as_of_utc)} UTC`}
+      >
+        {data.diagnostics.observers.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Observer</th>
+                  <th>Frames</th>
+                  <th>Relative lag p50 / p95 · ms</th>
+                  <th>Send → seen p50 / p95 · ms</th>
+                  <th>Missing / conflicts</th>
+                  <th>Incomparable clocks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.diagnostics.observers.map((o) => (
+                  <tr key={o.observer}>
+                    <td>{o.observer}</td>
+                    <td>{o.observations}</td>
+                    <td>
+                      {o.receive_lag_p50_ms?.toFixed(3) ?? "—"} /{" "}
+                      {o.receive_lag_p95_ms?.toFixed(3) ?? "—"}
+                    </td>
+                    <td>
+                      {o.send_to_seen_p50_ms?.toFixed(3) ?? "—"} /{" "}
+                      {o.send_to_seen_p95_ms?.toFixed(3) ?? "—"}
+                    </td>
+                    <td>
+                      {o.missing_owned} / {o.conflicts}
+                    </td>
+                    <td>{o.incomparable_clocks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Empty
+            title="No comparable observer population"
+            text={
+              data.health.source === "sim"
+                ? "Sim outcomes do not fabricate provider deliveries. Recorded fixture comparisons are verified separately."
+                : "Comparisons require configured observers and original owned-canary evidence."
+            }
+          />
+        )}
+      </Panel>
+      <Panel
+        title="Agreement by observer pair"
+        caption="Complete slot, block identity and execution result required"
+      >
+        {data.diagnostics.pairs.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pair</th>
+                  <th>Compared</th>
+                  <th>Agreed / disagreed</th>
+                  <th>Incomplete</th>
+                  <th>Agreement among complete pairs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.diagnostics.pairs.map((p) => (
+                  <tr key={`${p.a}-${p.b}`}>
+                    <td>
+                      {p.a} / {p.b}
+                    </td>
+                    <td>{p.compared}</td>
+                    <td>
+                      {p.agreed} / {p.disagreed}
+                    </td>
+                    <td>{p.incomplete}</td>
+                    <td>
+                      {p.agreed + p.disagreed
+                        ? `${((p.agreed / (p.agreed + p.disagreed)) * 100).toFixed(1)}%`
+                        : "Unavailable"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Empty
+            title="No pair evidence"
+            text="A missing comparison does not establish agreement."
+          />
+        )}
+      </Panel>
+      <Panel
+        title="Persisted diagnostic events"
+        caption="Latest 100 events · missing evidence after a 30-second grace period"
+      >
+        {data.diagnostics.disagreements.length ? (
+          <div className="canary-links">
+            {data.diagnostics.disagreements.map((e) => (
+              <a href={`#health/${encodeURIComponent(e.canary_id)}`} key={e.id}>
+                <div>
+                  <strong className="mono">{compact(e.canary_id, 10)}</strong>
+                  <span>
+                    {e.kind.replaceAll("_", " ")}
+                    {e.missing_observers.length
+                      ? ` · missing ${e.missing_observers.join(", ")}`
+                      : ""}{" "}
+                    · {dateTime(e.detected_at_utc)} UTC
+                  </span>
+                </div>
+                <ArrowUpRight size={15} />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <Empty
+            title="No persisted diagnostic events"
+            text="Absence of events in this bounded window does not prove complete observer coverage."
+          />
+        )}
+      </Panel>
+      <Panel
+        title="Alert history"
+        caption="Latest 50 source-scoped alerts · local persistence does not imply outbound delivery"
+      >
+        {data.diagnostics.alerts.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time · UTC</th>
+                  <th>Rule</th>
+                  <th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.diagnostics.alerts.map((a) => (
+                  <tr key={a.id}>
+                    <td>{dateTime(a.at_utc)}</td>
+                    <td>{a.rule.replaceAll("_", " ")}</td>
+                    <td>
+                      {a.summary}
+                      <span className="cell-detail mono">{a.subject}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Empty
+            title="No alerts recorded"
+            text="Observer disagreement alerts require three distinct recent canaries. Regime detections persist their own alert."
+          />
+        )}
+      </Panel>
       <Panel
         title="Recorded disagreements"
         caption="Explicit latest resolver reasons · latest 100 owned canaries"

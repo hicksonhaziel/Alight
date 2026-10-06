@@ -33,8 +33,11 @@ pub async fn run(
         match alight_notify::poll(&store, Source::Live, "local", &stream::utc_now(), daily_cap)
             .await
         {
-            Ok(alerts) => {
-                for alert in alerts {
+            Ok(_) => {
+                for alert in store.pending_alerts(Source::Live).await? {
+                    if !store.claim_alert_delivery(&alert.id).await? {
+                        continue;
+                    }
                     let status = if let Some(sender) = &sender {
                         if sender.send(&alert).await.is_ok() {
                             "DELIVERED"

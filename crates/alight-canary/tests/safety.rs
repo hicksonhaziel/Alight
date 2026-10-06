@@ -379,6 +379,54 @@ fn dropping_requires_canonical_exclusion_and_absence_and_failure_is_preserved() 
         Some(Outcome::LandedFailed)
     );
 }
+#[test]
+fn duplicated_slot_candidates_require_canonical_proof_before_dropped_resolution() {
+    let c = canary();
+    let a = observation(ObserverKind::Grpc);
+    let mut b = observation(ObserverKind::Mirage);
+    b.block_id = Some("simulation-block-b".into());
+    let mut e = ResolutionEvidence {
+        observations: vec![a, b],
+        ..Default::default()
+    };
+    assert_eq!(
+        resolve(&c, &e, UTC).canary.outcome,
+        Some(Outcome::Unresolved)
+    );
+    let mut final_rpc = rpc();
+    final_rpc.checked_commitment = Commitment::Finalized;
+    e.rpc = Some(final_rpc);
+    e.canonical_blocks.push(CanonicalBlock {
+        source: Source::Sim,
+        slot: 100,
+        block_id: "finalized-candidate".into(),
+        commitment: Commitment::Finalized,
+        signature: "simulation-signature".into(),
+        signature_present: false,
+        raw_ref: "fixture-finalized-block".into(),
+    });
+    let resolution = resolve(&c, &e, UTC);
+    assert_eq!(resolution.canary.outcome, Some(Outcome::LandedThenDropped));
+    assert!(resolution.finalized);
+    e.rpc.as_mut().expect("rpc").checked_block_height = c.last_valid_block_height;
+    assert!(
+        !resolve(&c, &e, UTC).finalized,
+        "a still-valid transaction can reappear later"
+    );
+    e.rpc.as_mut().expect("rpc").checked_block_height = c.last_valid_block_height + 1;
+    e.observations[1].slot = Some(101);
+    assert_eq!(
+        resolve(&c, &e, UTC).canary.outcome,
+        Some(Outcome::Unresolved),
+        "every candidate slot must be proven excluded"
+    );
+    e.observations[1].slot = Some(100);
+    e.canonical_blocks[0].signature_present = true;
+    assert_eq!(
+        resolve(&c, &e, UTC).canary.outcome,
+        Some(Outcome::Unresolved)
+    );
+}
 
 #[tokio::test]
 async fn restart_mid_flight_reloads_canary_and_resolves_late_saved_landing() {

@@ -38,6 +38,8 @@ pub struct Engine {
     wallet: Wallet,
     policy: AdaptivePolicy,
     policy_key: String,
+    seed: u64,
+    uniform_fraction: f64,
     routes: Routes,
     http: HttpProbe,
     leaders: Option<LeaderSchedule>,
@@ -100,6 +102,8 @@ impl Engine {
             wallet,
             policy,
             policy_key,
+            seed,
+            uniform_fraction: fraction,
             routes: Routes::new().map_err(|_| EngineError::Configuration)?,
             http: HttpProbe::new()?,
             leaders: None,
@@ -151,6 +155,35 @@ impl Engine {
         config: &Config,
         locked: Option<&ProveLock>,
     ) -> Result<Value, EngineError> {
+        let regime = self
+            .store
+            .active_regime(Source::Live, &Utc::now().to_rfc3339())
+            .await?;
+        let regime_id = regime
+            .as_ref()
+            .map_or("phase1-unclassified", |r| r.regime_id.as_str())
+            .to_owned();
+        if locked.is_some_and(|l| l.regime_id != regime_id) {
+            return Ok(json!({"status":"PROVE_REGIME_CHANGED"}));
+        }
+        let fraction = regime
+            .as_ref()
+            .filter(|r| {
+                chrono::DateTime::parse_from_rfc3339(&r.exploration_until_utc)
+                    .is_ok_and(|t| t > Utc::now())
+            })
+            .map_or(self.uniform_fraction, |r| r.exploration_fraction);
+        let key = format!(
+            "{}:{}:{fraction:.17}:{regime_id}",
+            crate::policy::ADAPTIVE_POLICY_ID,
+            self.seed
+        );
+        if key != self.policy_key {
+            let mut policy = AdaptivePolicy::new(self.seed, fraction)?;
+            policy.resume(self.store.next_policy_draw(&key).await?)?;
+            self.policy = policy;
+            self.policy_key = key;
+        }
         let health = self
             .store
             .observer_health(ObserverKind::Grpc, Source::Live)
@@ -233,7 +266,7 @@ impl Engine {
         let samples = self.store.training_canaries(Source::Live).await?;
         let context = CurveContext {
             source: Source::Live,
-            regime_id: "phase1-unclassified".into(),
+            regime_id: regime_id.clone(),
             region: "local".into(),
             as_of_utc: Utc::now().to_rfc3339(),
         };
@@ -345,6 +378,17 @@ impl Engine {
         }
         let utc_ms =
             u64::try_from(now.timestamp_millis()).map_err(|_| EngineError::Configuration)?;
+        let fresh_regime = self
+            .store
+            .active_regime(Source::Live, &now.to_rfc3339())
+            .await?;
+        if fresh_regime
+            .as_ref()
+            .map_or("phase1-unclassified", |r| r.regime_id.as_str())
+            != regime_id
+        {
+            return Ok(json!({"status":"PREFLIGHT_REGIME_CHANGED"}));
+        }
         let permit = match self
             .governor
             .reserve(&id, assignment.config.route, worst_cost, utc_ms)
@@ -374,7 +418,7 @@ impl Engine {
             policy_id: assignment.policy_id.into(),
             assignment_prob: assignment.assignment_prob,
             uniform_arm: assignment.uniform_arm,
-            regime_id: locked.map_or_else(|| "phase1-unclassified".into(), |l| l.regime_id.clone()),
+            regime_id: regime_id.clone(),
             sent_slot,
             clock_id: self.clock_id.clone(),
             send_mono_ns: u64::try_from(self.started.elapsed().as_nanos())

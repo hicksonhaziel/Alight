@@ -187,6 +187,22 @@ impl Client {
         self.scope(r.source)?;
         Ok(r)
     }
+    pub async fn diagnostics(&self) -> Result<DiagnosticsPage> {
+        let r: DiagnosticsPage = self.get("/v1/diagnostics", &[]).await?;
+        self.scope(r.source)?;
+        for source in r
+            .signals
+            .iter()
+            .map(|s| s.source)
+            .chain(r.regimes.iter().map(|s| s.source))
+            .chain(r.alerts.iter().map(|s| s.source))
+            .chain(r.backfills.iter().map(|s| s.source))
+            .chain(r.disagreements.iter().map(|s| s.source))
+        {
+            self.scope(source)?;
+        }
+        Ok(r)
+    }
     /// Read-only probability/economics preview; no ledger row or model is written.
     pub async fn quote(&self, request: &QuoteServiceRequest) -> Result<QuotePreview> {
         self.scope(request.model.context.source)?;

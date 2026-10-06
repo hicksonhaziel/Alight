@@ -579,3 +579,38 @@ and declared-head mismatches fail verification. This establishes integrity of
 the downloaded chain; an uploaded file's self-declared head is not external
 provenance. Independent publication/anchoring and frozen-model verification
 remain separate checks.
+## Phase 5 diagnostics
+
+`GET /v1/diagnostics` returns a bounded `DiagnosticsPage` for the server's source.
+It reads a saved snapshot and never starts a provider stream, signs, sends, or
+updates a detector. Snapshot time is explicit. Bounds: 100 signal windows,
+100 regime events, 100 observer disagreement events, 50 alerts, 100 owned
+canaries, 1,000 passive transfers over one hour, and 20 backfill reports.
+Rust and generated OpenAPI/TypeScript contracts share nullable measurements,
+sample counts, origin, UTC windows, and provenance. Missing values are never zero.
+Slots, epochs, tips and compute-unit totals remain exact decimal u64 strings.
+
+Example normalized signal measure:
+
+```json
+{"kind":"block_fullness","value":null,"unit":"fraction","n":0,"unavailable_reason":"missing_complete_cu_meta_or_verified_slot_capacity","provenance":"Sampled finalized blocks; verified capacity unavailable"}
+```
+
+Migration `0010_phase5_diagnostics.sql` adds immutable signal windows, source/origin
+detector checkpoints, regime actions, disagreement history/current sightings,
+aggregate block samples, saved snapshots, and history reports. Checkpoint CAS,
+the regime event, forecast void grades and the alert commit atomically. Forecast
+bodies and old canary regime labels are not edited. Detailed through-change scores
+are computed for at most 10,000 crossing claims; remaining crossing claims receive
+an unscored VOIDED grade atomically. Historic Backfill events remain Replay and do
+not reset active models, explore, or void forecasts.
+
+`POST /v1/webhook` uses `X-Webhook-Signature`, independently of the operator bearer.
+The header is 64 hexadecimal characters encoding HMAC-SHA256 of the exact body
+bytes using server-only `SOLAMI_WEBHOOK_SECRET`. Default disabled; Live/observe
+only, 65,536-byte/time/rate limits. It accepts the recorded enriched payload's
+signature/slot/status, strips unrelated fields, and records only owned canaries.
+Unknown block/index identity remains absent. Valid unowned signatures return
+`IGNORED_UNOWNED`; stored evidence returns `ACCEPTED`. The captured `succeeded`
+status establishes success; uncaptured status values stay unknown. Provider
+webhook registration is an independent operator action, not automatic startup.

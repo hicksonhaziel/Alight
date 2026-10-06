@@ -41,6 +41,7 @@ pub struct Options {
     pub region: String,
     pub run_id: String,
     pub operator_key: Option<String>,
+    pub webhook_secret: Option<String>,
     pub mirage_enabled: bool,
     pub simulated_as_of_utc: Option<String>,
     pub simulation: Option<SimProofEnvironment>,
@@ -56,6 +57,7 @@ impl Default for Options {
             region: "local".into(),
             run_id: "local".into(),
             operator_key: None,
+            webhook_secret: None,
             mirage_enabled: false,
             simulated_as_of_utc: None,
             simulation: None,
@@ -81,6 +83,7 @@ pub struct ApiState {
     as_of: Arc<RwLock<Option<String>>>,
     simulation: Option<SimProofEnvironment>,
     operator_digest: Option<[u8; 32]>,
+    webhook_secret: Option<Arc<str>>,
     rate: Arc<Mutex<(Instant, u32)>>,
     rate_limit: u32,
     write_rate: Arc<Mutex<(Instant, u32)>>,
@@ -110,6 +113,10 @@ impl ApiState {
             || source == Source::Live
                 && (options.simulated_as_of_utc.is_some() || options.simulation.is_some())
             || source == Source::Replay && options.simulation.is_some()
+            || options
+                .webhook_secret
+                .as_ref()
+                .is_some_and(|s| source != Source::Live || !(16..=256).contains(&s.len()))
         {
             return Err(ConfigurationError);
         }
@@ -155,6 +162,7 @@ impl ApiState {
             as_of: Arc::new(RwLock::new(options.simulated_as_of_utc)),
             simulation: options.simulation,
             operator_digest,
+            webhook_secret: options.webhook_secret.map(Arc::from),
             rate: Arc::new(Mutex::new((Instant::now(), options.requests_per_second))),
             rate_limit: options.requests_per_second,
             write_rate: Arc::new(Mutex::new((Instant::now(), 2))),
@@ -315,6 +323,8 @@ pub fn router(state: ApiState) -> Router {
         .route("/v1/ledger/verify", get(verify))
         .route("/v1/ledger/payloads", get(browser_ledger))
         .route("/v1/workbench", get(workbench))
+        .route("/v1/diagnostics", get(diagnostics))
+        .route("/v1/webhook", post(webhook))
         .route("/v1/canaries/{id}/observations", get(canary_evidence))
         .route("/v1/prove/{id}/canaries", get(prove_canaries))
         .route("/v1/tape", get(tape))
@@ -338,7 +348,16 @@ async fn boundary(State(state): State<ApiState>, mut request: Request, next: Nex
         }
         // Authentication precedes body extraction and every possible mutation.
         if request.method() != Method::GET && request.method() != Method::HEAD {
-            state.authenticate(&request)?;
+            let webhook = request.uri().path() == "/v1/webhook" && request.method() == Method::POST;
+            if !webhook {
+                state.authenticate(&request)?;
+            } else if state.webhook_secret.is_none() {
+                return Err(state.error(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "WEBHOOK_DISABLED",
+                    "Webhook observation is disabled",
+                ));
+            }
             state.rate(true)?;
             let (parts, body) = request.into_parts();
             let bytes = tokio::time::timeout(Duration::from_secs(5), to_bytes(body, BODY_BYTES))
@@ -357,6 +376,22 @@ async fn boundary(State(state): State<ApiState>, mut request: Request, next: Nex
                         "Request body exceeds 65536 bytes",
                     )
                 })?;
+            if webhook {
+                let signature = parts
+                    .headers
+                    .get("x-webhook-signature")
+                    .and_then(|h| h.to_str().ok())
+                    .unwrap_or("");
+                if !state.webhook_secret.as_ref().is_some_and(|s| {
+                    alight_ingest::webhook::verify(s.as_bytes(), signature, &bytes)
+                }) {
+                    return Err(state.error(
+                        StatusCode::UNAUTHORIZED,
+                        "WEBHOOK_SIGNATURE_INVALID",
+                        "Webhook signature was rejected",
+                    ));
+                }
+            }
             request = Request::from_parts(parts, Body::from(bytes));
         }
         Ok::<_, ApiError>(next.run(request).await)
@@ -392,6 +427,79 @@ async fn method_not_allowed(State(s): State<ApiState>) -> ApiError {
 }
 async fn schema() -> Json<Value> {
     Json(openapi_document())
+}
+async fn diagnostics(State(s): State<ApiState>) -> Result<Json<DiagnosticsPage>, ApiError> {
+    let now = s.now().await;
+    Ok(Json(
+        s.store
+            .diagnostics(s.source, &now)
+            .await
+            .map_err(|_| s.unavailable())?
+            .unwrap_or_else(|| DiagnosticsPage {
+                source: s.source,
+                as_of_utc: now,
+                signals: vec![],
+                regimes: vec![],
+                observers: vec![],
+                pairs: vec![],
+                disagreements: vec![],
+                expected_observers: vec![],
+                owned_window_n: 0,
+                fidelity: FidelityDiagnostic {
+                    comparisons: vec![],
+                    excluded_unmatched: 0,
+                    excluded_conflicting: 0,
+                    limits: vec!["No diagnostic snapshot is available".into()],
+                },
+                backfills: vec![],
+                alerts: vec![],
+                limits: vec![
+                    "Diagnostic collection has not produced a snapshot for this source".into(),
+                ],
+            }),
+    ))
+}
+async fn webhook(
+    State(s): State<ApiState>,
+    body: axum::body::Bytes,
+) -> Result<Json<WebhookReceipt>, ApiError> {
+    let (clock_id, started) = alight_types::process_clock_origin();
+    let received = ReceiveTime {
+        clock_id,
+        mono_ns: u64::try_from(started.elapsed().as_nanos()).map_err(|_| s.unavailable())?,
+        wall_utc: s.now().await,
+    };
+    let (event, raw) =
+        alight_ingest::webhook::normalize(&body, s.source, received).map_err(|_| s.invalid())?;
+    let Some(canary) = s
+        .store
+        .diagnostic_canary(s.source, &event.signature)
+        .await
+        .map_err(|_| s.unavailable())?
+    else {
+        return Ok(Json(WebhookReceipt {
+            source: s.source,
+            status: WebhookStatus::IgnoredUnowned,
+        }));
+    };
+    if utc(&event.received.wall_utc).map_err(|_| s.invalid())?
+        < utc(&canary.send_wall_utc).map_err(|_| s.invalid())?
+        || event.slot.is_some_and(|slot| slot < canary.sent_slot)
+    {
+        return Err(s.invalid());
+    }
+    s.store
+        .record(
+            ObserverKind::Webhook,
+            &IngestEvent::Observation(event),
+            &raw,
+        )
+        .await
+        .map_err(|_| s.unavailable())?;
+    Ok(Json(WebhookReceipt {
+        source: s.source,
+        status: WebhookStatus::Accepted,
+    }))
 }
 async fn observers(State(s): State<ApiState>) -> Result<Json<ObserverHealthPage>, ApiError> {
     Ok(Json(ObserverHealthPage {
@@ -536,8 +644,16 @@ async fn browser_ledger(
 async fn observer_views(s: &ApiState) -> Result<Vec<ObserverHealthView>, ApiError> {
     let now = utc(&s.now().await).map_err(|_| s.unavailable())?;
     let mut views = Vec::new();
-    for observer in [ObserverKind::Grpc, ObserverKind::Mirage] {
+    for observer in [
+        ObserverKind::Grpc,
+        ObserverKind::Mirage,
+        ObserverKind::Rpc,
+        ObserverKind::Webhook,
+    ] {
         if observer == ObserverKind::Mirage && !s.mirage {
+            continue;
+        }
+        if observer == ObserverKind::Webhook && s.webhook_secret.is_none() {
             continue;
         }
         let value = s
@@ -591,7 +707,10 @@ async fn health_view(s: &ApiState) -> Result<ApiHealth, ApiError> {
         budget_reserved_lamports: n(counts.budget_reserved_lamports)?,
     };
     let observers = observer_views(s).await?;
-    let ready = observers.iter().all(|o| o.status == "PASS");
+    let ready = observers
+        .iter()
+        .filter(|o| matches!(o.observer, ObserverKind::Grpc | ObserverKind::Mirage))
+        .all(|o| o.status == "PASS");
     let status = match s.source {
         Source::Sim => "SIMULATED",
         Source::Replay => "REPLAY",
@@ -726,7 +845,7 @@ async fn validate_quote(
     {
         return Err(s.invalid());
     }
-    if write {
+    if write || s.source != Source::Replay {
         let context = alight_forecast::current_context(&s.store, s.source, &s.region, &now)
             .await
             .map_err(|_| s.unavailable())?;

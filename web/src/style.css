@@ -2324,3 +2324,37 @@ dd {
   min-height: 30px;
   padding: 5px 8px;
 }
+
+.signal-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0 12px;
+}
+.signal-control select {
+  color: var(--ink);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: inherit;
+  max-width: 100%;
+}
+.signal-details {
+  margin: 16px 0;
+  font-size: 13px;
+}
+.signal-details summary {
+  cursor: pointer;
+  color: var(--accent-text);
+  padding: 6px 0;
+}
+.signal-details summary:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+}
+.timeline li > div {
+  min-width: 0;
+  width: 100%;
+}

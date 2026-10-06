@@ -6,6 +6,7 @@ import {
   type ApiClock,
   type CurvePage,
   type WorkbenchEvidence,
+  type DiagnosticsPage,
   type ProveReport,
 } from "../../sdk/ts/src/index";
 import { schemas } from "../../sdk/ts/src/schemas";
@@ -17,6 +18,7 @@ export interface DashboardData {
   clock: ApiClock;
   curves: CurvePage;
   evidence: WorkbenchEvidence;
+  diagnostics: DiagnosticsPage;
   proves: ProveReport[];
   receivedAt: number;
 }
@@ -38,6 +40,8 @@ export function errorText(error: unknown): string {
       UNAUTHORIZED: "The operator key was rejected.",
       PROVE_CONFLICT:
         "This forecast expired, changed regime, or already has a locked cell. Request a new quote.",
+      QUOTE_CONTEXT_CHANGED:
+        "Conditions or the quote timestamp changed. Refresh the page and compute a new quote.",
       RATE_LIMITED: "The server is busy. Wait a moment and try again.",
       LEDGER_INVALID:
         "Ledger verification failed. Inspect the stored evidence before using these forecasts.",
@@ -111,12 +115,15 @@ export function useDashboard(reconnect: number) {
       if (stopped || !client) return;
       try {
         if (!document.hidden) {
-          const [curves, evidence] = await Promise.all([
+          const [curves, evidence, diagnostics] = await Promise.all([
             client.curves(),
             client.workbench(),
+            client.diagnostics(),
           ]);
           if (!stopped)
-            setData((old) => (old ? { ...old, curves, evidence } : old));
+            setData((old) =>
+              old ? { ...old, curves, evidence, diagnostics } : old,
+            );
         }
       } catch (e) {
         fatal(e);
@@ -141,12 +148,14 @@ export function useDashboard(reconnect: number) {
           endpoint: location.origin,
           source: h.source,
         });
-        const [clock, curves, evidence, proves] = await Promise.all([
-          client.clock(),
-          client.curves(),
-          client.workbench(),
-          client.proves(8),
-        ]);
+        const [clock, curves, evidence, proves, diagnostics] =
+          await Promise.all([
+            client.clock(),
+            client.curves(),
+            client.workbench(),
+            client.proves(8),
+            client.diagnostics(),
+          ]);
         if (stopped) return;
         setData({
           client,
@@ -154,6 +163,7 @@ export function useDashboard(reconnect: number) {
           clock,
           curves,
           evidence,
+          diagnostics,
           proves: proves.reports,
           receivedAt: Date.now(),
         });

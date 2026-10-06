@@ -225,6 +225,11 @@ impl Store {
         let mut tx = self.pool.begin().await?;
         // Acquire the writer lock before reading the previous head, including other connections.
         sqlx::query("INSERT INTO forecast_heads(source,sequence,hash) VALUES(?,0,?) ON CONFLICT(source) DO NOTHING").bind(&source).bind(GENESIS).execute(&mut *tx).await?;
+        let regime:Option<String>=sqlx::query_scalar("SELECT regime_id FROM regime_changes WHERE source=? AND json_extract(payload_json,'$.origin')!='backfill' ORDER BY julianday(detected_at_utc) DESC LIMIT 1")
+            .bind(&source).fetch_optional(&mut *tx).await?;
+        if regime.is_some_and(|r| r != forecast.regime_id) {
+            return Err(StoreError::Invalid);
+        }
         let row = sqlx::query("SELECT sequence,hash FROM forecast_heads WHERE source=?")
             .bind(&source)
             .fetch_one(&mut *tx)

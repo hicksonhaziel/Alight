@@ -1,0 +1,22 @@
+[package]
+name = "alight-diagnostics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+[dependencies]
+alight-types.workspace = true
+alight-store.workspace = true
+alight-model.workspace = true
+alight-forecast.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+[dev-dependencies]
+alight-notify.workspace = true
+alight-prove.workspace = true
+alight-canary.workspace = true
+alight-sim.workspace = true
+tempfile.workspace = true
+[lints]
+workspace = true

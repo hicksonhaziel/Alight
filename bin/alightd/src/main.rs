@@ -1,5 +1,6 @@
 //! Persistent observe/live collector. Signing is confined to the governed canary engine.
 mod alerts;
+mod diagnostics;
 use alight_ingest::{
     Config, HttpProbe, MAINNET_GENESIS, adapter,
     clock::SlotClock,
@@ -50,6 +51,7 @@ struct Args {
     operator_key_file: Option<PathBuf>,
     seed: Option<u64>,
     sim_canaries: Option<u32>,
+    sim_regimes: bool,
 }
 impl Args {
     fn parse() -> Result<Self, Error> {
@@ -69,6 +71,9 @@ impl Args {
                 "--sim-canaries" => {
                     result.sim_canaries = Some(value.parse().map_err(|_| Error::Configuration)?)
                 }
+                "--sim-regimes" => {
+                    result.sim_regimes = value.parse().map_err(|_| Error::Configuration)?
+                }
                 "--run-for" => {
                     result.run_for = Some(value.parse().map_err(|_| Error::Configuration)?)
                 }
@@ -78,7 +83,10 @@ impl Args {
                 _ => return Err(Error::Configuration),
             }
         }
-        if result.run_for == Some(0) || result.disconnect == Some(0) {
+        if result.run_for == Some(0)
+            || result.disconnect == Some(0)
+            || result.sim_regimes && result.mode.as_deref() != Some("sim")
+        {
             return Err(Error::Configuration);
         }
         Ok(result)
@@ -465,12 +473,28 @@ async fn sim_server(args: Args) -> Result<(), Error> {
     };
     params.validate().map_err(|_| Error::Configuration)?;
     let generation = params.clone();
-    let data = tokio::task::spawn_blocking(move || {
+    let mut data = tokio::task::spawn_blocking(move || {
         alight_sim::generate_focused(&generation, Route::BeamHttp, SizeClass::Small)
     })
     .await
     .map_err(|_| Error::Task)?
     .map_err(|_| Error::Configuration)?;
+    if args.sim_regimes {
+        let first = data.canaries.first().ok_or(Error::Configuration)?;
+        let start = (alight_diagnostics::utc(&first.send_wall_utc)? - chrono::Duration::hours(2))
+            .to_rfc3339();
+        alight_diagnostics::simulation::scenario(&store, params.seed, &start).await?;
+        let regime = store
+            .active_regime(Source::Sim, &data.as_of_utc)
+            .await?
+            .ok_or(Error::Configuration)?;
+        // These are freshly generated samples after the synthetic change. Stored old labels are never edited.
+        for c in &mut data.canaries {
+            c.regime_id = regime.regime_id.clone();
+            c.id = format!("phase5-{}", c.id);
+            c.signature = Some(c.id.clone());
+        }
+    }
     for sample in data.training().map_err(|_| Error::Configuration)? {
         store.import_training(&sample).await?;
     }
@@ -483,6 +507,7 @@ async fn sim_server(args: Args) -> Result<(), Error> {
         }
     }
     alight_forecast::tick(&store, Source::Sim, "local", &as_of).await?;
+    alight_diagnostics::refresh(&store, Source::Sim, &as_of, &[]).await?;
     let api = alight_api::ApiState::new(
         store.clone(),
         alight_api::Options {
@@ -611,6 +636,7 @@ async fn run() -> Result<(), Error> {
                 args.operator_key_file.as_deref(),
                 config.get("ALIGHT_OPERATOR_KEY"),
             )?,
+            webhook_secret: config.get("SOLAMI_WEBHOOK_SECRET").map(str::to_owned),
             daily_budget_sol: config.get("ALIGHT_DAILY_BUDGET_SOL").map(str::to_owned),
             burst_budget_sol: config.get("ALIGHT_BURST_BUDGET_SOL").map(str::to_owned),
             ..Default::default()
@@ -648,6 +674,7 @@ async fn run() -> Result<(), Error> {
     ));
     workers.spawn(retention_loop(config.clone(), store.clone(), rx.clone()));
     workers.spawn(model_loop(store.clone(), rx.clone()));
+    workers.spawn(diagnostics::run(config.clone(), store.clone(), rx.clone()));
     workers.spawn(alerts::run(config.clone(), store.clone(), rx.clone()));
     if mode == RunMode::Live {
         // Load keys only in this worker's private configuration, never in observer state.

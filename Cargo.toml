@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "crates/alight-prove", "crates/alight-api", "crates/alight-client", "crates/alight-notify", "bin/alight", "bin/alightd"]
+members = ["crates/alight-types", "crates/alight-ingest", "crates/alight-store", "crates/alight-canary", "crates/alight-model", "crates/alight-sim", "crates/alight-forecast", "crates/alight-econ", "crates/alight-tape", "crates/alight-prove", "crates/alight-api", "crates/alight-client", "crates/alight-notify", "crates/alight-diagnostics", "bin/alight", "bin/alightd"]
 
 [workspace.package]
 version = "0.0.0"
@@ -21,6 +21,7 @@ alight-prove = { path = "crates/alight-prove" }
 alight-api = { path = "crates/alight-api" }
 alight-client = { path = "crates/alight-client" }
 alight-notify = { path = "crates/alight-notify" }
+alight-diagnostics = { path = "crates/alight-diagnostics" }
 schemars = "=1.2.2"
 tower = { version = "=0.5.3", features = ["util"] }
 subtle = "=2.6.1"
@@ -37,6 +38,7 @@ sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-toki
 chrono = { version = "=0.4.44", default-features = false, features = ["clock", "serde"] }
 uuid = { version = "=1.23.0", features = ["v4"] }
 sha2 = "=0.10.9"
+hmac = "=0.12.1"
 tempfile = "=3.27.0"
 futures-util = "=0.3.34"
 prost = "=0.14.4"

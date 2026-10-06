@@ -67,7 +67,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
       .getByText("Stream connected", { exact: true }),
   ).toBeVisible();
   await page.screenshot({
-    path: "../.alight/phase4/cockpit-dark.png",
+    path: "../.alight/phase5/cockpit-dark.png",
     fullPage: true,
   });
   await page.getByRole("link", { name: "Get a quote", exact: true }).click();
@@ -90,7 +90,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
     BigInt(recommendation.config.tip_lamports).toLocaleString(),
   );
   // Copy-as-code must compile against the same strict, branded SDK contracts.
-  const snippet = resolve("../.alight/phase4/copied-quote.ts");
+  const snippet = resolve("../.alight/phase5/copied-quote.ts");
   await writeFile(snippet, await page.locator("pre.code").innerText());
   const program = ts.createProgram([snippet], {
     target: ts.ScriptTarget.ES2023,
@@ -107,7 +107,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
       .map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n")),
   ).toEqual([]);
   await page.screenshot({
-    path: "../.alight/phase4/quote-dark.png",
+    path: "../.alight/phase5/quote-dark.png",
     fullPage: true,
   });
   await page.getByRole("button", { name: "Connect operator to lock" }).click();
@@ -142,7 +142,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   await expect(page.locator(".prove-members .member")).toHaveCount(40);
   await expect(page.locator(".verdict-row")).toContainText(report.verdict);
   await page.screenshot({
-    path: "../.alight/phase4/prove-dark.png",
+    path: "../.alight/phase5/prove-dark.png",
     fullPage: true,
   });
   await page.reload();
@@ -165,7 +165,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   expect(path).toBeTruthy();
   const bundle = JSON.parse(await readFile(path!, "utf8"));
   bundle.rows[0].entry.forecast.quote.recommendation.p_hat = 0.01;
-  const tampered = "../.alight/phase4/tampered.json";
+  const tampered = "../.alight/phase5/tampered.json";
   await writeFile(tampered, JSON.stringify(bundle));
   await page.getByLabel("Ledger export file").setInputFiles(tampered);
   await expect(page.getByRole("alert")).toContainText(
@@ -175,10 +175,10 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   expect(errors).toEqual([]);
 });
 
-test("seven screens are accessible in both themes and source labels remain visible", async ({
-  page,
-}) => {
-  for (const theme of ["dark", "light"]) {
+for (const theme of ["dark", "light"]) {
+  test(`seven screens are accessible in ${theme} theme and source labels remain visible`, async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(
       page.getByRole("heading", { name: "Network cockpit" }),
@@ -217,11 +217,11 @@ test("seven screens are accessible in both themes and source labels remain visib
       ).toEqual([]);
     }
     await page.screenshot({
-      path: `../.alight/phase4/tape-${theme}.png`,
+      path: `../.alight/phase5/tape-${theme}.png`,
       fullPage: true,
     });
-  }
-});
+  });
+}
 
 test("mobile, keyboard navigation, reduced motion, and offline errors are usable", async ({
   page,
@@ -238,7 +238,7 @@ test("mobile, keyboard navigation, reduced motion, and offline errors are usable
     ),
   ).toBe(true);
   await page.screenshot({
-    path: "../.alight/phase4/cockpit-mobile.png",
+    path: "../.alight/phase5/cockpit-mobile.png",
     fullPage: true,
   });
   await page.getByRole("button", { name: "Open navigation" }).click();

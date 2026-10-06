@@ -68,11 +68,15 @@ impl Store {
         tx.commit().await?;
         Ok(true)
     }
+    /// Claims once before delivery; a crash during ATTEMPTING is not automatically retried.
+    pub async fn claim_alert_delivery(&self, id: &str) -> Result<bool, StoreError> {
+        Ok(sqlx::query("UPDATE alerts SET delivery_status='ATTEMPTING' WHERE id=? AND delivery_status='PENDING'").bind(id).execute(&self.pool).await?.rows_affected()==1)
+    }
     pub async fn alert_delivery(&self, id: &str, status: &str) -> Result<(), StoreError> {
         if !["DELIVERED", "FAILED", "NO_ENDPOINT"].contains(&status) {
             return Err(StoreError::Invalid);
         }
-        sqlx::query("UPDATE alerts SET delivery_status=? WHERE id=? AND delivery_status='PENDING'")
+        sqlx::query("UPDATE alerts SET delivery_status=? WHERE id=? AND delivery_status IN ('PENDING','ATTEMPTING')")
             .bind(status)
             .bind(id)
             .execute(&self.pool)
@@ -86,8 +90,8 @@ impl Store {
         from: &str,
         through: &str,
     ) -> Result<u32, StoreError> {
-        let count:i64=sqlx::query_scalar("SELECT COUNT(*) FROM canaries c JOIN resolution_history r ON r.rowid=(SELECT MAX(r2.rowid) FROM resolution_history r2 WHERE r2.canary_id=c.id) WHERE c.source=? AND r.at_utc>=? AND r.at_utc<=? AND json_extract(r.payload_json,'$.reason') IN ('observer_disagreement','rpc_disagreement_or_incomplete')")
-            .bind(label(source)?).bind(from).bind(through).fetch_one(&self.pool).await?;
+        let count:i64=sqlx::query_scalar("SELECT COUNT(DISTINCT canary_id) FROM (SELECT c.id AS canary_id FROM canaries c JOIN resolution_history r ON r.rowid=(SELECT MAX(r2.rowid) FROM resolution_history r2 WHERE r2.canary_id=c.id) WHERE c.source=? AND julianday(r.at_utc)>=julianday(?) AND julianday(r.at_utc)<=julianday(?) AND json_extract(r.payload_json,'$.reason') IN ('observer_disagreement','rpc_disagreement_or_incomplete') UNION SELECT canary_id FROM observer_disagreements WHERE source=? AND julianday(last_observed_utc)>=julianday(?) AND julianday(last_observed_utc)<=julianday(?))")
+            .bind(label(source)?).bind(from).bind(through).bind(label(source)?).bind(from).bind(through).fetch_one(&self.pool).await?;
         u32::try_from(count).map_err(|_| StoreError::Invalid)
     }
 }

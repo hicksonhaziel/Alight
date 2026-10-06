@@ -133,6 +133,54 @@ export function Tape({ data }: { data: DashboardData }) {
         )}
       </Panel>
       <Panel
+        title="Workload fidelity"
+        caption="Equal paid tips · identical index scope · descriptive raw positions"
+      >
+        {data.diagnostics.fidelity.comparisons.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tip · lamports</th>
+                  <th>Index scope</th>
+                  <th>Canaries / tape samples</th>
+                  <th>Canary median index</th>
+                  <th>Tape median index</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.diagnostics.fidelity.comparisons.map((c) => (
+                  <tr key={`${c.tip_lamports}-${c.index_scope}`}>
+                    <td className="mono">{integer(c.tip_lamports)}</td>
+                    <td>{c.index_scope}</td>
+                    <td>
+                      {c.canaries} / {c.tape_transfers}
+                    </td>
+                    <td>{c.canary_p50_index.toFixed(1)}</td>
+                    <td>{c.tape_p50_index.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Empty
+            title="No matched position evidence"
+            text="This comparison needs landed canaries and passive transfers at equal paid tips with the same index scope."
+          />
+        )}
+        <div className="receipt-limits">
+          <p>
+            {data.diagnostics.fidelity.excluded_unmatched} unmatched ·{" "}
+            {data.diagnostics.fidelity.excluded_conflicting} conflicting passive
+            rows excluded
+          </p>
+          {data.diagnostics.fidelity.limits.map((l) => (
+            <p key={l}>{l}</p>
+          ))}
+        </div>
+      </Panel>
+      <Panel
         title="Wallet receipts"
         caption="Coverage and limitations"
         action={<ReceiptText size={18} aria-hidden="true" />}

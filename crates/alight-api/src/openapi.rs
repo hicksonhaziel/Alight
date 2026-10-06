@@ -74,6 +74,8 @@ pub fn document() -> Value {
     add::<Alert>(&mut schemas);
     add::<ForecastLedgerExport>(&mut schemas);
     add::<WorkbenchEvidence>(&mut schemas);
+    add::<DiagnosticsPage>(&mut schemas);
+    add::<WebhookReceipt>(&mut schemas);
     add::<CanaryEvidencePage>(&mut schemas);
     add::<ProveCanaryPage>(&mut schemas);
     add::<BrowserLedgerPage>(&mut schemas);
@@ -86,6 +88,13 @@ pub fn document() -> Value {
     schemas["ModelQuoteRequest"]["properties"]["candidates"]["minItems"] = json!(1);
     schemas["ModelQuoteRequest"]["properties"]["candidates"]["maxItems"] = json!(81);
     let mut paths = Map::new();
+    let mut webhook = operation("WebhookReceipt", false, "200");
+    webhook["security"] = json!([{"WebhookHmac":[]}]);
+    webhook["description"] = json!(
+        "Live/observe only, default disabled. Exact body HMAC-SHA256 in X-Webhook-Signature (64 hex characters), 65536-byte cap, owned signatures only. Unknown identities/index scopes remain incomplete. Valid unowned deliveries are ignored."
+    );
+    webhook["requestBody"] = json!({"required":true,"content":{"application/json":{"schema":{"type":"object","required":["signature","slot","status"],"properties":{"signature":{"type":"string","maxLength":90},"slot":{"type":"integer","minimum":0},"status":{"type":"string"}}}}}});
+    paths.insert("/v1/webhook".into(), json!({"post":webhook}));
     for (path, name) in [
         ("/v1/health", "ApiHealth"),
         ("/v1/clock", "ApiClock"),
@@ -93,6 +102,7 @@ pub fn document() -> Value {
         ("/v1/observers", "ObserverHealthPage"),
         ("/v1/ledger/verify", "LedgerVerification"),
         ("/v1/workbench", "WorkbenchEvidence"),
+        ("/v1/diagnostics", "DiagnosticsPage"),
     ] {
         paths.insert(path.into(), json!({"get":operation(name,false,"200")}));
     }
@@ -192,5 +202,5 @@ pub fn document() -> Value {
     ]);
     paths.insert("/v1/ledger/payloads".into(), json!({"get":payloads}));
     paths.insert("/v1/stream".into(),json!({"get":{"security":[],"description":"Read-only source-scoped snapshots each second; 32 connections maximum, 1 MiB output cap, 4 KiB input cap, slow clients disconnect. Text/binary controls are rejected.","responses":{"101":{"description":"WebSocket upgrade"},"429":response("ApiErrorResponse")},"x-websocket-message":{"$ref":"#/components/schemas/ApiStreamSnapshot"}}}));
-    json!({"openapi":"3.1.0","jsonSchemaDialect":"https://json-schema.org/draft/2020-12/schema","info":{"title":"Alight API","version":"1","description":"Canary landing forecasts with explicit live/sim/replay evidence. Public reads never sign, send or persist forecasts."},"paths":paths,"components":{"schemas":schemas,"securitySchemes":{"OperatorBearer":{"type":"http","scheme":"bearer","description":"Server-side ALIGHT_OPERATOR_KEY. Never put it in a URL."}}}})
+    json!({"openapi":"3.1.0","jsonSchemaDialect":"https://json-schema.org/draft/2020-12/schema","info":{"title":"Alight API","version":"1","description":"Canary landing forecasts with explicit live/sim/replay evidence. Public reads never sign, send or persist forecasts."},"paths":paths,"components":{"schemas":schemas,"securitySchemes":{"WebhookHmac":{"type":"apiKey","in":"header","name":"X-Webhook-Signature","description":"64 hexadecimal characters: HMAC-SHA256 of exact body bytes using SOLAMI_WEBHOOK_SECRET"},"OperatorBearer":{"type":"http","scheme":"bearer","description":"Server-side ALIGHT_OPERATOR_KEY. Never put it in a URL."}}}})
 }

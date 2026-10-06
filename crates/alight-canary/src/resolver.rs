@@ -76,6 +76,50 @@ pub fn resolve(canary: &Canary, evidence: &ResolutionEvidence, utc: &str) -> Res
         })
     });
     if disagree {
+        let absence = rpc.is_some_and(|r| {
+            r.searched_history
+                && r.history_covers_sent_slot
+                && r.landing.is_none()
+                && r.checked_commitment >= Commitment::Confirmed
+        });
+        let excluded = absence
+            && !missing_identity
+            && complete.iter().all(|o| {
+                evidence.canonical_blocks.iter().any(|b| {
+                    b.source == canary.source
+                        && b.signature == signature
+                        && Some(b.slot) == o.slot
+                        && !b.block_id.is_empty()
+                        && b.commitment >= Commitment::Confirmed
+                        && !b.signature_present
+                })
+            })
+            && !evidence.canonical_blocks.iter().any(|b| {
+                b.source == canary.source && b.signature == signature && b.signature_present
+            });
+        if excluded && let Some(first) = complete.first() {
+            result.outcome = Some(Outcome::LandedThenDropped);
+            result.landed_slot = first.slot;
+            result.landed_block_id = first.block_id.clone();
+            result.landed_index = first.index_in_block;
+            result.landed_index_scope = Some(first.index_scope);
+            return Resolution {
+                canary: result,
+                finalized: rpc.is_some_and(|r| {
+                    r.checked_commitment == Commitment::Finalized
+                        && r.checked_block_height > canary.last_valid_block_height
+                }) && complete.iter().all(|o| {
+                    evidence.canonical_blocks.iter().any(|b| {
+                        b.source == canary.source
+                            && b.signature == signature
+                            && Some(b.slot) == o.slot
+                            && b.commitment == Commitment::Finalized
+                            && !b.signature_present
+                    })
+                }),
+                reason: "canonical_blocks_exclude_all_observed_candidates",
+            };
+        }
         return Resolution {
             canary: result,
             finalized: false,
@@ -142,7 +186,10 @@ pub fn resolve(canary: &Canary, evidence: &ResolutionEvidence, utc: &str) -> Res
             return Resolution {
                 canary: result,
                 finalized: canonical.commitment == Commitment::Finalized
-                    && rpc.is_some_and(|r| r.checked_commitment == Commitment::Finalized),
+                    && rpc.is_some_and(|r| {
+                        r.checked_commitment == Commitment::Finalized
+                            && r.checked_block_height > canary.last_valid_block_height
+                    }),
                 reason: "canonical_block_excludes_signature",
             };
         }

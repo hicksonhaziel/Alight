@@ -70,12 +70,16 @@ pub async fn current_context(
     region: &str,
     as_of: &str,
 ) -> Result<CurveContext, StoreError> {
-    context(
+    let mut current = context(
         &store.training_canaries(source).await?,
         source,
         region,
         as_of,
-    )
+    )?;
+    if let Some(regime) = store.active_regime(source, as_of).await? {
+        current.regime_id = regime.regime_id;
+    }
+    Ok(current)
 }
 /// Periodic snapshot and grader tick; heavy numerical work uses a blocking worker, not ingest tasks.
 pub async fn tick(
@@ -85,7 +89,10 @@ pub async fn tick(
     as_of: &str,
 ) -> Result<serde_json::Value, StoreError> {
     let samples = store.training_canaries(source).await?;
-    let context = context(&samples, source, region, as_of)?;
+    let mut context = context(&samples, source, region, as_of)?;
+    if let Some(regime) = store.active_regime(source, as_of).await? {
+        context.regime_id = regime.regime_id;
+    }
     let cells = candidates(&samples, &context);
     let entries = store
         .forecasts_to_grade(source, 200)

@@ -3,6 +3,7 @@ mod beta;
 pub mod latency;
 pub mod pooled;
 pub mod quote;
+pub mod regime;
 pub mod regression;
 pub mod scoring;
 pub mod signal;

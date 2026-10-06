@@ -196,6 +196,7 @@ async fn public_preview_operator_freeze_forty_prove_restart_and_served_schemas_w
         "/v1/tape",
         "/v1/proves",
         "/v1/workbench",
+        "/v1/diagnostics",
         "/v1/ledger/payloads",
     ] {
         let (status, value) = call(&app, "GET", path, Value::Null, None).await;

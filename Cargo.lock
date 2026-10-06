@@ -22,6 +22,7 @@ name = "alight"
 version = "0.0.0"
 dependencies = [
  "alight-client",
+ "alight-diagnostics",
  "alight-forecast",
  "alight-ingest",
  "alight-model",
@@ -49,6 +50,7 @@ dependencies = [
  "axum",
  "chrono",
  "futures-util",
+ "hmac",
  "reqwest",
  "schemars",
  "serde",
@@ -110,6 +112,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "alight-diagnostics"
+version = "0.0.0"
+dependencies = [
+ "alight-canary",
+ "alight-forecast",
+ "alight-model",
+ "alight-notify",
+ "alight-prove",
+ "alight-sim",
+ "alight-store",
+ "alight-types",
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "alight-econ"
 version = "0.0.0"
 dependencies = [
@@ -155,6 +176,7 @@ dependencies = [
  "dotenvy",
  "flate2",
  "futures-util",
+ "hmac",
  "prost",
  "reqwest",
  "rustls",
@@ -182,6 +204,7 @@ version = "0.0.0"
 dependencies = [
  "alight-types",
  "chrono",
+ "serde",
  "serde_json",
  "sha2",
  "thiserror",
@@ -280,6 +303,7 @@ version = "0.0.0"
 dependencies = [
  "alight-api",
  "alight-canary",
+ "alight-diagnostics",
  "alight-forecast",
  "alight-ingest",
  "alight-notify",

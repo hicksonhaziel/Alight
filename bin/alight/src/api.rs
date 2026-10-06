@@ -81,7 +81,7 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
             "--operator-key-file",
         ],
         "export" => &["--api", "--source", "--day", "--output"],
-        "doctor" | "ledger" => &["--api", "--source"],
+        "doctor" | "ledger" | "diagnostics" => &["--api", "--source"],
         _ => return Err("Unknown API command".into()),
     };
     let o = options(args, start, allowed)?;
@@ -106,6 +106,10 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
     let client =
         Client::new(required("--api")?, source, key.as_deref().map(str::trim)).map_err(error)?;
     match command {
+        "diagnostics" => {
+            print(client.diagnostics().await.map_err(error)?)?;
+            Ok(0)
+        }
         "doctor" => {
             let h = client.health().await.map_err(error)?;
             let status = h.status.clone();
@@ -255,6 +259,7 @@ pub fn daemon(args: &[String]) -> Result<u8, String> {
         "--operator-key-file",
         "--seed",
         "--sim-canaries",
+        "--sim-regimes",
         "--force-disconnect-after",
     ];
     let mut seen = std::collections::BTreeSet::new();

@@ -23,9 +23,12 @@ def main():
             raise AssertionError("contract mismatch: " + case["label"])
     writes = [(path, method) for path, item in spec["paths"].items()
               for method in item if method == "post"]
-    assert set(writes) == {("/v1/quote", "post"), ("/v1/prove", "post")}
+    assert set(writes) == {("/v1/quote", "post"), ("/v1/prove", "post"), ("/v1/webhook", "post")}
     for path, method in writes:
-        assert spec["paths"][path][method]["security"] == [{"OperatorBearer": []}]
+        auth = "WebhookHmac" if path == "/v1/webhook" else "OperatorBearer"
+        assert spec["paths"][path][method]["security"] == [{auth: []}]
+    webhook_auth = spec["components"]["securitySchemes"]["WebhookHmac"]
+    assert webhook_auth["type"] == "apiKey" and webhook_auth["name"] == "X-Webhook-Signature"
     for path, item in spec["paths"].items():
         if "get" in item:
             assert item["get"]["security"] == []

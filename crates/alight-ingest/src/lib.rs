@@ -16,6 +16,7 @@ pub mod leaders;
 pub mod rpc;
 #[cfg(feature = "stream")]
 pub mod stream;
+pub mod webhook;
 
 pub const MAINNET_GENESIS: &str = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
 const MAX_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
@@ -235,7 +236,7 @@ impl HttpProbe {
             request = request.header("x-api-key", token);
         }
         // Complete epoch schedules exceed the normal proof-response cap.
-        let limit = if method == "getLeaderSchedule" {
+        let limit = if method == "getLeaderSchedule" || method == "getBlock" {
             // A complete epoch is roughly 3 MiB; retain a bounded large-response deadline.
             request = request.timeout(Duration::from_secs(45));
             8 * 1024 * 1024

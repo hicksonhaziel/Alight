@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+hmac.workspace = true
 solami = { workspace = true, optional = true }
 # Versions from Solami 0.1.58's published lockfile: newer semver-compatible
 # Solana patches require Rust 1.97.1 and mix incompatible pubkey generations.

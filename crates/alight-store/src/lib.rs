@@ -1,6 +1,7 @@
 //! SQLite WAL persistence. Event evidence and cursors commit in the same transaction.
 mod alerts;
 mod curves;
+mod diagnostics;
 mod ledger;
 mod phase3;
 mod prove;

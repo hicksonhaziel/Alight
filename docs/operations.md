@@ -216,8 +216,9 @@ Migration 0008 adds source-scoped rule state/events. One atomic transition emits
 one event per active condition; restart preserves suppression and recovery rearms
 it. The event history is capped at 10,000 rows per source. Webhook delivery makes
 one bounded, five-second attempt with redirects disabled. Delivery errors do not
-retry an uncertain response. A crash after persistence can leave `PENDING` events;
-there is no automatic replay or guaranteed external delivery. Discord disables
+retry an uncertain response. The dispatcher claims `PENDING` events as `ATTEMPTING` before delivery. A crash
+then leaves an uncertain attempt that is not automatically retried; external
+delivery is not guaranteed. New regime events use the same dispatcher. Discord disables
 mentions; Slack uses plain-text blocks. The induced test delivers all five rules
 to a temporary loopback receiver and checks restart suppression.
 
@@ -280,9 +281,53 @@ For an already installed Chrome, set `ALIGHT_BROWSER_EXECUTABLE` to its absolute
 path on the E2E command. Browser tests create/stop their own temporary Sim daemon
 on 8082 and Vite on 5180; both ports must be free. No real key, project ENV,
 provider request, wallet funding, or chain send is needed. Reports and screenshots
-are local under `.alight/phase4/`; CI uses bundled Chromium. The test checks
+are local under `.alight/phase5/`; CI uses bundled Chromium. The test checks
 actual API values, a frozen forecast, 40 held-out members, restart recovery,
-browser SHA-256 verification/tamper rejection, 14 Axe screen/theme audits, mobile
+browser SHA-256 verification/tamper rejection, 15 Axe audits (14 screen/theme
+audits and the diagnostics disclosure), mobile
 keyboard navigation, reduced motion, offline/source mismatch, and probability-only
 market fallback. See `docs/phase-4-report.md` for measured scope and remaining
 live/dependency acceptance.
+
+## Phase 5 diagnostics and finite history jobs
+
+Collection remains paused. These commands implement offline acceptance without
+loading signing keys or making provider requests:
+
+```sh
+cargo run -p alight -- regime-sim --database .alight/phase5/regime-sim.db --seed 42 --output .alight/phase5/regime-sim.json
+cargo run -p alight -- backfill --database .alight/phase5/history.db --input sanitized-history.json --output .alight/phase5/history-report.json
+```
+
+`regime-sim` stores 240 explicit synthetic signal windows with two injected changes.
+It is separate from default canary training. For the complete offline UI demo use
+an isolated database and `alightd --mode sim --sim-regimes true`: historical
+synthetic changes precede freshly generated, separately identified training
+samples. It creates no provider frames or market tape. Do not reuse the Live DB.
+`alight diagnostics --api http://127.0.0.1:8081 --source sim` reads saved diagnostics;
+the Rust and TypeScript SDKs expose the same read-only operation.
+
+The observe/live daemon now runs diagnostics inside its existing supervised
+lifetime: sealed clock bins, current reference-cell landing rates, observer
+comparison, bounded finalized block sampling, checkpointed detection and alerts.
+It does not run until the operator explicitly resumes collection. Optional
+`SOLAMI_WEBHOOK_SECRET` enables authenticated ingress; no webhook is registered
+by this code. Optional `ALIGHT_SLOT_COMPUTE_LIMIT` and
+`ALIGHT_SLOT_COMPUTE_LIMIT_PROVENANCE` must be supplied together with a verified
+capacity and its evidence. With neither set, fullness is unavailable.
+
+An explicitly requested future network backfill uses `alight backfill --network`
+with `--database`, `--days 42` through `56`, `--requests 64` through `1024`, and
+optional `--output`. That finite read-only job checks mainnet, retained first
+block and finalized tip, then samples chain block timestamps within its request
+budget. It does not sign, send, register webhooks or leave streams running. Its
+200 ms scheduling assumption selects candidate slots only; timestamp evidence
+determines actual coverage. Null/error responses and candidate conflicts remain
+missing. Sparse averages cannot resolve every short event. Use a separate Replay
+database. No such network backfill has been executed for Phase 5 offline acceptance.
+
+Regime actions reset old effective sample mass and enable uniform exploration
+for 30 minutes. The daily/burst governor and wallet reserve remain unchanged.
+An empty new regime must collect enough fresh support to quote again. Named
+upgrades require independent technical evidence; epoch dates alone never establish
+Alpenglow or a slot-time step. See `docs/phase5-methodology.md` for thresholds.

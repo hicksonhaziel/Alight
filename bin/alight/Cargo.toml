@@ -12,6 +12,7 @@ alight-sim.workspace = true
 alight-store.workspace = true
 alight-forecast.workspace = true
 alight-client.workspace = true
+alight-diagnostics.workspace = true
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true

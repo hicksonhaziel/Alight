@@ -38,7 +38,6 @@ export const schemas: Record<string, Schema> = {
       "summary",
       "details"
     ],
-    "title": "Alert",
     "type": "object"
   },
   "AlertRule": {
@@ -247,6 +246,69 @@ export const schemas: Record<string, Schema> = {
       "value"
     ],
     "title": "ApiTelemetry",
+    "type": "object"
+  },
+  "BackfillReport": {
+    "properties": {
+      "first_available_slot": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "from_utc": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "id": {
+        "type": "string"
+      },
+      "limitation": {
+        "type": "string"
+      },
+      "missing_timestamps": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "requested_days": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "requests": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "status": {
+        "type": "string"
+      },
+      "through_utc": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "timestamps": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "source",
+      "requested_days",
+      "first_available_slot",
+      "timestamps",
+      "missing_timestamps",
+      "requests",
+      "status",
+      "limitation"
+    ],
     "type": "object"
   },
   "BaselineCostComparison": {
@@ -581,6 +643,37 @@ export const schemas: Record<string, Schema> = {
       "observations"
     ],
     "title": "CanaryEvidencePage",
+    "type": "object"
+  },
+  "ChangeVote": {
+    "properties": {
+      "baseline": {
+        "format": "double",
+        "type": "number"
+      },
+      "cusum": {
+        "format": "double",
+        "type": "number"
+      },
+      "recent": {
+        "format": "double",
+        "type": "number"
+      },
+      "short_run_probability": {
+        "format": "double",
+        "type": "number"
+      },
+      "signal": {
+        "$ref": "#/components/schemas/SignalKind"
+      }
+    },
+    "required": [
+      "signal",
+      "baseline",
+      "recent",
+      "short_run_probability",
+      "cusum"
+    ],
     "type": "object"
   },
   "ClockWindow": {
@@ -1018,6 +1111,140 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "DiagnosticsPage": {
+    "properties": {
+      "alerts": {
+        "items": {
+          "$ref": "#/components/schemas/Alert"
+        },
+        "type": "array"
+      },
+      "as_of_utc": {
+        "type": "string"
+      },
+      "backfills": {
+        "items": {
+          "$ref": "#/components/schemas/BackfillReport"
+        },
+        "type": "array"
+      },
+      "disagreements": {
+        "items": {
+          "$ref": "#/components/schemas/DisagreementEvent"
+        },
+        "type": "array"
+      },
+      "expected_observers": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverKind"
+        },
+        "type": "array"
+      },
+      "fidelity": {
+        "$ref": "#/components/schemas/FidelityDiagnostic"
+      },
+      "limits": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "observers": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverComparison"
+        },
+        "type": "array"
+      },
+      "owned_window_n": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "pairs": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverPair"
+        },
+        "type": "array"
+      },
+      "regimes": {
+        "items": {
+          "$ref": "#/components/schemas/RegimeChange"
+        },
+        "type": "array"
+      },
+      "signals": {
+        "items": {
+          "$ref": "#/components/schemas/SignalWindow"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "as_of_utc",
+      "signals",
+      "regimes",
+      "observers",
+      "pairs",
+      "disagreements",
+      "expected_observers",
+      "owned_window_n",
+      "fidelity",
+      "backfills",
+      "alerts",
+      "limits"
+    ],
+    "title": "DiagnosticsPage",
+    "type": "object"
+  },
+  "DisagreementEvent": {
+    "properties": {
+      "canary_id": {
+        "type": "string"
+      },
+      "detected_at_utc": {
+        "type": "string"
+      },
+      "evidence_refs": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "missing_observers": {
+        "items": {
+          "$ref": "#/components/schemas/ObserverKind"
+        },
+        "type": "array"
+      },
+      "signature": {
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "id",
+      "source",
+      "canary_id",
+      "signature",
+      "detected_at_utc",
+      "kind",
+      "missing_observers",
+      "evidence_refs"
+    ],
+    "type": "object"
+  },
   "EconomicCost": {
     "properties": {
       "delay_cost_usd": {
@@ -1206,6 +1433,39 @@ export const schemas: Record<string, Schema> = {
       "local_p90"
     ],
     "type": "string"
+  },
+  "FidelityDiagnostic": {
+    "properties": {
+      "comparisons": {
+        "items": {
+          "$ref": "#/components/schemas/PositionComparison"
+        },
+        "type": "array"
+      },
+      "excluded_conflicting": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "excluded_unmatched": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "limits": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "comparisons",
+      "excluded_unmatched",
+      "excluded_conflicting",
+      "limits"
+    ],
+    "type": "object"
   },
   "Forecast": {
     "properties": {
@@ -1737,6 +1997,75 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "ObserverComparison": {
+    "properties": {
+      "comparable_lags": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "conflicts": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "incomparable_clocks": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "missing_owned": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "observations": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "observer": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "receive_lag_p50_ms": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "receive_lag_p95_ms": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "send_to_seen_p50_ms": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "send_to_seen_p95_ms": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "observer",
+      "observations",
+      "comparable_lags",
+      "missing_owned",
+      "conflicts",
+      "incomparable_clocks"
+    ],
+    "type": "object"
+  },
   "ObserverEvent": {
     "properties": {
       "block_id": {
@@ -1905,6 +2234,45 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "string"
   },
+  "ObserverPair": {
+    "properties": {
+      "a": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "agreed": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "b": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "compared": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "disagreed": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "incomplete": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "a",
+      "b",
+      "compared",
+      "agreed",
+      "disagreed",
+      "incomplete"
+    ],
+    "type": "object"
+  },
   "Outcome": {
     "enum": [
       "LANDED_OK",
@@ -2005,6 +2373,43 @@ export const schemas: Record<string, Schema> = {
       "fee_lamports",
       "success",
       "received"
+    ],
+    "type": "object"
+  },
+  "PositionComparison": {
+    "properties": {
+      "canaries": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "canary_p50_index": {
+        "format": "double",
+        "type": "number"
+      },
+      "index_scope": {
+        "$ref": "#/components/schemas/IndexScope"
+      },
+      "tape_p50_index": {
+        "format": "double",
+        "type": "number"
+      },
+      "tape_transfers": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "tip_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      }
+    },
+    "required": [
+      "tip_lamports",
+      "index_scope",
+      "canaries",
+      "tape_transfers",
+      "canary_p50_index",
+      "tape_p50_index"
     ],
     "type": "object"
   },
@@ -2466,6 +2871,98 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "object"
   },
+  "RegimeChange": {
+    "properties": {
+      "annotation": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "confidence": {
+        "format": "double",
+        "type": "number"
+      },
+      "detected_at_utc": {
+        "type": "string"
+      },
+      "epoch": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "exploration_fraction": {
+        "format": "double",
+        "type": "number"
+      },
+      "exploration_until_utc": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "old_effective_n_cap": {
+        "description": "Full reset is an explicit zero cap on old-regime sample mass, not relabeling old outcomes.",
+        "format": "double",
+        "type": "number"
+      },
+      "origin": {
+        "$ref": "#/components/schemas/SignalOrigin"
+      },
+      "policy": {
+        "type": "string"
+      },
+      "previous_regime_id": {
+        "type": "string"
+      },
+      "regime_id": {
+        "type": "string"
+      },
+      "signal_window_id": {
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "start_slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "votes": {
+        "items": {
+          "$ref": "#/components/schemas/ChangeVote"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "source",
+      "origin",
+      "previous_regime_id",
+      "regime_id",
+      "detected_at_utc",
+      "signal_window_id",
+      "votes",
+      "confidence",
+      "old_effective_n_cap",
+      "exploration_fraction",
+      "exploration_until_utc",
+      "policy"
+    ],
+    "type": "object"
+  },
   "ReliabilityBucket": {
     "properties": {
       "lower": {
@@ -2515,6 +3012,129 @@ export const schemas: Record<string, Schema> = {
       "replay"
     ],
     "type": "string"
+  },
+  "SignalKind": {
+    "enum": [
+      "slot_ms",
+      "slot_p95_ms",
+      "skip_rate",
+      "reference_landing_rate",
+      "block_fullness",
+      "non_vote_share",
+      "observer_lag_ms"
+    ],
+    "type": "string"
+  },
+  "SignalMeasure": {
+    "properties": {
+      "kind": {
+        "$ref": "#/components/schemas/SignalKind"
+      },
+      "n": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "provenance": {
+        "type": "string"
+      },
+      "unavailable_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "unit": {
+        "type": "string"
+      },
+      "value": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "kind",
+      "unit",
+      "n",
+      "provenance"
+    ],
+    "type": "object"
+  },
+  "SignalOrigin": {
+    "enum": [
+      "live",
+      "simulation",
+      "replay",
+      "backfill"
+    ],
+    "type": "string"
+  },
+  "SignalWindow": {
+    "properties": {
+      "end_slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "epoch": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "from_utc": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "measures": {
+        "items": {
+          "$ref": "#/components/schemas/SignalMeasure"
+        },
+        "type": "array"
+      },
+      "origin": {
+        "$ref": "#/components/schemas/SignalOrigin"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "start_slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "through_utc": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "source",
+      "origin",
+      "from_utc",
+      "through_utc",
+      "measures"
+    ],
+    "type": "object"
   },
   "SimProofEnvironment": {
     "properties": {
@@ -2664,6 +3284,29 @@ export const schemas: Record<string, Schema> = {
       "finalized"
     ],
     "type": "object"
+  },
+  "WebhookReceipt": {
+    "properties": {
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "status": {
+        "$ref": "#/components/schemas/WebhookStatus"
+      }
+    },
+    "required": [
+      "source",
+      "status"
+    ],
+    "title": "WebhookReceipt",
+    "type": "object"
+  },
+  "WebhookStatus": {
+    "enum": [
+      "ACCEPTED",
+      "IGNORED_UNOWNED"
+    ],
+    "type": "string"
   },
   "WorkbenchCanary": {
     "properties": {

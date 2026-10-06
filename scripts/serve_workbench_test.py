@@ -14,6 +14,7 @@ with tempfile.TemporaryDirectory(prefix="alight-workbench-") as directory:
     child = subprocess.Popen([
         str(root / "target/debug/alightd"), "--mode", "sim", "--seed", "42",
         "--sim-canaries", "900", "--bind", "127.0.0.1:8082",
+        "--sim-regimes", "true",
         "--db", str(Path(directory) / "sim.db"), "--operator-key-file", str(key),
     ], cwd=root, env={"PATH": os.environ["PATH"], "ALIGHT_SIGNING_KEY_FILE": "/must-not-load"})
     def stop(_signum, _frame):
