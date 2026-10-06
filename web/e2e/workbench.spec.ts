@@ -200,14 +200,20 @@ test("seven screens are accessible in both themes and source labels remain visib
         "SIMULATED",
       );
       await expect(page.locator(".loading")).toHaveCount(0);
+      // Entry motion must preserve text contrast at every animation frame.
+      await expect(page.locator(".page-content")).toHaveCSS("opacity", "1");
       const audit = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
       expect(
         audit.violations.map((v) => ({
           id: v.id,
-          nodes: v.nodes.map((n) => n.target),
+          nodes: v.nodes.map((n) => ({
+            target: n.target,
+            summary: n.failureSummary,
+          })),
         })),
+        `${theme} theme / ${route}`,
       ).toEqual([]);
     }
     await page.screenshot({

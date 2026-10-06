@@ -61,6 +61,11 @@ The first clean GitHub browser run exposed Chromium discarding a response body
 before the test read it. The test now buffers the actual API body before releasing
 it to the page; it performs one request with redirects/retries disabled and keeps
 the exact-value comparisons. Four other browser tests passed on that first run.
+The next clean run passed that full flow and caught reduced text contrast during
+the light-theme entry fade. Screen and dialog entrances now animate position
+only, preserving full text opacity throughout. The five-test local suite and all
+14 unchanged Axe audits pass after that fix; failure output identifies the theme,
+screen and contrast details.
 
 The browser verifies exact Rust canonical JSON bytes, not JavaScript reserialized
 floats. Its uploaded export's declared head establishes internal integrity, not

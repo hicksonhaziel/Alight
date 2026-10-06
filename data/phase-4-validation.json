@@ -6,8 +6,9 @@
       "axe_audits": 14,
       "axe_violations": 0,
       "copied_typescript_compiles": true,
+      "entry_motion_preserves_text_opacity": true,
       "failed": 0,
-      "full_suite_duration_s": 47.2,
+      "full_suite_duration_s": 92.5,
       "held_out_attempts": 40,
       "held_out_resolved": 40,
       "keyboard_navigation": "PASS",
@@ -69,7 +70,7 @@
       "csp": "PASS",
       "dependency_install_network": "disabled",
       "docker_image_build": "PASS_OFFLINE_CACHE",
-      "image_id": "sha256:b60bf96740b6031ac31008d0175944886410d0d549a1ec1005bb6cfd616f531a",
+      "image_id": "sha256:36ae6f9073a06d83b61228307149b463e01793c85f1c5df02e374f376027f528",
       "packaged_asset_smoke": "PASS",
       "packaged_browser_stream": "PASS",
       "public_source": "sim",
@@ -118,14 +119,14 @@
     "deploy/compose.yaml": "ad3dc747b6499d865a1b5ad6387df5fc01b9b72fdd732aafd8aa843f0d5007e2",
     "docs/contracts.md": "d3c91ea98d7b113c88f84fc7042fc4365ca6a7bef0f54c011962c7fc82390483",
     "docs/operations.md": "2b7ead77deb4e76e37f49c0cd6bf6498d7d37316a6b64d5b8494c35fa49d15b8",
-    "docs/phase-4-report.md": "b7228cc83f79f1f8d7533bd5d3fba71005398cde38ca6a4cfab85ba779628670",
+    "docs/phase-4-report.md": "dfcbc3e22663eb5e4227e60a9aaaf745cd601af0610c964f0adeb6ce54a0dd8f",
     "scripts/serve_workbench_test.py": "4a0d495b43a3121d786425f20dba30edae07f4033b5ea46180bc960e0c1b1c7e",
     "scripts/verify_phase4_receipt.py": "ad245b6327c9b92e998e50c359c7c589f979a61046ad82ec7a4a47f668845695",
     "sdk/ts/openapi.json": "24886605f118ffee73b5bc3c7bd4c7335ae841af1aaba4de5270b85e30a3c942",
     "sdk/ts/src/index.ts": "b55d9848f3ed04488738ba8c620b7f08700ac3108c0ccfbecb90ae839897f10b",
     "sdk/ts/src/schemas.ts": "89166d94597ce7223fa10fe3e936eaa8b2a41cc6f5aedb80b52e8823ab707877",
     "sdk/ts/src/types.ts": "ab5958101f812ebc8e26c3530724cc85f51f6f66b367454d2b980f85934f0a02",
-    "web/e2e/workbench.spec.ts": "75d748bbf577c18fe735fb39c15bd5f7c94641a090ffc5ba9840f1fb1d3c3192",
+    "web/e2e/workbench.spec.ts": "efa1281fcb892809dccfe97a8d648bc963766968386db25cd787d390d5fc8f82",
     "web/eslint.config.js": "234dac9038d8dec9ec424491236526c322179cef828a8a86da737eb65f7ea150",
     "web/index.html": "647425bb91c171c2921a7337fe8c7ba4bc187ca501c577668bf41880e1758d36",
     "web/package-lock.json": "9db1c15fb90af7f73c8e54e6da4a9c41957c29e7e75eb0700ba6ba5bad87ef02",
@@ -146,7 +147,7 @@
     "web/src/pages/Quote.tsx": "b9a45d9aa35e157737c828139f6c34a280badbda6e9ddf03adc90014b87d39c6",
     "web/src/pages/Regimes.tsx": "e5d8f04efa3bc5ed31a342c826e21a1fcc61c874e2d117c1dca51c7950d03ccd",
     "web/src/pages/Tape.tsx": "641e5c6b3f3c28b152c11deb575a5323d7db6793b39f6635a039da04f0c4759b",
-    "web/src/style.css": "1391f6a222905aac27538335c8dc7e53b00752fbeb616fc88bebb130d8caa093",
+    "web/src/style.css": "73008dbc31f6f4e7328e073eae8596b88c66e991a380ce2f0277493520041502",
     "web/src/ui.tsx": "40620937ab4d9adc9a76b4fa0015d757cdf0dbac34e1fb106f0b3be00c6be51a",
     "web/src/verification.ts": "28d05f51e66ad4b926c29b76b5a2773ab0dd765700b7d64f5ae426805ec4ba85",
     "web/test/evidence.ts": "156451a26f0f552cd9ff52cf6202aa9e5bc4937713e8dfd2148c5cbbd0209935",
@@ -210,5 +211,5 @@
       "human_assistive_technology": "NOT_RUN"
     }
   },
-  "validated_at_utc": "2026-10-06T17:47:37.653290+00:00"
+  "validated_at_utc": "2026-10-06T18:13:32.467521+00:00"
 }
