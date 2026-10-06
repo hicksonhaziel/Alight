@@ -33,7 +33,9 @@ export function Prove({
   initial: ForecastEntry | null;
   reference?: string;
 }) {
-  const [forecast, setForecast] = useState(initial),
+  const [forecast, setForecast] = useState(
+    reference && initial?.hash !== reference ? null : initial,
+  ),
     [report, setReport] = useState<ProveReport | null>(null),
     [members, setMembers] = useState<TrainingCanary[]>([]),
     [n, setN] = useState(40),
