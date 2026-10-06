@@ -1,8 +1,47 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import ts from "typescript";
+import type {
+  QuotePreview,
+  ForecastEntry,
+  ProveReport,
+} from "../../sdk/ts/src/types";
+
+/** Buffer the real API body before releasing it to a potentially navigating page. */
+async function captureResponse<T>(
+  page: Page,
+  method: "GET" | "POST",
+  path: string,
+) {
+  let resolveBody!: (body: T) => void;
+  let rejectBody!: (error: unknown) => void;
+  const body = new Promise<T>((resolve, reject) => {
+    resolveBody = resolve;
+    rejectBody = reject;
+  });
+  await page.route(
+    (url) => url.pathname === path,
+    async (route) => {
+      if (route.request().method() !== method) {
+        await route.continue();
+        return;
+      }
+      try {
+        // One actual backend request; redirects and uncertain retries stay disabled.
+        const response = await route.fetch({ maxRedirects: 0, maxRetries: 0 });
+        resolveBody((await response.json()) as T);
+        await route.fulfill({ response });
+      } catch (error) {
+        rejectBody(error);
+        await route.abort();
+      }
+    },
+    { times: 1 },
+  );
+  return { body };
+}
 
 test("real Sim quote → frozen claim → forty held-out members → browser ledger verification and tamper rejection", async ({
   page,
@@ -32,21 +71,23 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
     fullPage: true,
   });
   await page.getByRole("link", { name: "Get a quote", exact: true }).click();
-  const previewResponse = page.waitForResponse(
-    (r) =>
-      new URL(r.url()).pathname === "/v1/quote" &&
-      r.request().method() === "GET",
+  const previewResponse = await captureResponse<QuotePreview>(
+    page,
+    "GET",
+    "/v1/quote",
   );
   await page
     .getByRole("button", { name: "Compute quote", exact: true })
     .click();
-  const preview = await (await previewResponse).json();
-  expect(preview.quote.recommendation).toBeTruthy();
+  const preview = await previewResponse.body;
+  const recommendation = preview.quote.recommendation;
+  expect(recommendation).toBeTruthy();
+  if (!recommendation) throw new Error("Expected a supported Sim quote");
   await expect(page.locator(".quote-probability")).toContainText(
-    `${(preview.quote.recommendation.p_hat * 100).toFixed(1)}%`,
+    `${(recommendation.p_hat * 100).toFixed(1)}%`,
   );
   await expect(page.locator(".config-grid")).toContainText(
-    BigInt(preview.quote.recommendation.config.tip_lamports).toLocaleString(),
+    BigInt(recommendation.config.tip_lamports).toLocaleString(),
   );
   // Copy-as-code must compile against the same strict, branded SDK contracts.
   const snippet = resolve("../.alight/phase4/copied-quote.ts");
@@ -76,26 +117,26 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   await page
     .getByRole("button", { name: "Connect operator", exact: true })
     .click();
-  const freezeResponse = page.waitForResponse(
-    (r) =>
-      new URL(r.url()).pathname === "/v1/quote" &&
-      r.request().method() === "POST",
+  const freezeResponse = await captureResponse<ForecastEntry>(
+    page,
+    "POST",
+    "/v1/quote",
   );
   await page.getByRole("button", { name: "Lock forecast for Prove" }).click();
-  const frozen = await (await freezeResponse).json();
+  const frozen = await freezeResponse.body;
   expect(frozen.forecast.quote).toEqual(preview.quote);
   await expect(
     page.getByRole("heading", { name: "Forecast ready to lock" }),
   ).toBeVisible();
-  const reportResponse = page.waitForResponse(
-    (r) =>
-      new URL(r.url()).pathname === "/v1/prove" &&
-      r.request().method() === "POST",
+  const reportResponse = await captureResponse<ProveReport>(
+    page,
+    "POST",
+    "/v1/prove",
   );
   await page
     .getByRole("button", { name: "Run 40 canaries", exact: true })
     .click();
-  const report = await (await reportResponse).json();
+  const report = await reportResponse.body;
   expect(report.attempts).toBe(40);
   expect(report.resolved).toBe(40);
   await expect(page.locator(".prove-members .member")).toHaveCount(40);

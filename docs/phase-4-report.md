@@ -47,13 +47,20 @@ Validation performed on 6 October 2026:
 - Compiled production assets served through Caddy 2.10.2 against isolated Sim:
   browser stream connected and no console warnings/errors; assets/public routes,
   CSP, unknown-API 404, static-write 405 and unauthenticated-Prove 401 pass.
-  Compose configuration and Caddy configuration validate. The complete new
-  Docker image build was not run locally.
+  Compose configuration and Caddy configuration validate. The packaged image
+  also builds with the exact pinned lockfile using an ephemeral mount of already
+  verified public package-cache entries and networking disabled. It serves its
+  baked assets successfully against isolated Sim. The normal online dependency
+  install encountered local registry connectivity delays and was stopped.
 - Repository/private-file checks and historical Phase 3 receipt verification.
 
 An initial new source-isolation fixture attempted to import synthetic Live data;
 the store correctly refused it. The fixture now uses Replay and passes. Initial
 browser selector ambiguities were corrected before the final passing run.
+The first clean GitHub browser run exposed Chromium discarding a response body
+before the test read it. The test now buffers the actual API body before releasing
+it to the page; it performs one request with redirects/retries disabled and keeps
+the exact-value comparisons. Four other browser tests passed on that first run.
 
 The browser verifies exact Rust canonical JSON bytes, not JavaScript reserialized
 floats. Its uploaded export's declared head establishes internal integrity, not

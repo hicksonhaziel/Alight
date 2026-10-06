@@ -262,6 +262,8 @@ from one origin, with CSP and no external font/script dependencies. Build only
 the web image with `docker compose -f deploy/compose.yaml build caddy` when
 needed; this command does not resume collection. Starting the stack or resuming
 the collector remains a separate live operation under the standing pause.
+Rebuild the collector image as well when deploying backend changes; the new web
+contracts require the matching daemon. Building images does not start services.
 
 Verification:
 
