@@ -1,4 +1,4 @@
-# Phase 5 detection and diagnostics registration
+# Regime detection and diagnostics methodology
 
 Registered before running the new detector acceptance suite on 6 October 2026.
 

@@ -1,4 +1,4 @@
-# Local Phase 1 operations
+# Local operations
 
 Run these commands from the Alight directory. The container reads the ignored
 `.env` as a read-only file; credentials are excluded from the image and build
@@ -45,7 +45,7 @@ retains only NET_BIND_SERVICE, required by its official binary's file capability
 The collector has a bounded 256 MiB temporary workspace for SQLite index creation.
 Full epoch schedule responses have a separate bounded 45-second deadline.
 
-## Offline Phase 3 API
+## Offline API
 
 The saved/stopped collector image predates these routes. Rebuild from current
 sources before an owner-authorized live resume; this development did not restart
@@ -142,7 +142,7 @@ The earlier hostname failure is historical. Funded tipped submission and landing
 remain unverified; a connection failure is retained as uncertainty. Do not report
 a successful live route until a real canary lands and observers confirm it.
 
-## Phase 3 developer clients and CLI
+## Developer clients and CLI
 
 Build both binaries and the Rust canary example with `cargo build -p alight -p
 alightd -p alight-client --bins --examples --locked`. The TypeScript client needs
@@ -189,14 +189,15 @@ queued/inconclusive report; use `prove --id` to read progress without resubmitti
 
 Export verifies the source's whole ledger before paging to that verified head,
 then selects forecast issue dates in UTC. It is bounded to 10,000 rows / 64 MiB,
-creates a new output file and refuses overwrite. This Phase 3 export contains
-forecasts; the Phase 6 dataset exporter will add canaries, regimes and Parquet/CSV.
+creates a new output file and refuses overwrite. The current export contains
+forecasts; a full dataset exporter with canaries, regimes and Parquet/CSV is not
+yet implemented.
 A date-filtered subset cannot independently verify the complete chain or models.
 Run `python3 scripts/test_phase3_developer.py` after building: it starts/stops only
 temporary Sim daemons and checks both examples, CLI lifecycle, all four exit codes,
 export/overwrite protection, and `run` without provider credentials.
 
-## Phase 3 alerts
+## Alerts
 
 Observe/live daemons evaluate stored evidence every ten seconds and persist local
 alerts. Outbound delivery is explicitly configured with the private
@@ -222,7 +223,7 @@ delivery is not guaranteed. New regime events use the same dispatcher. Discord d
 mentions; Slack uses plain-text blocks. The induced test delivers all five rules
 to a temporary loopback receiver and checks restart suppression.
 
-## Phase 4 workbench
+## Workbench
 
 Use Node 22.22 or later. Install the pinned web dependencies with
 `npm --prefix web ci --ignore-scripts --no-audit --no-fund`. The workbench imports
@@ -286,10 +287,10 @@ actual API values, a frozen forecast, 40 held-out members, restart recovery,
 browser SHA-256 verification/tamper rejection, 15 Axe audits (14 screen/theme
 audits and the diagnostics disclosure), mobile
 keyboard navigation, reduced motion, offline/source mismatch, and probability-only
-market fallback. See `docs/phase-4-report.md` for measured scope and remaining
-live/dependency acceptance.
+market fallback. These are offline checks; funded live landing and observer
+agreement remain unverified.
 
-## Phase 5 diagnostics and finite history jobs
+## Diagnostics and finite history jobs
 
 Collection remains paused. These commands implement offline acceptance without
 loading signing keys or making provider requests:
@@ -324,10 +325,10 @@ budget. It does not sign, send, register webhooks or leave streams running. Its
 200 ms scheduling assumption selects candidate slots only; timestamp evidence
 determines actual coverage. Null/error responses and candidate conflicts remain
 missing. Sparse averages cannot resolve every short event. Use a separate Replay
-database. No such network backfill has been executed for Phase 5 offline acceptance.
+database. No such network backfill has been executed during offline verification.
 
 Regime actions reset old effective sample mass and enable uniform exploration
 for 30 minutes. The daily/burst governor and wallet reserve remain unchanged.
 An empty new regime must collect enough fresh support to quote again. Named
 upgrades require independent technical evidence; epoch dates alone never establish
-Alpenglow or a slot-time step. See `docs/phase5-methodology.md` for thresholds.
+Alpenglow or a slot-time step. See `docs/regime-methodology.md` for thresholds.
