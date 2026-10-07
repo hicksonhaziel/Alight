@@ -364,7 +364,21 @@ probability across both arms, computed before updating counts. A SplitMix64 seed
 and draw, the chosen arm, exact assignment, and policy configuration key are
 persisted by migration `0002_send_attempts.sql`. Restart reconstructs the stream
 from the next committed draw. Example assignment:
-`{"policy_id":"stratified-v0-splitmix64","seed":"1","draw":"0","assignment_prob":0.012345679012345678,"uniform_arm":true,"config":{"route":"rpc","tip_lamports":"0","cu_price_micro_lamports":"0","cu_limit":25000,"fee_bucket":"zero","tip_tier":"none","size_class":"small"}}`.
+`{"policy_id":"stratified-v0-splitmix64:full","seed":"1","draw":"0","assignment_prob":0.012345679012345678,"uniform_arm":true,"config":{"route":"rpc","tip_lamports":"0","cu_price_micro_lamports":"0","cu_limit":25000,"fee_bucket":"zero","tip_tier":"none","size_class":"small"}}`.
+
+`ALIGHT_GRID_PROFILE=full` is the default. `lean` restricts exploration to Small
+(25,000 CU), Zero/LocalP90 fees, and X1/X5 tips for both Beam routes: eight tipped
+cells plus two untipped RPC cells. Unknown values reject engine configuration.
+Both stratified and adaptive assignments append `:full` or `:lean` to `policy_id`;
+for example `thompson-cost-v1-splitmix64:lean`. Durable policy keys include this
+profile, keeping draw sequences separate across profile switches and restarts.
+The adaptive uniform fraction still has a 30% minimum, giving every lean cell a
+marginal propensity of at least 0.03. Regime-driven 100% uniform exploration stays
+within the selected profile. Held-out Prove keeps its exact frozen configuration
+and records the active profile as `prove-held-out-v1:full` or `:lean`; it does not
+resample that configuration from the exploration grid. Offline simulator defaults
+remain full. Existing records retain their original IDs. No schema migration is
+needed because the existing `policy_id` string carries the profile.
 
 Balance, observer freshness, pending limits, recent local fees, and the cluster's
 fee-for-message quote precede reservation. The governor reserves the entire

@@ -3,12 +3,48 @@ use alight_types::{CanaryConfig, FeeBucket, Route, SizeClass, TipTier};
 use serde::Serialize;
 use thiserror::Error;
 
-pub const POLICY_ID: &str = "stratified-v0-splitmix64";
+pub const POLICY_ID: &str = "stratified-v0-splitmix64:full";
 pub const MIN_TIP_LAMPORTS: u64 = 100_000;
-pub const ADAPTIVE_POLICY_ID: &str = "thompson-cost-v1-splitmix64";
+pub const ADAPTIVE_POLICY_ID: &str = "thompson-cost-v1-splitmix64:full";
 #[derive(Debug, Error)]
 #[error("invalid assignment policy configuration")]
 pub struct PolicyError;
+
+/// Assignment support: full has 81 cells; lean has ten Small cells, with no RPC tip.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum GridProfile {
+    #[default]
+    Full,
+    Lean,
+}
+impl GridProfile {
+    /// Parses ALIGHT_GRID_PROFILE. Missing configuration keeps full; unknown values fail closed.
+    pub fn from_config_value(value: Option<&str>) -> Result<Self, PolicyError> {
+        match value.unwrap_or("full") {
+            "full" => Ok(Self::Full),
+            "lean" => Ok(Self::Lean),
+            _ => Err(PolicyError),
+        }
+    }
+    fn stratified_policy_id(self) -> &'static str {
+        match self {
+            Self::Full => POLICY_ID,
+            Self::Lean => "stratified-v0-splitmix64:lean",
+        }
+    }
+    pub fn adaptive_policy_id(self) -> &'static str {
+        match self {
+            Self::Full => ADAPTIVE_POLICY_ID,
+            Self::Lean => "thompson-cost-v1-splitmix64:lean",
+        }
+    }
+    pub fn held_out_policy_id(self) -> &'static str {
+        match self {
+            Self::Full => "prove-held-out-v1:full",
+            Self::Lean => "prove-held-out-v1:lean",
+        }
+    }
+}
 pub fn cu_limit(size: SizeClass) -> u32 {
     match size {
         SizeClass::Small => 25_000,
@@ -29,6 +65,7 @@ pub struct Assignment {
 }
 #[derive(Clone)]
 pub struct Policy {
+    profile: GridProfile,
     cells: Vec<CanaryConfig>,
     counts: Vec<u64>,
     uniform_fraction: f64,
@@ -39,6 +76,14 @@ pub struct Policy {
 impl Policy {
     /// 81 cells: two tipped routes × four tips × three fees × three sizes, plus nine RPC cells.
     pub fn new(seed: u64, uniform_fraction: f64) -> Result<Self, PolicyError> {
+        Self::with_profile(seed, uniform_fraction, GridProfile::Full)
+    }
+    /// Selects grid support; fee prices are supplied later in micro-lamports per CU.
+    pub fn with_profile(
+        seed: u64,
+        uniform_fraction: f64,
+        profile: GridProfile,
+    ) -> Result<Self, PolicyError> {
         if !uniform_fraction.is_finite() || !(0.01..=1.0).contains(&uniform_fraction) {
             return Err(PolicyError);
         }
@@ -46,6 +91,8 @@ impl Policy {
         for route in [Route::BeamQuic, Route::BeamHttp, Route::Rpc] {
             let tips: &[(TipTier, u64)] = if route == Route::Rpc {
                 &[(TipTier::None, 0)]
+            } else if profile == GridProfile::Lean {
+                &[(TipTier::X1, 1), (TipTier::X5, 5)]
             } else {
                 &[
                     (TipTier::X1, 1),
@@ -55,8 +102,18 @@ impl Policy {
                 ]
             };
             for &(tip_tier, multiplier) in tips {
-                for fee_bucket in [FeeBucket::Zero, FeeBucket::LocalMedian, FeeBucket::LocalP90] {
-                    for size_class in [SizeClass::Small, SizeClass::Medium, SizeClass::Large] {
+                let fees: &[FeeBucket] = match profile {
+                    GridProfile::Full => {
+                        &[FeeBucket::Zero, FeeBucket::LocalMedian, FeeBucket::LocalP90]
+                    }
+                    GridProfile::Lean => &[FeeBucket::Zero, FeeBucket::LocalP90],
+                };
+                let sizes: &[SizeClass] = match profile {
+                    GridProfile::Full => &[SizeClass::Small, SizeClass::Medium, SizeClass::Large],
+                    GridProfile::Lean => &[SizeClass::Small],
+                };
+                for &fee_bucket in fees {
+                    for &size_class in sizes {
                         cells.push(CanaryConfig {
                             route,
                             tip_tier,
@@ -71,6 +128,7 @@ impl Policy {
             }
         }
         Ok(Self {
+            profile,
             counts: vec![0; cells.len()],
             cells,
             uniform_fraction,
@@ -137,7 +195,7 @@ impl Policy {
         };
         let result = Assignment {
             config,
-            policy_id: POLICY_ID,
+            policy_id: self.profile.stratified_policy_id(),
             seed: self.seed,
             draw: self.draw,
             assignment_prob: probabilities[index],
@@ -163,6 +221,7 @@ impl Policy {
 /// The Monte Carlo proposal is frozen before choosing the arm; its conditional propensity is exact.
 #[derive(Clone)]
 pub struct AdaptivePolicy {
+    profile: GridProfile,
     cells: Vec<CanaryConfig>,
     seed: u64,
     draw: u64,
@@ -172,11 +231,20 @@ pub struct AdaptivePolicy {
 impl AdaptivePolicy {
     const PROPOSALS: usize = 32;
     pub fn new(seed: u64, uniform_fraction: f64) -> Result<Self, PolicyError> {
+        Self::with_profile(seed, uniform_fraction, GridProfile::Full)
+    }
+    /// Cost-weighted assignments retain at least 30% uniform exploration over the selected grid.
+    pub fn with_profile(
+        seed: u64,
+        uniform_fraction: f64,
+        profile: GridProfile,
+    ) -> Result<Self, PolicyError> {
         if !uniform_fraction.is_finite() || !(0.30..=1.0).contains(&uniform_fraction) {
             return Err(PolicyError);
         }
         Ok(Self {
-            cells: Policy::new(seed, uniform_fraction)?.cells,
+            profile,
+            cells: Policy::with_profile(seed, uniform_fraction, profile)?.cells,
             seed,
             draw: 0,
             state: seed,
@@ -185,6 +253,14 @@ impl AdaptivePolicy {
     }
     pub fn cells(&self) -> &[CanaryConfig] {
         &self.cells
+    }
+    fn probabilities(&self, wins: &[u32]) -> Vec<f64> {
+        wins.iter()
+            .map(|w| {
+                self.uniform_fraction / self.cells.len() as f64
+                    + (1.0 - self.uniform_fraction) * f64::from(*w) / Self::PROPOSALS as f64
+            })
+            .collect()
     }
     fn random(&mut self) -> f64 {
         self.state = self.state.wrapping_add(0x9e3779b97f4a7c15);
@@ -244,13 +320,7 @@ impl AdaptivePolicy {
             }
             wins[best] += 1;
         }
-        let probabilities: Vec<_> = wins
-            .iter()
-            .map(|w| {
-                self.uniform_fraction / cells.len() as f64
-                    + (1.0 - self.uniform_fraction) * f64::from(*w) / Self::PROPOSALS as f64
-            })
-            .collect();
+        let probabilities = self.probabilities(&wins);
         let uniform_arm = self.random() < self.uniform_fraction;
         let random = self.random();
         let index = if uniform_arm {
@@ -266,7 +336,7 @@ impl AdaptivePolicy {
         };
         let assignment = Assignment {
             config: cells[index].clone(),
-            policy_id: ADAPTIVE_POLICY_ID,
+            policy_id: self.profile.adaptive_policy_id(),
             seed: self.seed,
             draw: self.draw,
             assignment_prob: probabilities[index],
@@ -280,24 +350,158 @@ impl AdaptivePolicy {
 mod tests {
     use super::*;
     #[test]
-    fn seeded_propensities_stay_normalized_uniform_and_reproducible() {
-        for seed in [0, 1, 42, u64::MAX] {
-            let mut policy = Policy::new(seed, 0.30).expect("policy");
-            let mut uniform = 0;
-            for _ in 0..10_000 {
-                let probabilities = policy.probabilities();
-                assert!((probabilities.iter().sum::<f64>() - 1.0).abs() < 1e-12);
-                assert!(probabilities.iter().all(|p| *p >= 0.30 / 81.0));
-                let a = policy.assign(100, 900);
-                uniform += u64::from(a.uniform_arm);
+    fn profile_defaults_to_full_and_rejects_unknown_configuration() {
+        assert_eq!(
+            GridProfile::from_config_value(None).expect("default"),
+            GridProfile::Full
+        );
+        assert_eq!(
+            GridProfile::from_config_value(Some("full")).expect("full"),
+            GridProfile::Full
+        );
+        assert_eq!(
+            GridProfile::from_config_value(Some("lean")).expect("lean"),
+            GridProfile::Lean
+        );
+        for invalid in ["", "Lean", "small", "lean,full"] {
+            assert!(GridProfile::from_config_value(Some(invalid)).is_err());
+        }
+    }
+    #[test]
+    fn lean_has_exactly_ten_small_cells_and_full_remains_the_default() {
+        assert_eq!(Policy::new(42, 0.30).expect("default").cells().len(), 81);
+        assert_eq!(
+            AdaptivePolicy::new(42, 0.30)
+                .expect("default adaptive")
+                .cells()
+                .len(),
+            81
+        );
+        let mut policy = Policy::with_profile(42, 0.30, GridProfile::Lean).expect("lean");
+        assert_eq!(policy.cells().len(), 10);
+        for (i, c) in policy.cells().iter().enumerate() {
+            assert_eq!(c.size_class, SizeClass::Small);
+            assert_eq!(c.cu_limit, 25_000);
+            assert!(matches!(
+                c.fee_bucket,
+                FeeBucket::Zero | FeeBucket::LocalP90
+            ));
+            assert!(!policy.cells()[..i].contains(c), "duplicate cell");
+            if c.route == Route::Rpc {
+                assert_eq!(c.tip_tier, TipTier::None);
+                assert_eq!(c.tip_lamports, 0);
+            } else {
+                assert!(matches!(c.tip_tier, TipTier::X1 | TipTier::X5));
+                assert_eq!(
+                    c.tip_lamports,
+                    if c.tip_tier == TipTier::X1 {
+                        100_000
+                    } else {
+                        500_000
+                    }
+                );
             }
-            assert!((uniform as f64 / 10_000.0 - 0.30).abs() < 0.025);
-            let mut resumed = Policy::new(seed, 0.30).expect("resume");
-            resumed.resume(10_000).expect("draws");
+        }
+        for (route, count) in [(Route::BeamQuic, 4), (Route::BeamHttp, 4), (Route::Rpc, 2)] {
             assert_eq!(
-                serde_json::to_value(policy.assign(100, 900)).expect("encode"),
-                serde_json::to_value(resumed.assign(100, 900)).expect("encode")
+                policy.cells().iter().filter(|c| c.route == route).count(),
+                count
             );
+        }
+        assert_eq!(
+            policy.assign(100, 900).policy_id,
+            "stratified-v0-splitmix64:lean"
+        );
+    }
+    #[test]
+    fn seeded_propensities_stay_normalized_uniform_and_reproducible() {
+        for profile in [GridProfile::Full, GridProfile::Lean] {
+            for seed in [0, 1, 42, u64::MAX] {
+                let mut policy = Policy::with_profile(seed, 0.30, profile).expect("policy");
+                let mut uniform = 0;
+                for _ in 0..10_000 {
+                    let probabilities = policy.probabilities();
+                    assert!((probabilities.iter().sum::<f64>() - 1.0).abs() < 1e-12);
+                    assert!(
+                        probabilities
+                            .iter()
+                            .all(|p| *p >= 0.30 / policy.cells().len() as f64)
+                    );
+                    let a = policy.assign(100, 900);
+                    assert_eq!(a.policy_id, profile.stratified_policy_id());
+                    uniform += u64::from(a.uniform_arm);
+                }
+                assert!((uniform as f64 / 10_000.0 - 0.30).abs() < 0.025);
+                let mut resumed = Policy::with_profile(seed, 0.30, profile).expect("resume");
+                resumed.resume(10_000).expect("draws");
+                assert_eq!(
+                    serde_json::to_value(policy.assign(100, 900)).expect("encode"),
+                    serde_json::to_value(resumed.assign(100, 900)).expect("encode")
+                );
+            }
+        }
+    }
+    #[test]
+    fn adaptive_propensities_sum_to_one_even_with_concentrated_proposals() {
+        for profile in [GridProfile::Full, GridProfile::Lean] {
+            for fraction in [0.30, 0.75, 1.0] {
+                let policy = AdaptivePolicy::with_profile(42, fraction, profile).expect("policy");
+                for offset in [0, policy.cells().len() - 1] {
+                    let mut wins = vec![0; policy.cells().len()];
+                    wins[offset] = AdaptivePolicy::PROPOSALS as u32;
+                    let probabilities = policy.probabilities(&wins);
+                    assert!((probabilities.iter().sum::<f64>() - 1.0).abs() < 1e-12);
+                    assert!(
+                        probabilities
+                            .iter()
+                            .all(|p| *p >= fraction / policy.cells().len() as f64)
+                    );
+                }
+            }
+        }
+    }
+    #[test]
+    fn adaptive_uniform_arm_and_restart_stream_survive_both_profiles() {
+        for profile in [GridProfile::Full, GridProfile::Lean] {
+            assert!(AdaptivePolicy::with_profile(42, 0.29, profile).is_err());
+            for fraction in [0.30, 1.0] {
+                let mut policy =
+                    AdaptivePolicy::with_profile(42, fraction, profile).expect("policy");
+                let mut posterior = vec![(1.0, 100.0); policy.cells().len()];
+                posterior[0] = (100.0, 1.0);
+                let mut uniform = 0;
+                let mut seen = Vec::new();
+                for _ in 0..512 {
+                    let a = policy.assign(100, 900, &posterior).expect("assignment");
+                    assert_eq!(a.policy_id, profile.adaptive_policy_id());
+                    assert!(a.assignment_prob >= fraction / policy.cells().len() as f64);
+                    uniform += u32::from(a.uniform_arm);
+                    if fraction == 1.0 {
+                        assert!(a.uniform_arm);
+                        assert!(
+                            (a.assignment_prob - 1.0 / policy.cells().len() as f64).abs() < 1e-12
+                        );
+                        if !seen.contains(&a.config) {
+                            seen.push(a.config);
+                        }
+                    }
+                }
+                assert!((f64::from(uniform) / 512.0 - fraction).abs() < 0.07);
+                if fraction == 1.0 && profile == GridProfile::Lean {
+                    assert_eq!(seen.len(), 10);
+                }
+                let mut resumed =
+                    AdaptivePolicy::with_profile(42, fraction, profile).expect("resume");
+                resumed.resume(512).expect("draw");
+                assert_eq!(
+                    serde_json::to_value(policy.assign(100, 900, &posterior).expect("next"))
+                        .expect("encode"),
+                    serde_json::to_value(
+                        resumed.assign(100, 900, &posterior).expect("resumed next")
+                    )
+                    .expect("encode")
+                );
+            }
         }
     }
 }

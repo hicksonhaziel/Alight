@@ -2,7 +2,7 @@
 use crate::{
     builder::{BuildError, Wallet},
     governor::{BudgetError, Governor},
-    policy::{AdaptivePolicy, Assignment, PolicyError},
+    policy::{AdaptivePolicy, Assignment, GridProfile, PolicyError},
     resolver,
     routes::{Routes, SendResult},
 };
@@ -40,6 +40,7 @@ pub struct Engine {
     policy_key: String,
     seed: u64,
     uniform_fraction: f64,
+    grid_profile: GridProfile,
     routes: Routes,
     http: HttpProbe,
     leaders: Option<LeaderSchedule>,
@@ -51,6 +52,7 @@ pub struct Engine {
 impl Engine {
     /// Live mode alone loads a signing identity; observe/replay never construct this engine.
     pub async fn new(config: &Config, store: Store) -> Result<Self, EngineError> {
+        let grid_profile = GridProfile::from_config_value(config.get("ALIGHT_GRID_PROFILE"))?;
         let wallet = Wallet::from_base58(
             config
                 .get("ALIGHT_CANARY_KEYPAIR")
@@ -69,10 +71,10 @@ impl Engine {
             .unwrap_or("0.30")
             .parse()
             .map_err(|_| EngineError::Configuration)?;
-        let mut policy = AdaptivePolicy::new(seed, fraction)?;
+        let mut policy = AdaptivePolicy::with_profile(seed, fraction, grid_profile)?;
         let policy_key = format!(
             "{}:{seed}:{fraction:.17}",
-            crate::policy::ADAPTIVE_POLICY_ID
+            grid_profile.adaptive_policy_id()
         );
         policy.resume(store.next_policy_draw(&policy_key).await?)?;
         let governor = Governor::new(
@@ -104,6 +106,7 @@ impl Engine {
             policy_key,
             seed,
             uniform_fraction: fraction,
+            grid_profile,
             routes: Routes::new().map_err(|_| EngineError::Configuration)?,
             http: HttpProbe::new()?,
             leaders: None,
@@ -175,11 +178,11 @@ impl Engine {
             .map_or(self.uniform_fraction, |r| r.exploration_fraction);
         let key = format!(
             "{}:{}:{fraction:.17}:{regime_id}",
-            crate::policy::ADAPTIVE_POLICY_ID,
+            self.grid_profile.adaptive_policy_id(),
             self.seed
         );
         if key != self.policy_key {
-            let mut policy = AdaptivePolicy::new(self.seed, fraction)?;
+            let mut policy = AdaptivePolicy::with_profile(self.seed, fraction, self.grid_profile)?;
             policy.resume(self.store.next_policy_draw(&key).await?)?;
             self.policy = policy;
             self.policy_key = key;
@@ -275,7 +278,7 @@ impl Engine {
         let mut assignment = if let Some(lock) = locked {
             Assignment {
                 config: lock.config.clone(),
-                policy_id: "prove-held-out-v1",
+                policy_id: self.grid_profile.held_out_policy_id(),
                 seed: 0,
                 draw: self.store.next_policy_draw(&policy_key).await?,
                 assignment_prob: 1.0,

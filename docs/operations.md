@@ -121,6 +121,13 @@ reserve of at least 1,000,000 lamports, and a pending limit of 1–32 (8 by defa
 The default governor caps are 0.20 SOL/day and 0.05 SOL per rolling minute;
 reservations are conservative worst-case fees plus tips, not reported actual
 spend. Funding checks, cap checks, and database persistence precede any send.
+`ALIGHT_GRID_PROFILE` defaults to `full` (81 exploration cells). Set it to `lean`
+for ten Small-only cells: Beam QUIC/HTTP at X1/X5 tips and Zero/LocalP90 fees, plus
+untipped RPC at those two fees. The selected profile is recorded in each new
+canary's policy ID and survives temporary uniform exploration after a regime
+change. Budget caps, wallet reserve and the minimum 30% adaptive uniform arm
+remain in force. This configuration takes effect on the next explicitly
+authorized engine start; changing it does not resume collection.
 `ALIGHT_RUNTIME_MODE=observe` starts Compose without signing access; restart with
 `up -d` after changing mode. `ALIGHT_MODE` remains the host daemon's default.
 

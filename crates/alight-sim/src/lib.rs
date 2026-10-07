@@ -244,7 +244,9 @@ pub fn simulate_locked(
         id: format!("{}-{ordinal}", lock.id),
         source: Source::Sim,
         config: lock.config.clone(),
-        policy_id: "prove-held-out-v1".into(),
+        policy_id: alight_canary::policy::GridProfile::Full
+            .held_out_policy_id()
+            .into(),
         assignment_prob: 1.0,
         uniform_arm: false,
         regime_id: lock.regime_id.clone(),
@@ -328,7 +330,7 @@ fn generate_inner(
             };
             Assignment {
                 config,
-                policy_id: "focused-uniform-sim",
+                policy_id: "focused-uniform-sim:full",
                 seed: parameters.seed,
                 draw: u64::from(draw),
                 assignment_prob: 1.0 / focused_cells.len() as f64,
