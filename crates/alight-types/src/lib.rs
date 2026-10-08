@@ -1,19 +1,25 @@
 //! Version 1 wire contracts shared by the collector, storage, and canary engine.
 mod alerts;
+mod anchors;
 mod api;
 mod contracts;
+mod dataset;
 mod economics;
 mod phase2;
 mod phase3;
 mod phase5;
+mod receipts;
 mod schema;
 pub use alerts::*;
+pub use anchors::*;
 pub use api::*;
 pub use contracts::*;
+pub use dataset::*;
 pub use economics::*;
 pub use phase2::*;
 pub use phase3::*;
 pub use phase5::*;
+pub use receipts::*;
 pub use schema::DecimalU64;
 use serde::{Deserialize, Serialize};
 

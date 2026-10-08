@@ -258,3 +258,21 @@ Verification passed: all 13 canary tests (including the 81 transaction-wire
 configurations), formatting, Clippy and the repository credential check. One
 read-only `getGenesisHash` request returned Solana mainnet's expected hash in an
 80-byte response; this confirms RPC reachability, not tipped transaction landing.
+
+## 8 October 2026 — bounded receipt history and unsigned commitments
+
+The public Solami product/API material inspected for Phase 6 did not establish
+a captured Data API wallet-history payload. Existing Blur fixtures are not
+wallet history. Receipts therefore accept bounded Alight Sim/Replay envelopes
+and captured Yellowstone/Mirage transactions. Unknown route/chain time and
+missing historical frontiers remain descriptive. The provider adapter stays
+pending a verified documented/captured response. No history endpoint was
+invented. Public references inspected: [Solami](https://solami.dev/) and
+[API index](https://solami.dev/docs/api/get_index).
+
+The owner keeps collection paused and prohibits all transactions. Ledger-head
+commitments are prepared and verified offline as unsigned Memo instructions
+inside alight-canary. There is no anchor broadcast endpoint. Periodic governed
+mainnet sends and explorer verification remain pending; no mainnet anchor is
+claimed. Exported owned datasets use CC BY 4.0 by reference; private wallet
+captures are excluded from publication.

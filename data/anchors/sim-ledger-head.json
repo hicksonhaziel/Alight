@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source": "sim",
+  "sequence": "2",
+  "head_hash": "sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+  "memo": "alight.ledger.v1|sim|2|sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+  "status": "PREPARED_UNSIGNED",
+  "signing_enabled": false,
+  "signature": null,
+  "explorer_url": null
+}

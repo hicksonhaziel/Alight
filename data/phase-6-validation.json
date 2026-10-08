@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "phase": 6,
+  "status": "OFFLINE_PASS_LIVE_PENDING",
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-08T11:03:31.596562+00:00",
+  "base_revision": "64d5b3acc8d9ac70b013c6c370dbf4b82d2c6365",
+  "runtime": {
+    "collection_resumed": false,
+    "owned_live_transactions_sent": 0,
+    "mainnet_memo_transactions_sent": 0,
+    "provider_api_requests": 0,
+    "original_live_database_modified": false,
+    "outbound_alerts_sent": 0,
+    "preview_source": "sim",
+    "preview_url": "http://127.0.0.1:8181/#datasets"
+  },
+  "scope": "First offline Phase 6 batch; this is not full Phase 6 or mainnet acceptance.",
+  "tasks": {
+    "6.1": {
+      "offline": "PASS",
+      "provider_history_acceptance": "PENDING",
+      "evidence": "Receipt engine, API/CLI/SDK/UI; real recorded wallet transaction gives descriptive Replay report with explicit partial coverage. No verified Data API payload or supported real-wallet frontier."
+    },
+    "6.2": {
+      "offline": "PASS",
+      "evidence": "Read-only UTC-day/source export, CSV and Zstd Parquet, original payloads, schema, checksums, full ledger/frozen evidence witness; corruption/secret/unknown/boundary regressions."
+    },
+    "6.3": {
+      "offline": "PASS",
+      "public_host_acceptance": "PENDING",
+      "evidence": "Sim dataset and methodology download exact bytes through localhost Caddy; data license CC BY 4.0. Public internet deployment not performed."
+    },
+    "6.4": {
+      "offline": "PASS",
+      "mainnet_acceptance": "PENDING_NO_SEND_AUTHORIZATION",
+      "evidence": "Unsigned Memo instruction and source-scoped historical ledger-prefix verification; CLI/API/UI/repo draft. No periodic sender, signature, explorer record or on-chain RPC proof."
+    },
+    "6.5": {
+      "offline": "PASS",
+      "second_person_acceptance": "PENDING",
+      "evidence": "prebuilt pinned binaries in fresh directory, not an independent fresh-machine developer; README quick start, per-product usage, conditional cost arithmetic and actual limitations."
+    },
+    "6.6": {
+      "offline": "PASS",
+      "evidence": "Limitations reviewed against plan claims: region/vantage, workload transfer, survivorship, samples/age, null verdicts, economics and integrity versus truth."
+    },
+    "6.7": {
+      "offline": "PASS",
+      "full_recording_acceptance": "PENDING",
+      "evidence": "160-second shot list and 5.4-second browser-generated Sim fallback with visible source label; no full narrated or Live recording."
+    },
+    "6.8": {
+      "offline": "PASS",
+      "fresh_read_key_observe_acceptance": "PENDING_COLLECTION_PAUSED",
+      "evidence": "Sim/Replay doctor and recorded observer replay without ENV/keys/network. Observe presence doctor excludes both signing identities; real fresh read-key stream not started."
+    }
+  },
+  "wallet_replay": {
+    "status": "PASS",
+    "source": "replay",
+    "origin": "existing sanitized real Mirage/Yellowstone recording",
+    "population": "partial_captured_fee_payer_transactions",
+    "transactions": 1,
+    "fees_lamports": "5000",
+    "known_paid_tips_lamports": "0",
+    "unknown_tip_payments": 1,
+    "compared_transactions": 0,
+    "complete_wallet_history": false,
+    "provider_requests": 0,
+    "transactions_sent": 0
+  },
+  "dataset": {
+    "source": "sim",
+    "seed": "61",
+    "day": "2026-10-05",
+    "formats": [
+      "csv",
+      "parquet"
+    ],
+    "canaries": 243,
+    "curve_snapshots": 438,
+    "regime_events": 0,
+    "forecasts": 2,
+    "grades": 2,
+    "ledger_sequence": "2",
+    "curve_evidence": "INSUFFICIENT",
+    "path": "web/public/datasets/sim-2026-10-05",
+    "private_wallet_captures_published": false
+  },
+  "anchors": {
+    "status": "PREPARED_UNSIGNED",
+    "source": "sim",
+    "sequence": "2",
+    "signing_enabled": false,
+    "signature": null,
+    "verification": "Retained source chain and unsigned instruction bytes only"
+  },
+  "checks": {
+    "format": "PASS",
+    "all_target_clippy": "PASS",
+    "focused_clippy": "PASS",
+    "rust_workspace_checkpoint": "PASS",
+    "rust_checkpoint_scope": "Full workspace with Beam; subsequent receipt guards and judge regressions checked in affected packages.",
+    "receipt_regressions": {
+      "passed": 6,
+      "failed": 0
+    },
+    "judge_regressions": {
+      "passed": 2,
+      "failed": 0
+    },
+    "dataset_regressions": {
+      "passed": 4,
+      "failed": 0
+    },
+    "sdk_lint": "PASS",
+    "sdk_generator": "PASS",
+    "sdk_tests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "web_lint": "PASS",
+    "web_build": "PASS",
+    "web_unit_tests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 8,
+      "failed": 0,
+      "scope": "Seven existing workbench tests plus the Phase 6 test, across two system-Chrome runs"
+    },
+    "accessibility": "Existing Axe audits include Datasets in both themes; zero violations.",
+    "openapi_snapshot": "PASS",
+    "phase6_contracts": "PASS",
+    "developer_regression": "PASS",
+    "repository_scan": "PASS",
+    "dataset_verification": "PASS",
+    "static_proxy": "PASS",
+    "fresh_directory": {
+      "status": "PASS",
+      "scope": "prebuilt pinned binaries in fresh directory, not an independent fresh-machine developer",
+      "provider_requests": 0,
+      "transactions_sent": 0,
+      "commands": [
+        "doctor sim",
+        "doctor replay",
+        "sim seed61",
+        "ledger verify",
+        "replay-model",
+        "observer replay"
+      ]
+    },
+    "ci": "PENDING_AT_PUBLICATION"
+  },
+  "production_proxy": {
+    "source": "sim",
+    "canaries.parquet": "PASS",
+    "canaries.csv": "PASS",
+    "schema.json": "PASS",
+    "SHA256SUMS": "PASS",
+    "ledger-witness.json": "PASS",
+    "status": "PASS",
+    "methodology_files": 4,
+    "unknown_evidence_404": true,
+    "static_post_405": true,
+    "packaging": "Latest Vite build and Caddy config mounted read-only into cached Caddy image",
+    "preview_url": "http://127.0.0.1:8181/#datasets",
+    "provider_requests": 0,
+    "transactions_sent": 0
+  },
+  "demo": {
+    "script_seconds": 160,
+    "fallback_seconds": 5.4,
+    "fallback_source": "sim",
+    "full_narrated_recording": "PENDING"
+  },
+  "limits": [
+    "Full wallet history and an authentic real-wallet historical frontier remain unverified.",
+    "Mainnet anchors and governed periodic sending are not implemented or exercised; no sends are authorized.",
+    "Downloads are hosted only on localhost; no public deployment was performed.",
+    "The fresh-directory check used prebuilt pinned binaries and was not an independent second-person or fresh-machine run.",
+    "A judge-owned read-key Observe stream was not started while collection remains paused.",
+    "The narrated 160-second demo and funded Live acceptance remain pending."
+  ],
+  "local_artifact_sha256": {
+    "clean-run.json": "2504d55bee3cb2354af1fedce3490913d8449034bd68eff506e5726797578dfd",
+    "production-proxy.json": "ab9ee77c73696e0602fc911511834393e804b1d39cea2a872ec0148e50511526",
+    "contracts.json": "e6f239c4e12ee108e06da8c2b9bea4d4669313a0a5a6a9e7b7556a51cc688126",
+    "real-wallet/summary.json": "4a0eed98420bae6509adf12dc33e168b4edd519d2d0cfc2743621dfa62a3e323",
+    "browser/receipt-sim.png": "10c02ca91b26f8db3e365602d5205c32bbb274c97cb480b73058f71ff0995751",
+    "browser/datasets-sim.png": "cf91c0579419911841daefee968186247e1ad1abe062aaf5c63cd1be4b259907",
+    "browser/sim-fallback.webm": "9fe250a2f9d9a044ea22fdeac2b1668baef6db82aeab2e8f3074b7de18034290"
+  },
+  "code_sha256": {
+    ".dockerignore": "529f0ebd945e7a5a74bd4fa220f6e892063c949d3e501df79e544b8805dd3520",
+    ".github/workflows/ci.yml": "efc8498f0ee994ec494605e20e870997b55fa113ae5ff54d6b29f66c914b7143",
+    ".gitignore": "15f575b7f1c25aa831b8e2bc625af0474c16b1e0e95015b942669def69cec114",
+    "Cargo.lock": "810fbf34cb98262391a787a6871b63a9dedd26c864151048be280589951fdfc9",
+    "README.md": "0214f20b2d19c89ceab7ea63cd99be1642b5458241d391d2b91301a8f4572fa5",
+    "bin/alight/Cargo.toml": "61b8f76a7d31dba29456c17231d5a200c967f58d47af92117c14fbea144a0021",
+    "bin/alight/src/anchor.rs": "69d77bdc3c89f6d2b8ff640fd0d0e8bb15d69b565c2c46bc26fa2bf33a022c17",
+    "bin/alight/src/dataset.rs": "053056e2f0f88413e06f16c19b7811b48c132ebe3caff8c85f2c41850c2c4944",
+    "bin/alight/src/judge.rs": "e3a67c1339e41b554d6080f317067068725a2c32a92d83b4bc55b5912e739e77",
+    "bin/alight/src/main.rs": "20f92b7550defebfaca4336fc7900a2f9ef476d9e6bff160a2d621476575c9de",
+    "bin/alight/src/receipts.rs": "4fc4f8306ef22888e7dbb74136d11dbc6fad1c7612421f1890a64a10703975af",
+    "bin/alight/tests/judge.rs": "72f65cd82a8a841389f25495198dce5e894d596526552ed26854c187b665263f",
+    "crates/alight-api/Cargo.toml": "30030508677f4849dd8b1a418ed296d1c54fc9dccdea4225b6896b8884370389",
+    "crates/alight-api/src/lib.rs": "e85406bbcafae8534de94b2d61c22117a37d411f74120b9fb0d5d8741747f97d",
+    "crates/alight-api/src/openapi.rs": "a2fb66436124a3c80150e75b7158ff89f1a94adc9224dc3ce542e731cd32154a",
+    "crates/alight-api/src/receipts.rs": "e00af2cb8ff546799601fc8cf9ebdb2ef5b22c1b0b6c2f7fd425ce6970eb00ea",
+    "crates/alight-api/tests/api.rs": "4e5b3be19664ee5085b3640ad1cbd27f32ca3a08773002b0d45db18beeb8421e",
+    "crates/alight-canary/src/anchor.rs": "5bc34276206f83c416453387af7e44bb7037ec5188286727284a764cb2094e31",
+    "crates/alight-canary/src/lib.rs": "4156060ac435b97a70d28207465d8fbc0a6556aef89927296d8ac9b24fa3a3b7",
+    "crates/alight-client/src/lib.rs": "43eeb911f19d1c86e2abcd0b9507fc0a4cfb3e978f1411f410aa8072f0c81fe5",
+    "crates/alight-store/migrations/0011_wallet_history.sql": "e4914ac279fbbe760df263017e9f3a9cc8d774cd8d15f0fb92b0f3eedf57ccf0",
+    "crates/alight-store/src/lib.rs": "c2e1a2a5897b2afa108b2643a035706b2950664cb4c79048b84cc995e2b3ad8f",
+    "crates/alight-store/src/receipts.rs": "dc540e444b16be17a659d283817b09a6d468c01333fce351fb3693accfb87b5f",
+    "crates/alight-tape/Cargo.toml": "9ed89843635139dff79886e357d9a568a2c8093a2306dd2f8834bf61d460a534",
+    "crates/alight-tape/src/lib.rs": "9efeb91557bb8f5efb4f14e10602b24d6094fcfb4ba4b7e13a8455e5bc5f82c1",
+    "crates/alight-tape/src/receipts.rs": "fb11d46f1fdb2582791066fbb037a09e18b228ad6bdcdba9c14c780c4040f6b5",
+    "crates/alight-tape/tests/receipts.rs": "2ab6e9e95b8c3bb42998bc025145f3ea838983edfde8bd2b733df0b97580c12d",
+    "crates/alight-types/src/anchors.rs": "0556cab4bee0b8eab271f3cb941d547d6350a79de36d16de462cf2f0e6fe04e6",
+    "crates/alight-types/src/dataset.rs": "a8d73f8c308dbaf9117bfe41f03bcec9b7c49742cf1900c1490c33568710eb59",
+    "crates/alight-types/src/lib.rs": "a8660a092ee4267bc49693642f614e452e5b0aa811a81002c8c24e07c76fa25b",
+    "crates/alight-types/src/receipts.rs": "d95a0768db0944ceb2415e17b339fa89d53d4312f7148649d2f8bc9e735585ae",
+    "data/anchors/sim-ledger-head.json": "1dbee3a1966cc2a3e58058b0ff05ce7a2d2a76e364ac5ba1a33ab13f95982895",
+    "deploy/Caddyfile": "5d2b08e54652cff13908ad1e4926fdbbcc2a564a08306bfa93cb85f6bfab1f05",
+    "deploy/Web.Dockerfile": "1448488df567769a76a47febff9becd05fdd3dc959c5d7a626139cb877619267",
+    "docs/anchoring.md": "bbc4d04548328a1470708eebc2743c1f0d4078298330b70c1bb7c5c6ffb0cbcf",
+    "docs/contracts.md": "0563ef78ed4d7fd8ad0eb33ef0fbb47b9a88f541d5f07f832f55d541f18042d3",
+    "docs/dataset.md": "32274e59dbdc0514d36a23e752c3a6bfc2738b452a51cf933037506b8bfc6e02",
+    "docs/decisions.md": "8fb6c640062bb451f0ce31414ce55c12dead146d43c16d80cb653325a619442a",
+    "docs/demo.md": "9aff311645855adfda11c5ce194894188ad02e6fdf0a439de428288b48e17d33",
+    "docs/limitations.md": "621b268ff89587538519aa1692a2bf4f021796971a06502f6dc2fc3f962cbeee",
+    "docs/receipts.md": "609000a7960639cd355220f134e6907c8e227075bc6f355e461c50d9cacac92b",
+    "scripts/dataset-requirements.txt": "0f53f66c64af2a3eafd35c242e7ab9798f81025eaa1071b05fac61000c8edcb5",
+    "scripts/export_dataset.py": "afeb61a970f2b0c3f18739b5202b5bf0893d9d4e9aa27a37197b98bf897298e6",
+    "scripts/serve_workbench_test.py": "20d515d8434390fcdd1f6c0d671c099e318e2d1ff718d4b9424ab3cc98c15e06",
+    "scripts/test_dataset.py": "c86342d7de54c23ae0f55d6a96da5e9a8f3293e449f71b71f1be58a078a8e778",
+    "scripts/verify_dataset.py": "1270ae05fd5331fe057a86bd431f30311ae7dc7d4722911fdf4dc30566e66d56",
+    "scripts/verify_phase6_receipt.py": "f22f34a979eec221b35df25d826c12d365ffd9797a22b925091ab6c01b1dbbdc",
+    "sdk/ts/openapi.json": "93306022c88106a48ce570b0490ce392000ae464743d6d3d8a45d5b281e60939",
+    "sdk/ts/src/index.ts": "6be21948560ab8d62df952f5df46faa57f91acbac73cb3759573d9f93e144607",
+    "sdk/ts/src/schemas.ts": "11dadb543ac7844e46602b793f1dc5185d88ef7340261c8e0702e65710ea1c23",
+    "sdk/ts/src/types.ts": "93b9f740f6b850986669d2a8d540f94e347c6a685f02596fe6af29598cd24517",
+    "web/e2e/phase6.spec.ts": "4f0257edd35ee78033853393b3fa9759fd77d3a5bf8d3fe12efaf0b6878bfb23",
+    "web/e2e/workbench.spec.ts": "a897758ab9eb8003813077425a89d9ee6b50225bd39bb181b8b1afa315ce5371",
+    "web/package.json": "6a44e6aa4b40a2203d80d37ff6b353214cef33b334914f7e56ace0c757010e2c",
+    "web/public/datasets/index.json": "e5d37856de3add4bae6faa92c69e813df3d9af67b24b129285bee62d9092ee61",
+    "web/public/datasets/sim-2026-10-05/LICENSE.txt": "866d466fea020b543c2bed4399dd37cc1299e40c8b3149205bff44d431a67867",
+    "web/public/datasets/sim-2026-10-05/SHA256SUMS": "db06da2f548fd5a126f13433759d3f58928080fb6177ae710f47aca50fd5a8be",
+    "web/public/datasets/sim-2026-10-05/canaries.csv": "c10009a0042b8d35c6256ba24e2209f71b8d223f4409098f13e8bee86364472b",
+    "web/public/datasets/sim-2026-10-05/canaries.parquet": "6659adfaae6bd0108e22c37c18c01870bb1bd7ea4412b99242eb658e677772bb",
+    "web/public/datasets/sim-2026-10-05/curve_snapshots.csv": "1e515dd95b1a215ddcd75d7dcd48132c0eebc2c08072aa5f3a0fdbfb01b3bdd7",
+    "web/public/datasets/sim-2026-10-05/curve_snapshots.parquet": "397f0fb5d2a1f293ece123756e11a281706cd0f76fb8d012ffb91dd3393dca3e",
+    "web/public/datasets/sim-2026-10-05/forecasts.csv": "32a56785e09d2142bb0e749952946b35fd70c72e50ae50b398f755f534b29d87",
+    "web/public/datasets/sim-2026-10-05/forecasts.parquet": "4c8d176606148eca2d39012c2e1fab9509669a1348ce3947a443a4602680bb20",
+    "web/public/datasets/sim-2026-10-05/grades.csv": "8c3c497e25a86741bb09adcc1570062d8ff92ea574bb06b765beb9a55eb6e857",
+    "web/public/datasets/sim-2026-10-05/grades.parquet": "bf0adb25d4245d96a037616e12fa88b5546eb7102edf30cbfe4add6520d655f5",
+    "web/public/datasets/sim-2026-10-05/ledger-witness.json": "6161d3cfe4c0eb3b8b8e9479433d0041530d32f44ebb3e878eaace487521cf9a",
+    "web/public/datasets/sim-2026-10-05/manifest.json": "be69a3cfb84272bc59aaaa52cadc356e6fdc2f739c6bd5ce3947ecba0124a754",
+    "web/public/datasets/sim-2026-10-05/regimes.csv": "bf14d4a508e62b19d508474ed9a0ecc46ab686c43103b648e573c0af1caab770",
+    "web/public/datasets/sim-2026-10-05/regimes.parquet": "6bf01562be0b111e8cd621f1081246c069f17753ce78fa0e4ef38b41c4c6f6f1",
+    "web/public/datasets/sim-2026-10-05/schema.json": "309b43ffbdc2b83ecc4063797965b058ac4787838a086bd601269e3043a7e1c8",
+    "web/scripts/copy-methodology.mjs": "c4b7e32962628668d7e2be31337b141a0bc091e2b0ed951e8deac59338e699ac",
+    "web/src/App.tsx": "3e8f9bd5731806a1d3abc69c0e633ee99d245695481ad5b42985894ea9631f73",
+    "web/src/pages/Anchor.tsx": "6f42991900dfd5dead60c7211d539acf6542d55e874d7d0d1330c7fcc2900fa5",
+    "web/src/pages/Datasets.tsx": "8d707fd0f254c3f1b6bb40c552c14c2c12f13c3c8c72c724b5cf91b19597768c",
+    "web/src/pages/Ledger.tsx": "08ed3b3d044ee36d04399cfbe1a33915dccbe98364078d6238df69a4b7d56fdd",
+    "web/src/pages/Tape.tsx": "4fb676855354be160c61c9a075560afe28639b5c03f25cd3fc74e53996c26bb7",
+    "web/src/pages/WalletReceipt.tsx": "80a14890e35d2f2e0d079b01a573a9c74188dbbc6e0b1b5a14a3b8f028b44429"
+  }
+}

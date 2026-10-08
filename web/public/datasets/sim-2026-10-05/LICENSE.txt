@@ -1,0 +1,4 @@
+Alight datasets: Creative Commons Attribution 4.0 International (CC BY 4.0).
+License terms: https://creativecommons.org/licenses/by/4.0/legalcode
+Attribute Hickson / Alight, preserve source, date, vantage and methodology labels, and identify modifications.
+License applies to these exported records, not provider software or arbitrary private wallet captures.

@@ -1,5 +1,6 @@
 //! Source-scoped REST/WS boundary. This crate has no signing key or transaction sender.
 mod openapi;
+mod receipts;
 use alight_ingest::clock::SlotClock;
 use alight_store::{Store, StoreError};
 use alight_types::*;
@@ -321,6 +322,7 @@ pub fn router(state: ApiState) -> Router {
         .route("/v1/proves", get(proves))
         .route("/v1/ledger", get(ledger))
         .route("/v1/ledger/verify", get(verify))
+        .route("/v1/ledger/anchor", get(anchor_draft))
         .route("/v1/ledger/payloads", get(browser_ledger))
         .route("/v1/workbench", get(workbench))
         .route("/v1/diagnostics", get(diagnostics))
@@ -328,6 +330,7 @@ pub fn router(state: ApiState) -> Router {
         .route("/v1/canaries/{id}/observations", get(canary_evidence))
         .route("/v1/prove/{id}/canaries", get(prove_canaries))
         .route("/v1/tape", get(tape))
+        .route("/v1/receipt/{wallet}", get(receipts::receipt))
         .route("/v1/observers", get(observers))
         .route("/v1/openapi.json", get(schema))
         .route("/v1/stream", get(stream))
@@ -1081,6 +1084,21 @@ async fn verify(State(s): State<ApiState>) -> Result<Json<LedgerVerification>, A
         verified: true,
         entries,
     }))
+}
+async fn anchor_draft(State(s): State<ApiState>) -> Result<Json<AnchorDraft>, ApiError> {
+    let _permit = s.work()?;
+    Ok(Json(
+        alight_canary::anchor::prepare(&s.store, s.source)
+            .await
+            .map_err(|e| match e {
+                StoreError::Invalid => s.error(
+                    StatusCode::CONFLICT,
+                    "ANCHOR_UNAVAILABLE",
+                    "A verified nonempty ledger is required for an unsigned anchor draft",
+                ),
+                _ => s.unavailable(),
+            })?,
+    ))
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

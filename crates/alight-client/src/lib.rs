@@ -295,6 +295,40 @@ impl Client {
         Ok(r)
     }
     /// Passive tape timestamps are RFC3339 UTC; the API caps windows at one day.
+    /// Read-only receipt from an exact imported capture. No provider fetch or signing.
+    pub async fn receipt(
+        &self,
+        wallet: &str,
+        capture: &str,
+        scope: &WalletReceiptRequest,
+    ) -> Result<WalletReceipt> {
+        if !(32..=44).contains(&wallet.len())
+            || !wallet
+                .bytes()
+                .all(|b| b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".contains(&b))
+            || capture.len() != 71
+            || !capture.starts_with("sha256:")
+            || !capture[7..].bytes().all(|b| b.is_ascii_hexdigit())
+        {
+            return Err(ClientError::Configuration);
+        }
+        let r: WalletReceipt = self
+            .request(
+                Method::GET,
+                &format!("/v1/receipt/{wallet}"),
+                &[
+                    ("capture", capture.into()),
+                    ("region", scope.region.clone()),
+                    ("target_p", scope.target_p.to_string()),
+                    ("horizon_slots", scope.horizon_slots.to_string()),
+                    ("max_curve_age_s", scope.max_curve_age_s.to_string()),
+                ],
+                None,
+            )
+            .await?;
+        self.scope(r.source)?;
+        Ok(r)
+    }
     pub async fn tape(&self, from: &str, through: &str, limit: u32) -> Result<TapePage> {
         let r: TapePage = self
             .get(

@@ -7,7 +7,9 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "predev": "node scripts/copy-methodology.mjs",
     "dev": "vite --host 127.0.0.1",
+    "prebuild": "node scripts/copy-methodology.mjs",
     "lint": "tsc --noEmit && eslint src",
     "build": "tsc --noEmit && vite build",
     "test": "node --experimental-strip-types --test test/*.ts",

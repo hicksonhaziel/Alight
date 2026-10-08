@@ -17,6 +17,7 @@
 **/__pycache__/
 *.pyc
 /web/dist/
+/web/public/methodology/
 /sdk/ts/dist/
 /web/playwright-report/
 /web/test-results/

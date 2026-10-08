@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "source": "sim",
+  "day": "2026-10-05",
+  "tables": {
+    "canaries": {
+      "source": "string",
+      "id": "string",
+      "sent_at_utc": "string",
+      "route": "string",
+      "size_class": "string",
+      "tip_lamports": "string",
+      "cu_price_micro_lamports": "string",
+      "policy_id": "string",
+      "assignment_prob": "number",
+      "uniform_arm": "boolean",
+      "regime_id": "string",
+      "outcome": "nullable_string",
+      "finalized": "boolean",
+      "payload_json": "string"
+    },
+    "curve_snapshots": {
+      "source": "string",
+      "snapshot_id": "string",
+      "as_of_utc": "string",
+      "region": "string",
+      "regime_id": "string",
+      "route": "string",
+      "size_class": "string",
+      "horizon_slots": "integer",
+      "n_effective": "number",
+      "evidence": "string",
+      "payload_json": "string"
+    },
+    "regimes": {
+      "source": "string",
+      "id": "string",
+      "detected_at_utc": "string",
+      "regime_id": "string",
+      "payload_json": "string"
+    },
+    "forecasts": {
+      "source": "string",
+      "sequence": "string",
+      "created_at_utc": "string",
+      "regime_id": "string",
+      "prev_hash": "string",
+      "hash": "string",
+      "payload_json": "string"
+    },
+    "grades": {
+      "source": "string",
+      "forecast_hash": "string",
+      "graded_at_utc": "string",
+      "status": "string",
+      "payload_json": "string"
+    }
+  },
+  "null_csv": "Empty cell; quoted payload_json preserves original nulls",
+  "units": "Lamports and micro-lamports/CU are decimal strings. Times UTC. Horizon slots. Effective n discounted sample mass.",
+  "row_limit_per_table": 100000
+}

@@ -29,6 +29,7 @@ import { Ledger } from "./pages/Ledger";
 import { Regimes } from "./pages/Regimes";
 import { Health } from "./pages/Health";
 import { Tape } from "./pages/Tape";
+import { Datasets } from "./pages/Datasets";
 const navigation: {
   id: string;
   name: string;
@@ -76,6 +77,12 @@ const navigation: {
     name: "Tape & receipts",
     description: "Market transfers and coverage",
     icon: Wallet,
+  },
+  {
+    id: "datasets",
+    name: "Datasets",
+    description: "Download source-labelled evidence",
+    icon: ShieldCheck,
   },
 ];
 export function App() {
@@ -477,6 +484,8 @@ export function App() {
               <Health data={data} reference={reference} />
             ) : page === "tape" ? (
               <Tape data={data} />
+            ) : page === "datasets" ? (
+              <Datasets data={data} />
             ) : (
               <Cockpit data={data} />
             )}

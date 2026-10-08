@@ -10,6 +10,7 @@ import type { DashboardData } from "../data";
 import { errorText } from "../data";
 import { compact, dateTime, percent, routeNames } from "../format";
 import { loadBundle, verifyBundle, type LedgerBundle } from "../ledger";
+import { AnchorPanel } from "./Anchor";
 import {
   CopyButton,
   Empty,
@@ -434,6 +435,7 @@ export function Ledger({ data }: { data: DashboardData }) {
           />
         )}
       </Panel>
+      <AnchorPanel data={data} />
     </>
   );
 }

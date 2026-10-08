@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "datasets": [
+    {
+      "id": "sim-2026-10-05",
+      "day": "2026-10-05",
+      "source": "sim",
+      "label": "Seed 61 \u00b7 243 synthetic canaries \u00b7 schema/verification example; insufficient cells"
+    }
+  ]
+}

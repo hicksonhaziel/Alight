@@ -21,6 +21,7 @@ dependencies = [
 name = "alight"
 version = "0.0.0"
 dependencies = [
+ "alight-canary",
  "alight-client",
  "alight-diagnostics",
  "alight-forecast",
@@ -28,6 +29,7 @@ dependencies = [
  "alight-model",
  "alight-sim",
  "alight-store",
+ "alight-tape",
  "alight-types",
  "chrono",
  "serde",
@@ -46,6 +48,7 @@ dependencies = [
  "alight-prove",
  "alight-sim",
  "alight-store",
+ "alight-tape",
  "alight-types",
  "axum",
  "chrono",
@@ -279,12 +282,15 @@ dependencies = [
 name = "alight-tape"
 version = "0.0.0"
 dependencies = [
+ "alight-store",
  "alight-types",
  "base64",
  "bs58",
  "chrono",
  "serde_json",
+ "tempfile",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
 //! Canary construction and route sending, guarded by durable spending authorization.
+pub mod anchor;
 pub mod builder;
 pub mod engine;
 pub mod governor;

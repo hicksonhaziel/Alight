@@ -4,6 +4,7 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY web ./
 COPY sdk/ts/src ../sdk/ts/src
+COPY docs/methodology.md docs/receipts.md docs/dataset.md docs/limitations.md ../docs/
 RUN npm run build
 
 FROM caddy:2.10.2-alpine

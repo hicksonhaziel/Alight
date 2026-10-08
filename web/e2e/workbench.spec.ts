@@ -193,6 +193,7 @@ for (const theme of ["dark", "light"]) {
       "regimes",
       "health",
       "tape",
+      "datasets",
     ]) {
       await page.goto(`/#${route}`);
       await expect(page.locator("main h1")).toBeVisible();

@@ -20,6 +20,7 @@ jobs:
       - run: npm --prefix sdk/ts test
       - run: node sdk/ts/generate.mjs --check
       - run: python3 -m pip install --disable-pip-version-check jsonschema==4.23.0
+      - run: python3 -m pip install --disable-pip-version-check -r scripts/dataset-requirements.txt
       - run: rustup show active-toolchain
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --features alight-ingest/beam --locked -- -D warnings
@@ -27,6 +28,8 @@ jobs:
       - run: cargo run -p alight-api --example openapi --locked > /tmp/alight-openapi.json && cmp /tmp/alight-openapi.json sdk/ts/openapi.json
       - run: cargo build -p alight -p alightd -p alight-client --bins --examples --locked
       - run: python3 scripts/test_phase3_developer.py
+      - run: python3 scripts/test_dataset.py
+      - run: python3 scripts/verify_dataset.py web/public/datasets/sim-2026-10-05
       - run: npm --prefix web ci --ignore-scripts --no-audit --no-fund
       - run: npm --prefix web run lint
       - run: npm --prefix web test
@@ -42,6 +45,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
       - run: python3 scripts/verify_phase5_receipt.py
+      - run: python3 scripts/verify_phase6_receipt.py
       - run: python3 scripts/verify_phase4_receipt.py
       - run: python3 scripts/verify_phase3_final_receipt.py
       - run: python3 scripts/check_repository.py

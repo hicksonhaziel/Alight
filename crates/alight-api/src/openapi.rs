@@ -70,6 +70,12 @@ pub fn document() -> Value {
     add::<LedgerPage>(&mut schemas);
     add::<LedgerVerification>(&mut schemas);
     add::<TapePage>(&mut schemas);
+    add::<WalletHistoryCapture>(&mut schemas);
+    add::<WalletReceipt>(&mut schemas);
+    add::<WalletReceiptRequest>(&mut schemas);
+    add::<DatasetCatalog>(&mut schemas);
+    add::<DatasetManifest>(&mut schemas);
+    add::<AnchorDraft>(&mut schemas);
     add::<ApiStreamSnapshot>(&mut schemas);
     add::<Alert>(&mut schemas);
     add::<ForecastLedgerExport>(&mut schemas);
@@ -88,6 +94,19 @@ pub fn document() -> Value {
     schemas["ModelQuoteRequest"]["properties"]["candidates"]["minItems"] = json!(1);
     schemas["ModelQuoteRequest"]["properties"]["candidates"]["maxItems"] = json!(81);
     let mut paths = Map::new();
+    let mut receipt = operation("WalletReceipt", false, "200");
+    receipt["description"] = json!(
+        "Partial imported Sim/replay history only; no network fetch. A missing capture returns HISTORY_UNAVAILABLE. Comparisons require matched historical evidence; unknown route is descriptive."
+    );
+    receipt["parameters"] = json!([
+        {"name":"wallet","in":"path","required":true,"schema":{"type":"string","minLength":32,"maxLength":44}},
+        query("capture",json!({"type":"string","pattern":"^sha256:[a-f0-9]{64}$"}),false),
+        query("region",json!({"type":"string","maxLength":128}),false),
+        query("target_p",json!({"type":"number","exclusiveMinimum":0,"maximum":1,"default":0.9}),false),
+        query("horizon_slots",json!({"type":"integer","minimum":1,"maximum":32,"default":2}),false),
+        query("max_curve_age_s",json!({"type":"integer","minimum":1,"maximum":3600,"default":300}),false)
+    ]);
+    paths.insert("/v1/receipt/{wallet}".into(), json!({"get":receipt}));
     let mut webhook = operation("WebhookReceipt", false, "200");
     webhook["security"] = json!([{"WebhookHmac":[]}]);
     webhook["description"] = json!(
@@ -101,6 +120,7 @@ pub fn document() -> Value {
         ("/v1/leaders", "ApiTelemetry"),
         ("/v1/observers", "ObserverHealthPage"),
         ("/v1/ledger/verify", "LedgerVerification"),
+        ("/v1/ledger/anchor", "AnchorDraft"),
         ("/v1/workbench", "WorkbenchEvidence"),
         ("/v1/diagnostics", "DiagnosticsPage"),
     ] {

@@ -628,3 +628,46 @@ Unknown block/index identity remains absent. Valid unowned signatures return
 `IGNORED_UNOWNED`; stored evidence returns `ACCEPTED`. The captured `succeeded`
 status establishes success; uncaptured status values stay unknown. Provider
 webhook registration is an independent operator action, not automatic startup.
+# Wallet receipts (v1)
+
+`WalletHistoryCapture` is an Alight replay envelope, not a Solami Data API
+payload. It holds at most 1,000 normalized `PassiveTransaction` records for one
+fee payer over at most 24 hours. Imports accept `sim` and `replay` only. Capture
+coverage is always partial; missing submissions are not inferred. Chain time,
+transport route, workload class and regime are optional and are never guessed
+from a tip recipient or observer receive time.
+
+`WalletReceiptRequest` fixes the region, target probability, slot horizon and
+maximum historical curve age in seconds. A comparison uses the newest stored
+curve cohort at or before the transaction's chain time, with the same source,
+region, regime, route, CU limit, CU price and size. Only `MEASURED` lower 95%
+bounds qualify. The receipt's threshold is the lowest supported tip meeting
+that bound; arithmetic spend above it is a conditional diagnostic, not proven
+waste or proof of equivalent swap performance. Missing/stale frontiers remain
+null. Failed transactions pay fees but zero executed tips. Inner transfers and
+transfers from a different payer have unknown wallet payment.
+
+Example request (all time units explicit):
+```json
+{"region":"synthetic-local","target_p":0.9,"horizon_slots":2,"max_curve_age_s":300}
+```
+Migration `0011_wallet_history.sql` adds immutable content-addressed captures.
+No historical canary, forecast, grade or curve bytes are rewritten. Public
+`GET /v1/receipt/{wallet}?capture=sha256:...` evaluates an explicitly selected
+stored capture in the API's source; it performs no provider fetch or send.
+Without a capture, the API reports unavailable history rather than guessing.
+
+Static `DatasetCatalog` and `DatasetManifest` schemas describe reviewed public
+`/datasets/index.json` and `/datasets/{id}/manifest.json`. They declare each
+download's source independently of the active API. Daily CSV/Parquet schemas
+and ledger witness rules are in [dataset documentation](dataset.md). No schema
+or migration rewrites historical forecasts. `export --api` remains the bounded
+forecast-only JSON export; `export --database` produces the daily dataset.
+
+`GET /v1/ledger/anchor` returns `AnchorDraft` from a verified nonempty source
+ledger, with `status=PREPARED_UNSIGNED`, `signing_enabled=false` and null
+signature/explorer. It is a read-only commitment, not an on-chain anchor.
+Example memo: `alight.ledger.v1|sim|2|sha256:` followed by the actual head's 64
+hex digits. No database migration is required. Preparation/verification live
+in `alight-canary`; no sign/send path is added. [Anchoring](anchoring.md)
+documents the remaining governed mainnet acceptance.

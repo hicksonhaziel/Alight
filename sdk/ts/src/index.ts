@@ -57,6 +57,9 @@ export class AlightClient {
     finally { clearTimeout(timer); }
   }
   async health(): Promise<T.ApiHealth> { const r=await this.request<T.ApiHealth>('ApiHealth','/v1/health'); this.scope(r.source); return r; }
+  /** Static downloads declare their own source; they may differ from the active API. */
+  async datasets(): Promise<T.DatasetCatalog> { return this.request<T.DatasetCatalog>('DatasetCatalog','/datasets/index.json'); }
+  async dataset(id:string): Promise<T.DatasetManifest> { if(!/^[a-z0-9-]{1,64}$/.test(id)) throw new AlightError('CONFIGURATION'); return this.request<T.DatasetManifest>('DatasetManifest',`/datasets/${id}/manifest.json`); }
   async workbench(): Promise<T.WorkbenchEvidence> { const r=await this.request<T.WorkbenchEvidence>('WorkbenchEvidence','/v1/workbench'); this.scope(r.source); return r; }
   async diagnostics(): Promise<T.DiagnosticsPage> { const r=await this.request<T.DiagnosticsPage>('DiagnosticsPage','/v1/diagnostics'); this.scope(r.source); for(const item of [...r.signals,...r.regimes,...r.alerts,...r.backfills,...r.disagreements]) this.scope(item.source); return r; }
   async canaryEvidence(id: string): Promise<T.CanaryEvidencePage> { if(!/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw new AlightError('CONFIGURATION'); const r=await this.request<T.CanaryEvidencePage>('CanaryEvidencePage',`/v1/canaries/${id}/observations`); this.scope(r.source); return r; }
@@ -75,7 +78,9 @@ export class AlightClient {
   async proves(limit=20): Promise<T.ProvePage> { const r=await this.request<T.ProvePage>('ProvePage','/v1/proves',{limit:String(limit)}); this.scope(r.source); return r; }
   async ledger(after:T.DecimalU64=decimalU64('0'),limit=50): Promise<T.LedgerPage> { const r=await this.request<T.LedgerPage>('LedgerPage','/v1/ledger',{after:decimalU64(after),limit:String(limit)}); this.scope(r.source); return r; }
   async verifyLedger(): Promise<T.LedgerVerification> { const r=await this.request<T.LedgerVerification>('LedgerVerification','/v1/ledger/verify'); this.scope(r.source); if(!r.verified) throw new AlightError('LEDGER_INVALID'); return r; }
+  async anchorDraft(): Promise<T.AnchorDraft> { const r=await this.request<T.AnchorDraft>('AnchorDraft','/v1/ledger/anchor'); this.scope(r.source); if(r.status!=='PREPARED_UNSIGNED'||r.signing_enabled||r.signature!==null||r.explorer_url!==null) throw new AlightError('CONTRACT'); return r; }
   async tape(from:string,through:string,limit=100): Promise<T.TapePage> { const r=await this.request<T.TapePage>('TapePage','/v1/tape',{from,through,limit:String(limit)}); this.scope(r.source); return r; }
+  async receipt(wallet:string,capture:string,request:T.WalletReceiptRequest): Promise<T.WalletReceipt> { if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)||!/^sha256:[a-f0-9]{64}$/.test(capture)) throw new AlightError('CONFIGURATION'); this.validate('WalletReceiptRequest',request); const r=await this.request<T.WalletReceipt>('WalletReceipt',`/v1/receipt/${wallet}`,{capture,region:request.region,target_p:String(request.target_p),horizon_slots:String(request.horizon_slots),max_curve_age_s:String(request.max_curve_age_s)}); this.scope(r.source); return r; }
   /** Native browser/Node 22 WebSocket. The returned connection must be closed by its owner. */
   stream(onSnapshot:(snapshot:T.ApiStreamSnapshot)=>void,onError:(error:AlightError)=>void): WebSocket {
     const url=new URL('/v1/stream',this.endpoint); url.protocol=url.protocol==='https:'?'wss:':'ws:';

@@ -12,6 +12,7 @@ alight-prove.workspace = true
 alight-canary.workspace = true
 alight-ingest.workspace = true
 alight-sim.workspace = true
+alight-tape.workspace = true
 axum.workspace = true
 tokio.workspace = true
 serde.workspace = true

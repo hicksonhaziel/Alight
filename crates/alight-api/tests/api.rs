@@ -12,7 +12,168 @@ use std::{path::Path, process::Command, time::Duration};
 use tower::ServiceExt;
 
 const NOW: &str = "2026-10-05T01:00:00Z";
+
+#[tokio::test]
+async fn wallet_receipt_is_read_only_source_scoped_and_reports_missing_history() {
+    let dir = tempfile::tempdir().expect("dir");
+    let store = Store::open(&dir.path().join("receipts.db"), 16 * 1024 * 1024)
+        .await
+        .expect("store");
+    let mut transactions = Vec::new();
+    for line in include_str!("../../../data/fixtures/mirage_transactions_sample.jsonl").lines() {
+        let value: Value = serde_json::from_str(line).expect("recording");
+        let received = ReceiveTime {
+            clock_id: "replay-wallet".into(),
+            mono_ns: 0,
+            wall_utc: value["received_at"].as_str().expect("timestamp").into(),
+        };
+        if let Some(tx) = alight_tape::captured_transaction(&value, Source::Replay, received)
+            .expect("transaction")
+        {
+            transactions.push(tx);
+        }
+    }
+    let tx = transactions.remove(1);
+    let capture = WalletHistoryCapture {
+        schema_version: 1,
+        source: Source::Replay,
+        wallet: tx.account_keys[0].clone(),
+        from_utc: "2026-10-04T00:40:00Z".into(),
+        through_utc: "2026-10-04T00:45:00Z".into(),
+        tip_recipients: vec![],
+        rows: vec![WalletHistoryRow {
+            transaction: tx,
+            chain_time_utc: None,
+            route: None,
+            size_class: None,
+            regime_id: None,
+        }],
+    };
+    let hash = store.save_wallet_capture(&capture).await.expect("save");
+    let app = router(
+        ApiState::new(
+            store.clone(),
+            Options {
+                mode: RunMode::Replay,
+                requests_per_second: 200,
+                ..Default::default()
+            },
+        )
+        .expect("state"),
+    );
+    let url = format!("/v1/receipt/{}", capture.wallet);
+    let (status, error) = call(&app, "GET", &url, json!(null), None).await;
+    assert_eq!(status, 503);
+    assert_eq!(error["code"], "HISTORY_UNAVAILABLE");
+    let (status, r) = call(
+        &app,
+        "GET",
+        &format!("{url}?capture={hash}"),
+        json!(null),
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
+    assert_eq!(r["source"], "replay");
+    assert_eq!(r["transactions"], 1);
+    assert_eq!(r["compared_transactions"], 0);
+    assert_eq!(call(&app, "POST", &url, json!(null), None).await.0, 403);
+    let live = router(
+        ApiState::new(
+            store.clone(),
+            Options {
+                mode: RunMode::Observe,
+                requests_per_second: 200,
+                ..Default::default()
+            },
+        )
+        .expect("observe"),
+    );
+    assert_eq!(
+        call(
+            &live,
+            "GET",
+            &format!("{url}?capture={hash}"),
+            json!(null),
+            None
+        )
+        .await
+        .0,
+        404
+    );
+    assert_eq!(
+        store.counts(Source::Live).await.expect("counts").canaries,
+        0
+    );
+    store.close().await;
+}
 const KEY: &str = "local-test-operator-key-42-only";
+
+#[tokio::test]
+async fn unsigned_anchor_verifies_historical_prefix_and_rejects_tampering_without_spend() {
+    let dir = tempfile::tempdir().expect("dir");
+    let store = setup(&dir.path().join("anchor.db")).await;
+    assert!(
+        alight_canary::anchor::prepare(&store, Source::Sim)
+            .await
+            .is_err()
+    );
+    alight_forecast::issue_combined(&store, request())
+        .await
+        .expect("forecast");
+    let draft = alight_canary::anchor::prepare(&store, Source::Sim)
+        .await
+        .expect("draft");
+    assert_eq!(draft.status, "PREPARED_UNSIGNED");
+    assert!(draft.signature.is_none());
+    assert!(!draft.signing_enabled);
+    let before = store
+        .counts(Source::Sim)
+        .await
+        .expect("counts")
+        .budget_reserved_lamports;
+    let app = router(state(store.clone()));
+    let (status, body) = call(&app, "GET", "/v1/ledger/anchor", json!(null), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["sequence"], "1");
+    assert_eq!(body["signature"], json!(null));
+    alight_forecast::issue_combined(&store, request())
+        .await
+        .expect("later forecast");
+    alight_canary::anchor::verify(&store, &draft)
+        .await
+        .expect("historical prefix");
+    let mut altered = draft.clone();
+    altered.head_hash = "sha256:".to_owned() + &"1".repeat(64);
+    assert!(
+        alight_canary::anchor::verify(&store, &altered)
+            .await
+            .is_err()
+    );
+    let mut altered = draft.clone();
+    altered.source = Source::Live;
+    assert!(
+        alight_canary::anchor::verify(&store, &altered)
+            .await
+            .is_err()
+    );
+    let mut altered = draft.clone();
+    altered.signing_enabled = true;
+    assert!(
+        alight_canary::anchor::verify(&store, &altered)
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        store
+            .counts(Source::Sim)
+            .await
+            .expect("counts")
+            .budget_reserved_lamports,
+        before
+    );
+    store.close().await;
+}
 fn config() -> CanaryConfig {
     CanaryConfig {
         route: Route::BeamHttp,

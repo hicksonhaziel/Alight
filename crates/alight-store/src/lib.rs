@@ -5,6 +5,7 @@ mod diagnostics;
 mod ledger;
 mod phase3;
 mod prove;
+mod receipts;
 mod workbench;
 use alight_types::{
     BudgetLimits, BudgetReservation, Canary, IngestEvent, ObserverEvent, ObserverKind, Source,
@@ -71,6 +72,21 @@ pub fn raw_ref(raw: &Value) -> Result<String, StoreError> {
 }
 
 impl Store {
+    /// Opens an existing database without migrations, chmod, creation or application writes.
+    /// Used for offline receipts and validation; time and amount units follow stored contracts.
+    pub async fn open_read_only(path: &Path) -> Result<Self, StoreError> {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(
+                SqliteConnectOptions::new()
+                    .filename(path)
+                    .read_only(true)
+                    .create_if_missing(false)
+                    .busy_timeout(Duration::from_secs(5)),
+            )
+            .await?;
+        Ok(Self { pool })
+    }
     /// Opens a file database with FULL synchronous WAL. max_bytes bounds main-database pages.
     pub async fn open(path: &Path, max_bytes: u64) -> Result<Self, StoreError> {
         if !(16 * 1024 * 1024..=16 * 1024 * 1024 * 1024).contains(&max_bytes) {

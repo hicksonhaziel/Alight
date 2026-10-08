@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "alight_daily_dataset",
+  "source": "sim",
+  "day": "2026-10-05",
+  "license": "CC-BY-4.0",
+  "formats": [
+    "csv",
+    "parquet"
+  ],
+  "tables": {
+    "canaries": {
+      "rows": 243
+    },
+    "curve_snapshots": {
+      "rows": 438
+    },
+    "regimes": {
+      "rows": 0
+    },
+    "forecasts": {
+      "rows": 2
+    },
+    "grades": {
+      "rows": 2
+    }
+  },
+  "regions": [
+    "synthetic-local"
+  ],
+  "ledger": {
+    "verified": true,
+    "head": "sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+    "sequence": "2",
+    "witness_scope": "Full source chain, including forecasts outside selected day"
+  },
+  "coverage": "Rows retained at export snapshot; daily canaries selected by send time, curves by as-of, regimes by detection, forecasts by issue and grades by grading time. This is not complete chain or wallet history.",
+  "vantage": "Curve region labels are retained. Canary region is the collection host; no region is inferred when absent from history.",
+  "limits": [
+    "Sim/replay are not Live evidence.",
+    "Unresolved and unfinalized outcomes remain visible; no timeout labels.",
+    "Original payload JSON and immutable forecast hashes are preserved; suspicious secret-bearing evidence rejects the export.",
+    "Detected regime events only; a workload regime label does not fabricate a detection."
+  ],
+  "files": {
+    "LICENSE.txt": {
+      "bytes": 360,
+      "sha256": "sha256:866d466fea020b543c2bed4399dd37cc1299e40c8b3149205bff44d431a67867"
+    },
+    "canaries.csv": {
+      "bytes": 325433,
+      "sha256": "sha256:c10009a0042b8d35c6256ba24e2209f71b8d223f4409098f13e8bee86364472b"
+    },
+    "canaries.parquet": {
+      "bytes": 25612,
+      "sha256": "sha256:6659adfaae6bd0108e22c37c18c01870bb1bd7ea4412b99242eb658e677772bb"
+    },
+    "curve_snapshots.csv": {
+      "bytes": 512916,
+      "sha256": "sha256:1e515dd95b1a215ddcd75d7dcd48132c0eebc2c08072aa5f3a0fdbfb01b3bdd7"
+    },
+    "curve_snapshots.parquet": {
+      "bytes": 45299,
+      "sha256": "sha256:397f0fb5d2a1f293ece123756e11a281706cd0f76fb8d012ffb91dd3393dca3e"
+    },
+    "forecasts.csv": {
+      "bytes": 9599,
+      "sha256": "sha256:32a56785e09d2142bb0e749952946b35fd70c72e50ae50b398f755f534b29d87"
+    },
+    "forecasts.parquet": {
+      "bytes": 19836,
+      "sha256": "sha256:4c8d176606148eca2d39012c2e1fab9509669a1348ce3947a443a4602680bb20"
+    },
+    "grades.csv": {
+      "bytes": 1548,
+      "sha256": "sha256:8c3c497e25a86741bb09adcc1570062d8ff92ea574bb06b765beb9a55eb6e857"
+    },
+    "grades.parquet": {
+      "bytes": 4718,
+      "sha256": "sha256:bf0adb25d4245d96a037616e12fa88b5546eb7102edf30cbfe4add6520d655f5"
+    },
+    "ledger-witness.json": {
+      "bytes": 131213,
+      "sha256": "sha256:6161d3cfe4c0eb3b8b8e9479433d0041530d32f44ebb3e878eaace487521cf9a"
+    },
+    "regimes.csv": {
+      "bytes": 49,
+      "sha256": "sha256:bf14d4a508e62b19d508474ed9a0ecc46ab686c43103b648e573c0af1caab770"
+    },
+    "regimes.parquet": {
+      "bytes": 979,
+      "sha256": "sha256:6bf01562be0b111e8cd621f1081246c069f17753ce78fa0e4ef38b41c4c6f6f1"
+    },
+    "schema.json": {
+      "bytes": 1695,
+      "sha256": "sha256:309b43ffbdc2b83ecc4063797965b058ac4787838a086bd601269e3043a7e1c8"
+    }
+  }
+}

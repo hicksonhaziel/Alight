@@ -1,4 +1,5 @@
 //! Passive native SOL transfers to a configured recipient set, never owned training labels.
+pub mod receipts;
 use alight_types::*;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde_json::Value;

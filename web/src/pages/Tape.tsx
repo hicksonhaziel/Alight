@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ReceiptText } from "lucide-react";
+import { WalletReceiptPanel } from "./WalletReceipt";
 import type { TapePage } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
@@ -180,34 +180,7 @@ export function Tape({ data }: { data: DashboardData }) {
           ))}
         </div>
       </Panel>
-      <Panel
-        title="Wallet receipts"
-        caption="Coverage and limitations"
-        action={<ReceiptText size={18} aria-hidden="true" />}
-      >
-        <div className="receipt-limits">
-          <h3>Receipt service unavailable.</h3>
-          <p>
-            This API exposes filtered tip transfers, without a wallet
-            transaction history or a historical receipt evaluator. Wallet
-            receipt generation is not available on this API.
-          </p>
-          <dl>
-            <div>
-              <dt>Population</dt>
-              <dd>Landed transactions visible to the configured filters</dd>
-            </div>
-            <div>
-              <dt>Missing population</dt>
-              <dd>Unlanded submissions and traffic outside those filters</dd>
-            </div>
-            <div>
-              <dt>Performance limits</dt>
-              <dd>Canary curves do not establish real swap performance</dd>
-            </div>
-          </dl>
-        </div>
-      </Panel>
+      <WalletReceiptPanel data={data} />
     </>
   );
 }

@@ -50,6 +50,57 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "string"
   },
+  "AnchorDraft": {
+    "additionalProperties": false,
+    "properties": {
+      "explorer_url": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "head_hash": {
+        "type": "string"
+      },
+      "memo": {
+        "type": "string"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "sequence": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "signature": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "signing_enabled": {
+        "type": "boolean"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "status": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "source",
+      "sequence",
+      "head_hash",
+      "memo",
+      "status",
+      "signing_enabled"
+    ],
+    "title": "AnchorDraft",
+    "type": "object"
+  },
   "ApiClock": {
     "properties": {
       "mean_slot_ms": {
@@ -954,6 +1005,180 @@ export const schemas: Record<string, Schema> = {
       "unresolved_share",
       "evidence",
       "insufficient_reasons"
+    ],
+    "type": "object"
+  },
+  "DatasetCatalog": {
+    "properties": {
+      "datasets": {
+        "items": {
+          "$ref": "#/components/schemas/DatasetLink"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "schema_version",
+      "datasets"
+    ],
+    "title": "DatasetCatalog",
+    "type": "object"
+  },
+  "DatasetFile": {
+    "properties": {
+      "bytes": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "sha256": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "bytes",
+      "sha256"
+    ],
+    "type": "object"
+  },
+  "DatasetLedger": {
+    "properties": {
+      "head": {
+        "type": "string"
+      },
+      "sequence": {
+        "type": "string"
+      },
+      "verified": {
+        "type": "boolean"
+      },
+      "witness_scope": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "verified",
+      "head",
+      "sequence",
+      "witness_scope"
+    ],
+    "type": "object"
+  },
+  "DatasetLink": {
+    "properties": {
+      "day": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "id",
+      "day",
+      "source",
+      "label"
+    ],
+    "type": "object"
+  },
+  "DatasetManifest": {
+    "properties": {
+      "coverage": {
+        "type": "string"
+      },
+      "day": {
+        "type": "string"
+      },
+      "files": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/DatasetFile"
+        },
+        "type": "object"
+      },
+      "formats": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "ledger": {
+        "$ref": "#/components/schemas/DatasetLedger"
+      },
+      "license": {
+        "type": "string"
+      },
+      "limits": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "regions": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "tables": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/DatasetTable"
+        },
+        "type": "object"
+      },
+      "vantage": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "source",
+      "day",
+      "license",
+      "formats",
+      "tables",
+      "regions",
+      "ledger",
+      "coverage",
+      "vantage",
+      "limits",
+      "files"
+    ],
+    "title": "DatasetManifest",
+    "type": "object"
+  },
+  "DatasetTable": {
+    "properties": {
+      "rows": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "rows"
     ],
     "type": "object"
   },
@@ -2284,6 +2509,46 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "string"
   },
+  "PassiveInstruction": {
+    "properties": {
+      "accounts": {
+        "items": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "type": "array"
+      },
+      "data_base64": {
+        "type": "string"
+      },
+      "inner_index": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "outer_index": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "program_id_index": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "program_id_index",
+      "accounts",
+      "data_base64",
+      "outer_index"
+    ],
+    "type": "object"
+  },
   "PassiveTip": {
     "properties": {
       "block_id": {
@@ -2372,6 +2637,75 @@ export const schemas: Record<string, Schema> = {
       "requested_tip_lamports",
       "fee_lamports",
       "success",
+      "received"
+    ],
+    "type": "object"
+  },
+  "PassiveTransaction": {
+    "properties": {
+      "account_keys": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "block_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "fee_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "index_in_block": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "index_scope": {
+        "$ref": "#/components/schemas/IndexScope"
+      },
+      "instructions": {
+        "items": {
+          "$ref": "#/components/schemas/PassiveInstruction"
+        },
+        "type": "array"
+      },
+      "observer": {
+        "$ref": "#/components/schemas/ObserverKind"
+      },
+      "received": {
+        "$ref": "#/components/schemas/ReceiveTime"
+      },
+      "signature": {
+        "type": "string"
+      },
+      "slot": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "success": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "source",
+      "observer",
+      "signature",
+      "slot",
+      "index_scope",
+      "success",
+      "fee_lamports",
+      "account_keys",
+      "instructions",
       "received"
     ],
     "type": "object"
@@ -2852,6 +3186,30 @@ export const schemas: Record<string, Schema> = {
     "title": "QuoteServiceRequest",
     "type": "object"
   },
+  "ReceiptComparison": {
+    "properties": {
+      "age_at_transaction_s": {
+        "format": "double",
+        "type": "number"
+      },
+      "snapshot": {
+        "$ref": "#/components/schemas/CurveSnapshot"
+      },
+      "snapshot_id": {
+        "type": "string"
+      },
+      "spend_above_threshold_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      }
+    },
+    "required": [
+      "snapshot_id",
+      "snapshot",
+      "age_at_transaction_s",
+      "spend_above_threshold_lamports"
+    ],
+    "type": "object"
+  },
   "ReceiveTime": {
     "properties": {
       "clock_id": {
@@ -3282,6 +3640,297 @@ export const schemas: Record<string, Schema> = {
     "required": [
       "canary",
       "finalized"
+    ],
+    "type": "object"
+  },
+  "WalletHistoryCapture": {
+    "additionalProperties": false,
+    "properties": {
+      "from_utc": {
+        "type": "string"
+      },
+      "rows": {
+        "items": {
+          "$ref": "#/components/schemas/WalletHistoryRow"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "through_utc": {
+        "type": "string"
+      },
+      "tip_recipients": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "wallet": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "source",
+      "wallet",
+      "from_utc",
+      "through_utc",
+      "tip_recipients",
+      "rows"
+    ],
+    "title": "WalletHistoryCapture",
+    "type": "object"
+  },
+  "WalletHistoryRow": {
+    "additionalProperties": false,
+    "properties": {
+      "chain_time_utc": {
+        "description": "Chain timestamp, not observer receive time. Missing time prevents comparison.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "regime_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "route": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Route"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Transport cannot be established merely from a recipient payment."
+      },
+      "size_class": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SizeClass"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "transaction": {
+        "$ref": "#/components/schemas/PassiveTransaction"
+      }
+    },
+    "required": [
+      "transaction"
+    ],
+    "type": "object"
+  },
+  "WalletReceipt": {
+    "properties": {
+      "capture_hash": {
+        "type": "string"
+      },
+      "compared_transactions": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "duplicates_removed": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "failed_transactions": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "fees_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "from_utc": {
+        "type": "string"
+      },
+      "known_paid_tips_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "limits": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "population": {
+        "type": "string"
+      },
+      "request": {
+        "$ref": "#/components/schemas/WalletReceiptRequest"
+      },
+      "rows": {
+        "items": {
+          "$ref": "#/components/schemas/WalletReceiptRow"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      },
+      "spend_above_threshold_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "threshold_definition": {
+        "type": "string"
+      },
+      "through_utc": {
+        "type": "string"
+      },
+      "transactions": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "unknown_tip_payments": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "visible_failed_share": {
+        "format": "double",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "wallet": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "source",
+      "capture_hash",
+      "wallet",
+      "from_utc",
+      "through_utc",
+      "request",
+      "population",
+      "transactions",
+      "duplicates_removed",
+      "failed_transactions",
+      "unknown_tip_payments",
+      "compared_transactions",
+      "fees_lamports",
+      "known_paid_tips_lamports",
+      "spend_above_threshold_lamports",
+      "threshold_definition",
+      "rows",
+      "limits"
+    ],
+    "title": "WalletReceipt",
+    "type": "object"
+  },
+  "WalletReceiptRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "horizon_slots": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "max_curve_age_s": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "region": {
+        "type": "string"
+      },
+      "target_p": {
+        "format": "double",
+        "type": "number"
+      }
+    },
+    "required": [
+      "region",
+      "target_p",
+      "horizon_slots",
+      "max_curve_age_s"
+    ],
+    "title": "WalletReceiptRequest",
+    "type": "object"
+  },
+  "WalletReceiptRow": {
+    "properties": {
+      "chain_time_utc": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "comparison": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ReceiptComparison"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "fee_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "paid_tip_lamports": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "route": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Route"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "signature": {
+        "type": "string"
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "unavailable_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "signature",
+      "success",
+      "fee_lamports"
     ],
     "type": "object"
   },

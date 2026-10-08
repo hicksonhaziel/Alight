@@ -1,9 +1,13 @@
 use alight_ingest::{Config, HttpProbe};
 use alight_types::Verdict;
 use std::process::ExitCode;
+mod anchor;
 mod api;
+mod dataset;
 mod diagnostics;
 mod forecasting;
+mod judge;
+mod receipts;
 mod simulation;
 
 #[tokio::main]
@@ -19,6 +23,16 @@ async fn main() -> ExitCode {
 
 async fn run() -> Result<u8, String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("anchor") {
+        return anchor::run(&args).await;
+    }
+    if args.first().map(String::as_str) == Some("receipt") {
+        return receipts::run(&args).await;
+    }
+    if args.first().map(String::as_str) == Some("export") && args.iter().any(|a| a == "--database")
+    {
+        return dataset::run(&args);
+    }
     if args.first().map(String::as_str) == Some("run") {
         return api::daemon(&args);
     }
@@ -48,15 +62,29 @@ async fn run() -> Result<u8, String> {
     }
     if args.first().map(String::as_str) != Some("doctor") {
         eprintln!(
+            "Phase 6: alight receipt capture|import|evaluate [options]; alight export --database DB --source MODE --day YYYY-MM-DD --output DIR [--format csv|parquet|both]; alight anchor prepare|verify [options]; alight doctor --mode sim|replay|observe|live [--network]. See README for exact offline commands."
+        );
+        eprintln!(
             "Usage: alight run --mode sim|observe|live|replay [alightd options]\n       alight doctor|ledger verify --api URL --source MODE\n       alight quote --api URL --source MODE --request FILE [--freeze --operator-key-file FILE]\n       alight prove --api URL --source MODE (--id ID | --request FILE --operator-key-file FILE)\n       alight export --api URL --source MODE --day YYYY-MM-DD --output FILE\n       alight doctor [--network] [--output PATH]\n       alight sim [--seed N] [--canaries N] [--slot-ms N] [--congestion X] [--flat-tip]\n                  [--shift-at N --shift-slot-ms N --shift-congestion X] [--output PATH] [--database PATH]\n       alight replay-model --input PATH [--output PATH] [--database PATH]\nalight quote --database PATH --request JSON [--ttl S] [--frozen-model HASH] [--tape JSON]\n       alight ledger verify --database PATH --source live|sim|replay\n       alight model-tick|grade --database PATH --source MODE --as-of UTC [--region NAME]\n       alight signal --database PATH --source MODE --day YYYY-MM-DD --as-of UTC\nDoctor defaults to configuration presence only; --network runs read-only probes. Sim/replay need no environment, keys or network."
         );
         return Ok(2);
     }
     let mut network = false;
     let mut output = None;
+    let mut mode = None;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
+            "--mode" => {
+                i += 1;
+                mode = Some(match args.get(i).map(String::as_str) {
+                    Some("observe") => alight_types::RunMode::Observe,
+                    Some("live") => alight_types::RunMode::Live,
+                    Some("sim") => alight_types::RunMode::Sim,
+                    Some("replay") => alight_types::RunMode::Replay,
+                    _ => return Err("doctor --mode must be observe, live, sim or replay".into()),
+                });
+            }
             "--network" => network = true,
             "--output" => {
                 i += 1;
@@ -65,6 +93,9 @@ async fn run() -> Result<u8, String> {
             _ => return Err("Unknown option; see alight doctor usage".into()),
         }
         i += 1;
+    }
+    if let Some(mode) = mode {
+        return judge::doctor(mode, network, output.as_deref()).await;
     }
     let config = Config::load().map_err(|e| e.to_string())?;
     if !network {
