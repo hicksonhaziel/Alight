@@ -47,9 +47,8 @@ Full epoch schedule responses have a separate bounded 45-second deadline.
 
 ## Offline API
 
-The saved/stopped collector image predates these routes. Rebuild from current
-sources before an owner-authorized live resume; this development did not restart
-collection. For a provider/key-free Sim server with API operator authentication:
+Rebuild collector images from current sources before switching deployments.
+For a provider/key-free Sim server with API operator authentication:
 
 ```sh
 python3 -m pip install jsonschema==4.23.0  # contract-test dependency
@@ -83,10 +82,9 @@ bearer keys in the `Authorization` header. Only live mode schedules real sends,
 through the existing observer/funding/budget/prepared-send checks. Observe and
 replay reject Prove. Sim can demonstrate N=40 without provider traffic or spend.
 
-Hickson requested that collection be paused after deployment verification to
-save internet data. Both containers are explicitly stopped; the prior systemd
-observe service is disabled. Local data and the verified image are preserved.
-To resume using cached images, then inspect health:
+An intentionally stopped Compose deployment preserves local data and images.
+To resume it using cached images, then inspect health (Compose defaults to live
+sending unless `ALIGHT_RUNTIME_MODE=observe` is configured):
 
 ```sh
 docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
@@ -196,9 +194,9 @@ queued/inconclusive report; use `prove --id` to read progress without resubmitti
 
 Export verifies the source's whole ledger before paging to that verified head,
 then selects forecast issue dates in UTC. It is bounded to 10,000 rows / 64 MiB,
-creates a new output file and refuses overwrite. The current export contains
-forecasts; a full dataset exporter with canaries, regimes and Parquet/CSV is not
-yet implemented.
+creates a new output file and refuses overwrite. This API export contains
+forecasts. Database-based `alight export --database DB --source SOURCE --day DAY
+--output DIR` exports the full CSV/Parquet dataset; see `docs/dataset.md`.
 A date-filtered subset cannot independently verify the complete chain or models.
 Run `python3 scripts/test_phase3_developer.py` after building: it starts/stops only
 temporary Sim daemons and checks both examples, CLI lifecycle, all four exit codes,
@@ -299,8 +297,8 @@ agreement remain unverified.
 
 ## Diagnostics and finite history jobs
 
-Collection remains paused. These commands implement offline acceptance without
-loading signing keys or making provider requests:
+These commands implement offline acceptance without loading signing keys or
+making provider requests:
 
 ```sh
 cargo run -p alight -- regime-sim --database .alight/phase5/regime-sim.db --seed 42 --output .alight/phase5/regime-sim.json
@@ -315,10 +313,10 @@ samples. It creates no provider frames or market tape. Do not reuse the Live DB.
 `alight diagnostics --api http://127.0.0.1:8081 --source sim` reads saved diagnostics;
 the Rust and TypeScript SDKs expose the same read-only operation.
 
-The observe/live daemon now runs diagnostics inside its existing supervised
+The observe/live daemon runs diagnostics inside its existing supervised
 lifetime: sealed clock bins, current reference-cell landing rates, observer
 comparison, bounded finalized block sampling, checkpointed detection and alerts.
-It does not run until the operator explicitly resumes collection. Optional
+Starting collection also starts these diagnostics. Optional
 `SOLAMI_WEBHOOK_SECRET` enables authenticated ingress; no webhook is registered
 by this code. Optional `ALIGHT_SLOT_COMPUTE_LIMIT` and
 `ALIGHT_SLOT_COMPUTE_LIMIT_PROVENANCE` must be supplied together with a verified
@@ -344,6 +342,10 @@ Alpenglow or a slot-time step. See `docs/regime-methodology.md` for thresholds.
 ## Observe collection and Blur
 
 Observe excludes signing identities and never starts the canary or anchor sender.
+The host service template in `deploy/alight-observe.service` retries failed
+startup after 30 seconds; its 12-start/300-second limit tolerates a temporary
+RPC/DNS outage without exhausting a rapid restart burst. The workbench and API
+report upstream freshness separately from service availability.
 The optional Blur worker defaults on when a read token is configured;
 `ALIGHT_BLUR_ENABLED=false` disables it. It discovers up to three pools with
 at least $100,000 reported TVL, keeps one pool-filtered socket, and bounds each

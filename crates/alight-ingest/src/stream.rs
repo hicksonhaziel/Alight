@@ -328,6 +328,10 @@ pub async fn grpc_worker(
         if *stop.borrow() {
             break;
         }
+        if let Some(reason) = reason {
+            // Reasons are static categories; never include provider errors or credentials.
+            eprintln!("gRPC reconnect: {reason}");
+        }
         if reason == Some("writer_closed") {
             break;
         }

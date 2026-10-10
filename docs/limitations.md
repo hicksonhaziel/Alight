@@ -10,7 +10,8 @@ Beam HTTP and plain RPC use the configured Solami RPC endpoint; tipped versus
 untipped is a workload distinction, not evidence of independent HTTP backends.
 QUIC is separate. No funded owned route landing, live N=40 Prove, mainnet memo
 anchor or complete four-observer agreement has been verified in this work.
-Collection remains paused. Earlier observe-only records are not canary outcomes.
+Observe collection reads network and market data without signing or sending.
+Observe-only records are not owned canary outcomes.
 
 Missing observations remain unknown. A timeout is never expiry. Proven expiry
 requires passed last-valid block height and covered commitment-level RPC

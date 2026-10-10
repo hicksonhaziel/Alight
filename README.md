@@ -5,10 +5,11 @@ claims for held-out Prove runs, and keeps an immutable forecast ledger. It uses
 Solami data and compares outcomes across observers. The workbench shows
 uncertainty, source, sample size, age and unfavorable verdicts.
 
-The verified path is offline Sim/Replay. Observe collects data without sending
-transactions. Fresh live stream access, funded owned canaries, complete
-four-observer agreement and mainnet anchoring remain unverified. The downloadable
-sample is **Sim**, not mainnet performance.
+Sim/Replay are verified offline. Observe collects data without sending
+transactions; fresh gRPC/Mirage observations and Blur market snapshots were
+verified on 10 October 2026. Funded owned canaries, complete four-observer
+agreement and mainnet anchoring remain unverified. The downloadable sample
+is **Sim**, not mainnet performance.
 
 ## Quick start: no keys or wallet
 

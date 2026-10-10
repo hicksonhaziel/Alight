@@ -429,11 +429,21 @@ impl BlurClient {
         )
         .await
         .map_err(|_| EconError::Transport)?
-        .map_err(|error| match error {
-            tokio_tungstenite::tungstenite::Error::Http(response) => {
-                EconError::Http(response.status().as_u16())
+        .map_err(|error| {
+            use tokio_tungstenite::tungstenite::Error;
+            // Log only fixed categories; transport errors may embed authenticated URLs.
+            let category = match &error {
+                Error::Http(_) => "http",
+                Error::Io(_) => "io",
+                Error::Tls(_) => "tls",
+                Error::Protocol(_) => "protocol",
+                _ => "transport",
+            };
+            eprintln!("Blur websocket connection failed: {category}");
+            match error {
+                Error::Http(response) => EconError::Http(response.status().as_u16()),
+                _ => EconError::Transport,
             }
-            _ => EconError::Transport,
         })?;
         let mut last_data = tokio::time::Instant::now();
         loop {
