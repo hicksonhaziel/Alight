@@ -5,9 +5,9 @@ import type {
 } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
-import { Empty, Header, Loading, Notice, Panel } from "../ui";
+import { Empty, Loading, Notice } from "../ui";
 
-export function Datasets({ data }: { data: DashboardData }) {
+export function DatasetDownloads({ data }: { data: DashboardData }) {
   const [catalog, setCatalog] = useState<DatasetCatalog | null>(null);
   const [manifests, setManifests] = useState<Record<string, DatasetManifest>>(
     {},
@@ -47,15 +47,6 @@ export function Datasets({ data }: { data: DashboardData }) {
   }, [data.client]);
   return (
     <>
-      <Header
-        eyebrow="EVIDENCE / 08"
-        title="Datasets"
-        description="Download retained evidence with its schema, source and checksums."
-      />
-      <Notice>
-        Each bundle has its own source label. Sim and Replay downloads do not
-        establish mainnet performance.
-      </Notice>
       {error ? (
         <Notice danger>{error}</Notice>
       ) : !catalog ? (
@@ -69,16 +60,11 @@ export function Datasets({ data }: { data: DashboardData }) {
         catalog.datasets.map((item) => {
           const m = manifests[item.id];
           return (
-            <Panel
-              key={item.id}
-              title={`${m.source.toUpperCase()} · ${m.day} UTC`}
-              caption={item.label}
-            >
+            <div key={item.id} className="receipt-limits">
+              <h3>
+                {m.source.toUpperCase()} · {m.day} UTC
+              </h3>
               <p className="panel-note">{m.coverage}</p>
-              <p className="panel-note">
-                Region labels: {m.regions.join(", ") || "Unrecorded"} · license{" "}
-                {m.license}
-              </p>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -135,44 +121,30 @@ export function Datasets({ data }: { data: DashboardData }) {
                   </span>
                 ))}
               </p>
-              <p className="panel-note">
-                Verified ledger sequence {m.ledger.sequence} ·{" "}
-                {m.ledger.witness_scope}
-              </p>
-              <div className="receipt-limits">
-                {m.limits.map((limit) => (
-                  <p key={limit}>{limit}</p>
-                ))}
-              </div>
-            </Panel>
+            </div>
           );
         })
       )}
-      <Panel
-        title="Methodology & license"
-        caption="Read the scope before comparing populations"
-      >
-        <p>
-          <a href="/methodology/methodology.md">Model methodology</a>
-          {" · "}
-          <a href="/methodology/receipts.md">Wallet receipts</a>
-          {" · "}
-          <a href="/methodology/dataset.md">Dataset schema and verification</a>
-          {" · "}
-          <a href="/methodology/limitations.md">Limitations</a>
-        </p>
-        <p className="panel-note">
-          Exported data is available under{" "}
-          <a
-            href="https://creativecommons.org/licenses/by/4.0/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            CC BY 4.0
-          </a>
-          . Private wallet captures are excluded from publication.
-        </p>
-      </Panel>
+      <p>
+        <a href="/methodology/methodology.md">Model methodology</a>
+        {" · "}
+        <a href="/methodology/receipts.md">Wallet receipts</a>
+        {" · "}
+        <a href="/methodology/dataset.md">Dataset schema and verification</a>
+        {" · "}
+        <a href="/methodology/limitations.md">Limitations</a>
+      </p>
+      <p className="panel-note">
+        Exported data is available under{" "}
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          CC BY 4.0
+        </a>
+        . Private wallet captures are excluded from publication.
+      </p>
     </>
   );
 }

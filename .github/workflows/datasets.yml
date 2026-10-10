@@ -1,0 +1,37 @@
+name: Publish evidence downloads
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: evidence-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Keep publication on the current main revision
+        run: |
+          current=$(git ls-remote origin refs/heads/main | cut -f1)
+          test "$(git rev-parse HEAD)" = "$current"
+      - run: python3 -m pip install --disable-pip-version-check -r scripts/dataset-requirements.txt
+      - run: python3 scripts/build_dataset_site.py .alight/dataset-site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .alight/dataset-site
+      - uses: actions/deploy-pages@v4
+        id: deploy

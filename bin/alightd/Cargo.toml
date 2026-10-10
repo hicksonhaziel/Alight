@@ -15,6 +15,7 @@ alight-api.workspace = true
 alight-notify.workspace = true
 alight-sim.workspace = true
 alight-diagnostics.workspace = true
+alight-econ.workspace = true
 tokio.workspace = true
 serde_json.workspace = true
 serde.workspace = true

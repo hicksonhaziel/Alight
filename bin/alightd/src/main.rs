@@ -1,6 +1,7 @@
 //! Persistent observe/live collector. Signing is confined to the governed canary engine.
 mod alerts;
 mod diagnostics;
+mod market;
 use alight_ingest::{
     Config, HttpProbe, MAINNET_GENESIS, adapter,
     clock::SlotClock,
@@ -676,6 +677,12 @@ async fn run() -> Result<(), Error> {
     workers.spawn(model_loop(store.clone(), rx.clone()));
     workers.spawn(diagnostics::run(config.clone(), store.clone(), rx.clone()));
     workers.spawn(alerts::run(config.clone(), store.clone(), rx.clone()));
+    workers.spawn(market::run(
+        config.clone(),
+        store.clone(),
+        clock.clone(),
+        rx.clone(),
+    ));
     if mode == RunMode::Live {
         // Load keys only in this worker's private configuration, never in observer state.
         let signing = Arc::new(Config::load().map_err(|_| Error::Configuration)?);

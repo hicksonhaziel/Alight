@@ -17,7 +17,7 @@
 :80 {
 	@readonly {
 		method GET HEAD
-		path /v1/health /v1/clock /v1/leaders /v1/curve /v1/quote /v1/prove/* /v1/proves /v1/ledger /v1/ledger/verify /v1/ledger/anchor /v1/ledger/payloads /v1/workbench /v1/diagnostics /v1/canaries/*/observations /v1/tape /v1/receipt/* /v1/observers /v1/openapi.json /v1/stream
+		path /v1/health /v1/clock /v1/leaders /v1/curve /v1/quote /v1/prove/* /v1/proves /v1/ledger /v1/ledger/verify /v1/ledger/anchor /v1/ledger/anchors /v1/ledger/payloads /v1/workbench /v1/diagnostics /v1/canaries/*/observations /v1/tape /v1/receipt/* /v1/observers /v1/openapi.json /v1/stream
 	}
 	handle @readonly {
 		reverse_proxy collector:8080

@@ -76,6 +76,7 @@ pub fn document() -> Value {
     add::<DatasetCatalog>(&mut schemas);
     add::<DatasetManifest>(&mut schemas);
     add::<AnchorDraft>(&mut schemas);
+    add::<AnchorPage>(&mut schemas);
     add::<ApiStreamSnapshot>(&mut schemas);
     add::<Alert>(&mut schemas);
     add::<ForecastLedgerExport>(&mut schemas);
@@ -121,6 +122,7 @@ pub fn document() -> Value {
         ("/v1/observers", "ObserverHealthPage"),
         ("/v1/ledger/verify", "LedgerVerification"),
         ("/v1/ledger/anchor", "AnchorDraft"),
+        ("/v1/ledger/anchors", "AnchorPage"),
         ("/v1/workbench", "WorkbenchEvidence"),
         ("/v1/diagnostics", "DiagnosticsPage"),
     ] {

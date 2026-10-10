@@ -323,6 +323,7 @@ pub fn router(state: ApiState) -> Router {
         .route("/v1/ledger", get(ledger))
         .route("/v1/ledger/verify", get(verify))
         .route("/v1/ledger/anchor", get(anchor_draft))
+        .route("/v1/ledger/anchors", get(anchors))
         .route("/v1/ledger/payloads", get(browser_ledger))
         .route("/v1/workbench", get(workbench))
         .route("/v1/diagnostics", get(diagnostics))
@@ -1083,6 +1084,17 @@ async fn verify(State(s): State<ApiState>) -> Result<Json<LedgerVerification>, A
         source: s.source,
         verified: true,
         entries,
+    }))
+}
+async fn anchors(State(s): State<ApiState>) -> Result<Json<AnchorPage>, ApiError> {
+    let _permit = s.work()?;
+    Ok(Json(AnchorPage {
+        source: s.source,
+        records: s
+            .store
+            .anchors(s.source)
+            .await
+            .map_err(|_| s.unavailable())?,
     }))
 }
 async fn anchor_draft(State(s): State<ApiState>) -> Result<Json<AnchorDraft>, ApiError> {

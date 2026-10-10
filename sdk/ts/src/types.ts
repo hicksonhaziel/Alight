@@ -1,7 +1,11 @@
 // GENERATED. Run cargo run -p alight-api --example openapi > sdk/ts/openapi.json then npm run generate.
 export type Alert = { "at_utc": string; "details": unknown; "id": string; "rule": AlertRule; "schema_version": number; "source": Source; "subject": string; "summary": string };
 export type AlertRule = "ROUTE_DEGRADATION" | "OBSERVER_DISAGREEMENT" | "REGIME_CHANGE" | "QUOTE_DRIFT" | "BUDGET";
+export type AnchorAttempt = { "commitment": AnchorDraft; "last_valid_block_height": DecimalU64; "payer": string; "prepared_at_utc": string; "quoted_fee_lamports": DecimalU64; "reservation_id": string; "schema_version": number; "signature": string; "wire_sha256": string };
 export type AnchorDraft = { "explorer_url"?: (string | null); "head_hash": string; "memo": string; "schema_version": number; "sequence": DecimalU64; "signature"?: (string | null); "signing_enabled": boolean; "source": Source; "status": string };
+export type AnchorEvent = { "actual_fee_lamports"?: (DecimalU64 | null); "at_utc": string; "confirmed_slot"?: (DecimalU64 | null); "reservation_id": string; "status": string };
+export type AnchorPage = { "records": Array<AnchorRecord>; "source": Source };
+export type AnchorRecord = { "attempt": AnchorAttempt; "event": AnchorEvent; "source": Source };
 export type ApiClock = { "mean_slot_ms"?: (number | null); "method": string; "minimum_chain_seconds": number; "minimum_slot_distance": number; "source": Source; "window": ClockWindow };
 export type ApiErrorResponse = { "code": string; "message": string; "source": Source };
 export type ApiHealth = { "as_of_utc": string; "budget_reserved_today_by_route": { [key: string]: string }; "canaries_sent": DecimalU64; "canary_engine": unknown; "collector_status": string; "counts": HealthCounts; "leaders": unknown; "mode": RunMode; "observers": Array<ObserverHealthView>; "region": string; "run_id": string; "schema_version": number; "send_attempts": { [key: string]: number }; "signing_enabled": boolean; "source": Source; "status": string; "uptime_s": DecimalU64 };

@@ -50,6 +50,53 @@ export const schemas: Record<string, Schema> = {
     ],
     "type": "string"
   },
+  "AnchorAttempt": {
+    "additionalProperties": false,
+    "description": "Immutable attempt persisted before broadcast; all money is lamports.",
+    "properties": {
+      "commitment": {
+        "$ref": "#/components/schemas/AnchorDraft"
+      },
+      "last_valid_block_height": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "payer": {
+        "type": "string"
+      },
+      "prepared_at_utc": {
+        "type": "string"
+      },
+      "quoted_fee_lamports": {
+        "$ref": "#/components/schemas/DecimalU64"
+      },
+      "reservation_id": {
+        "type": "string"
+      },
+      "schema_version": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "signature": {
+        "type": "string"
+      },
+      "wire_sha256": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "reservation_id",
+      "commitment",
+      "payer",
+      "signature",
+      "prepared_at_utc",
+      "wire_sha256",
+      "quoted_fee_lamports",
+      "last_valid_block_height"
+    ],
+    "type": "object"
+  },
   "AnchorDraft": {
     "additionalProperties": false,
     "properties": {
@@ -98,7 +145,84 @@ export const schemas: Record<string, Schema> = {
       "status",
       "signing_enabled"
     ],
-    "title": "AnchorDraft",
+    "type": "object"
+  },
+  "AnchorEvent": {
+    "additionalProperties": false,
+    "properties": {
+      "actual_fee_lamports": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "at_utc": {
+        "type": "string"
+      },
+      "confirmed_slot": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/DecimalU64"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "reservation_id": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "reservation_id",
+      "at_utc",
+      "status"
+    ],
+    "type": "object"
+  },
+  "AnchorPage": {
+    "properties": {
+      "records": {
+        "items": {
+          "$ref": "#/components/schemas/AnchorRecord"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "records"
+    ],
+    "title": "AnchorPage",
+    "type": "object"
+  },
+  "AnchorRecord": {
+    "properties": {
+      "attempt": {
+        "$ref": "#/components/schemas/AnchorAttempt"
+      },
+      "event": {
+        "$ref": "#/components/schemas/AnchorEvent"
+      },
+      "source": {
+        "$ref": "#/components/schemas/Source"
+      }
+    },
+    "required": [
+      "source",
+      "attempt",
+      "event"
+    ],
     "type": "object"
   },
   "ApiClock": {

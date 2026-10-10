@@ -180,7 +180,10 @@ export function Tape({ data }: { data: DashboardData }) {
           ))}
         </div>
       </Panel>
-      <WalletReceiptPanel data={data} />
+      <details className="panel">
+        <summary>Wallet receipts</summary>
+        <WalletReceiptPanel data={data} />
+      </details>
     </>
   );
 }

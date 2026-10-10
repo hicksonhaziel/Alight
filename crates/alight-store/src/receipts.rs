@@ -5,6 +5,20 @@ use sha2::{Digest, Sha256};
 use sqlx::Row;
 
 impl Store {
+    /// Latest imported same-source wallet capture by coverage end, with a stable hash tie-break.
+    /// The exact envelope is reverified before use; this method never fetches history.
+    pub async fn latest_wallet_capture(
+        &self,
+        source: Source,
+        wallet: &str,
+    ) -> Result<Option<WalletHistoryCapture>, StoreError> {
+        let hash: Option<String> = sqlx::query_scalar("SELECT hash FROM wallet_history_captures WHERE source=? AND wallet=? ORDER BY julianday(json_extract(payload_json,'$.through_utc')) DESC,hash DESC LIMIT 1")
+            .bind(label(source)?).bind(wallet).fetch_optional(&self.pool).await?;
+        match hash {
+            Some(hash) => self.wallet_capture(source, wallet, &hash).await,
+            None => Ok(None),
+        }
+    }
     /// Stores a bounded replay/Sim envelope by content hash; import never creates Live evidence.
     pub async fn save_wallet_capture(
         &self,

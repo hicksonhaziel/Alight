@@ -655,7 +655,9 @@ Migration `0011_wallet_history.sql` adds immutable content-addressed captures.
 No historical canary, forecast, grade or curve bytes are rewritten. Public
 `GET /v1/receipt/{wallet}?capture=sha256:...` evaluates an explicitly selected
 stored capture in the API's source; it performs no provider fetch or send.
-Without a capture, the API reports unavailable history rather than guessing.
+Without a capture hash, the API selects the latest imported same-source wallet
+capture by coverage end (stable hash tie-break), rechecks its content hash, and
+returns unavailable when none exists. This adds no network request or migration.
 
 Static `DatasetCatalog` and `DatasetManifest` schemas describe reviewed public
 `/datasets/index.json` and `/datasets/{id}/manifest.json`. They declare each
@@ -668,6 +670,19 @@ forecast-only JSON export; `export --database` produces the daily dataset.
 ledger, with `status=PREPARED_UNSIGNED`, `signing_enabled=false` and null
 signature/explorer. It is a read-only commitment, not an on-chain anchor.
 Example memo: `alight.ledger.v1|sim|2|sha256:` followed by the actual head's 64
-hex digits. No database migration is required. Preparation/verification live
-in `alight-canary`; no sign/send path is added. [Anchoring](anchoring.md)
-documents the remaining governed mainnet acceptance.
+hex digits. Unsigned preparation needs no new tables. Preparation/verification
+live in `alight-canary`. Periodic execution adds `AnchorAttempt`, `AnchorEvent`,
+`AnchorRecord`
+and `AnchorPage`. Migration `0012_ledger_anchors.sql` stores immutable attempts
+and append-only events in the same database as Live budget reservations.
+The commitment source describes the ledger being anchored; every network
+anchor spends a Live/RPC governor reservation, including a labelled Sim head.
+An attempt is persisted before its sole broadcast. A crash/unknown result is
+never retried with a new signature. `PREPARED`, `ACCEPTED`, `UNKNOWN` and
+`REJECTED` do not establish landing; only `FINALIZED` follows a successful
+finalized RPC transaction whose payer, memo bytes, fee and signature match.
+Example event: `{"reservation_id":"anchor-...","at_utc":"2026-10-10T00:00:00Z","status":"UNKNOWN","confirmed_slot":null,"actual_fee_lamports":null}`.
+`GET /v1/ledger/anchors` lists at most 100 same-source records. Observe never
+starts this sender. The standalone CLI requires explicit mainnet opt-in and
+uses the configured collector database for shared spend accounting.
+[Anchoring](anchoring.md) documents the governed controls and pending mainnet acceptance.

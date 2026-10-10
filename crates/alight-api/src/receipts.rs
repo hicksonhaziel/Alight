@@ -22,26 +22,35 @@ pub(super) async fn receipt(
     {
         return Err(s.invalid());
     }
-    let hash = q.capture.ok_or_else(|| s.error(StatusCode::SERVICE_UNAVAILABLE, "HISTORY_UNAVAILABLE", "Wallet history requires an explicitly imported capture; Data API history is unverified"))?;
-    if hash.len() != 71
-        || !hash.starts_with("sha256:")
-        || !hash[7..].bytes().all(|b| b.is_ascii_hexdigit())
-    {
+    if q.capture.as_ref().is_some_and(|hash| {
+        hash.len() != 71
+            || !hash.starts_with("sha256:")
+            || !hash[7..].bytes().all(|b| b.is_ascii_hexdigit())
+    }) {
         return Err(s.invalid());
     }
     let _permit = s.work()?;
-    let capture = s
-        .store
-        .wallet_capture(s.source, &wallet, &hash)
-        .await
-        .map_err(|_| s.unavailable())?
-        .ok_or_else(|| {
-            s.error(
-                StatusCode::NOT_FOUND,
-                "HISTORY_NOT_FOUND",
-                "No matching source-scoped wallet capture",
-            )
-        })?;
+    let explicit = q.capture.is_some();
+    let capture = match q.capture {
+        Some(hash) => s.store.wallet_capture(s.source, &wallet, &hash).await,
+        None => s.store.latest_wallet_capture(s.source, &wallet).await,
+    }
+    .map_err(|_| s.unavailable())?
+    .ok_or_else(|| {
+        s.error(
+            if explicit {
+                StatusCode::NOT_FOUND
+            } else {
+                StatusCode::SERVICE_UNAVAILABLE
+            },
+            if explicit {
+                "HISTORY_NOT_FOUND"
+            } else {
+                "HISTORY_UNAVAILABLE"
+            },
+            "No saved history for this wallet and source; live provider history is unavailable",
+        )
+    })?;
     if utc(&capture.through_utc).map_err(|_| s.unavailable())?
         > utc(&s.now().await).map_err(|_| s.unavailable())?
     {

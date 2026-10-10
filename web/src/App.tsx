@@ -29,7 +29,6 @@ import { Ledger } from "./pages/Ledger";
 import { Regimes } from "./pages/Regimes";
 import { Health } from "./pages/Health";
 import { Tape } from "./pages/Tape";
-import { Datasets } from "./pages/Datasets";
 const navigation: {
   id: string;
   name: string;
@@ -78,12 +77,6 @@ const navigation: {
     description: "Market transfers and coverage",
     icon: Wallet,
   },
-  {
-    id: "datasets",
-    name: "Datasets",
-    description: "Download source-labelled evidence",
-    icon: ShieldCheck,
-  },
 ];
 export function App() {
   const [route, setRoute] = useState(location.hash.slice(1) || "cockpit"),
@@ -99,7 +92,8 @@ export function App() {
     [draftKey, setDraftKey] = useState("");
   const [frozen, setFrozen] = useState<ForecastEntry | null>(null);
   const { data, connection, error } = useDashboard(reconnect);
-  const page = route.split("/")[0],
+  const page =
+      route.split("/")[0] === "datasets" ? "ledger" : route.split("/")[0],
     selected = navigation.find((n) => n.id === page);
   let reference: string | undefined;
   try {
@@ -484,8 +478,6 @@ export function App() {
               <Health data={data} reference={reference} />
             ) : page === "tape" ? (
               <Tape data={data} />
-            ) : page === "datasets" ? (
-              <Datasets data={data} />
             ) : (
               <Cockpit data={data} />
             )}

@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
 test.use({ video: "on" });
-test("Sim receipts, unsigned anchors and dataset downloads preserve evidence labels", async ({
+test("Compact receipts and dataset downloads preserve evidence labels", async ({
   page,
   request,
 }) => {
@@ -74,12 +74,16 @@ test("Sim receipts, unsigned anchors and dataset downloads preserve evidence lab
   );
   await page.goto("/#tape");
   await expect(page.locator(".topbar .source-badge")).toHaveText("SIMULATED");
+  expect(imported.capture_hash).toMatch(/^sha256:/);
+  await page.getByText("Wallet receipts", { exact: true }).click();
   await page.getByLabel("Wallet fee payer").fill(wallet);
-  await page.getByLabel("Capture hash").fill(imported.capture_hash);
   await page.getByRole("button", { name: "Evaluate receipt" }).click();
   await expect(
     page.getByRole("heading", { name: "SIM · 1 visible transactions" }),
   ).toBeVisible();
+  await page
+    .getByText("Transaction details and limits", { exact: true })
+    .click();
   await expect(
     page.getByText(
       "Missing supported historical Beam frontier or transaction context",
@@ -128,16 +132,15 @@ test("Sim receipts, unsigned anchors and dataset downloads preserve evidence lab
     },
   });
   expect(freeze.status()).toBe(201);
-  await page.getByRole("button", { name: "Prepare unsigned memo" }).click();
+  await expect(
+    page.getByRole("button", { name: "Prepare unsigned memo" }),
+  ).toHaveCount(0);
   const response = await request.get("http://127.0.0.1:8082/v1/ledger/anchor");
   expect(response.status()).toBe(200);
   const draft = await response.json();
   expect(draft.signing_enabled).toBe(false);
   expect(draft.signature).toBeNull();
-  await expect(
-    page.getByText("No signature · no mainnet timestamp · no broadcast"),
-  ).toBeVisible();
-  await page.goto("/#datasets");
+  await page.getByText("Download datasets", { exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "SIM · 2026-10-05 UTC" }),
   ).toBeVisible();

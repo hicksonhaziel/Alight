@@ -339,3 +339,21 @@ for 30 minutes. The daily/burst governor and wallet reserve remain unchanged.
 An empty new regime must collect enough fresh support to quote again. Named
 upgrades require independent technical evidence; epoch dates alone never establish
 Alpenglow or a slot-time step. See `docs/regime-methodology.md` for thresholds.
+
+
+## Observe collection and Blur
+
+Observe excludes signing identities and never starts the canary or anchor sender.
+The optional Blur worker defaults on when a read token is configured;
+`ALIGHT_BLUR_ENABLED=false` disables it. It discovers up to three pools with
+at least $100,000 reported TVL, keeps one pool-filtered socket, and bounds each
+price series to 300 seconds / 10,000 trades. Initial REST history is three trades
+per pool. Current economics also require a fresh observer and measured slot
+clock. Gaps and regime changes prevent bridging old price evidence; stale or
+sparse data preserves probability-only quotes.
+
+HTTP 401/402/403 discovery failures retry after 300 seconds; other discovery
+failures after 60 seconds. These indicate unavailable evidence, not a stopped
+service or healthy collection. Restore the account's read access before
+expecting fresh streams. Restart the observe service after changing local keys.
+No provider token or authenticated URL should be copied into logs or reports.

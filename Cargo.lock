@@ -310,6 +310,7 @@ dependencies = [
  "alight-api",
  "alight-canary",
  "alight-diagnostics",
+ "alight-econ",
  "alight-forecast",
  "alight-ingest",
  "alight-notify",

@@ -108,7 +108,7 @@ Reservations are worst-case exposure, not balance reconciliation.
 | Yellowstone gRPC | Filtered primary observation, clock/block identity and tip tape |
 | Mirage | Secondary transport via captured Yellowstone-compatible frames |
 | RPC | Leaders, commitment/absence checks, block sampling and untipped submission |
-| Blur | Captured pool/trade/candle shapes, conditional delay-cost economics; stale/sparse fallback |
+| Blur | Observe/live worker discovers up to three liquid pools, subscribes with pool filters and stores bounded delay-cost snapshots; stale/sparse fallback |
 | Webhooks | Exact-body HMAC observation; complete live registration/coverage unverified |
 | Data API | Wallet-history adapter pending a verified payload; receipts use bounded Sim/Replay captures |
 
@@ -140,9 +140,12 @@ target/debug/alight anchor verify --database .alight/judge/sim.db \
 
 Datasets include CSV/Parquet, schema, checksums and the original full forecast
 chain witness. `--format csv` needs no PyArrow. `export --api` keeps the earlier
-forecast-only JSON behavior. The Datasets page serves reviewed downloads with
+forecast-only JSON behavior. Ledger's collapsed downloads section serves reviewed bundles with
 their own source labels. Data uses CC BY 4.0; private wallet captures are
-excluded. Unsigned memo preparation sends nothing; mainnet acceptance is pending.
+excluded. Public downloads are built from the same reviewed catalog and published
+through GitHub Pages after CI. Unsigned memo preparation and `anchor preflight`
+send nothing. The periodic sender requires separate explicit mainnet opt-in;
+mainnet acceptance is pending. See [anchor controls](docs/anchoring.md).
 
 Receipts deduplicate fees, preserve unknown payments, and compare supported
 historical Beam frontiers. Missing route/time/frontier evidence stays descriptive.

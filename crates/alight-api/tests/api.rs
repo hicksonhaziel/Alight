@@ -62,7 +62,17 @@ async fn wallet_receipt_is_read_only_source_scoped_and_reports_missing_history()
         .expect("state"),
     );
     let url = format!("/v1/receipt/{}", capture.wallet);
-    let (status, error) = call(&app, "GET", &url, json!(null), None).await;
+    let (status, latest) = call(&app, "GET", &url, json!(null), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(latest["capture_hash"], hash);
+    let (status, error) = call(
+        &app,
+        "GET",
+        "/v1/receipt/11111111111111111111111111111111",
+        json!(null),
+        None,
+    )
+    .await;
     assert_eq!(status, 503);
     assert_eq!(error["code"], "HISTORY_UNAVAILABLE");
     let (status, r) = call(

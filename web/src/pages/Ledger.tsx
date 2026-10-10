@@ -7,10 +7,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { DashboardData } from "../data";
+import type { AnchorRecord } from "../../../sdk/ts/src/index";
 import { errorText } from "../data";
 import { compact, dateTime, percent, routeNames } from "../format";
 import { loadBundle, verifyBundle, type LedgerBundle } from "../ledger";
-import { AnchorPanel } from "./Anchor";
+import { DatasetDownloads } from "./Datasets";
 import {
   CopyButton,
   Empty,
@@ -21,6 +22,26 @@ import {
   Status,
 } from "../ui";
 export function Ledger({ data }: { data: DashboardData }) {
+  const [anchors, setAnchors] = useState<AnchorRecord[]>([]);
+  useEffect(() => {
+    let active = true;
+    void data.client
+      .anchors()
+      .then((page) => {
+        if (active)
+          setAnchors(
+            page.records
+              .filter((r) => r.event.status === "FINALIZED")
+              .slice(0, 3),
+          );
+      })
+      .catch(() => {
+        /* Missing anchor service does not establish a commitment. */
+      });
+    return () => {
+      active = false;
+    };
+  }, [data.client]);
   const [bundle, setBundle] = useState<LedgerBundle | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -136,6 +157,21 @@ export function Ledger({ data }: { data: DashboardData }) {
           {busy ? "Verifying…" : "Verify in browser"}
         </button>
       </Header>
+      {anchors.length > 0 && (
+        <p className="panel-note">
+          Verified mainnet commitments:{" "}
+          {anchors.map((r) => (
+            <a
+              key={r.attempt.reservation_id}
+              href={`https://explorer.solana.com/tx/${encodeURIComponent(r.attempt.signature)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              sequence {r.attempt.commitment.sequence}{" "}
+            </a>
+          ))}
+        </p>
+      )}
       {error && <Notice danger>{error}</Notice>}
       {verified && (
         <div className="verification-success" role="status">
@@ -435,7 +471,10 @@ export function Ledger({ data }: { data: DashboardData }) {
           />
         )}
       </Panel>
-      <AnchorPanel data={data} />
+      <details className="panel">
+        <summary>Download datasets</summary>
+        <DatasetDownloads data={data} />
+      </details>
     </>
   );
 }

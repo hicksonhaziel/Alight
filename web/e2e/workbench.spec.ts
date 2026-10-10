@@ -46,6 +46,8 @@ async function captureResponse<T>(
 test("real Sim quote → frozen claim → forty held-out members → browser ledger verification and tamper rejection", async ({
   page,
 }) => {
+  // This flow also runs the TypeScript compiler over copied SDK code.
+  test.setTimeout(120000);
   const errors: string[] = [],
     writes: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -193,7 +195,6 @@ for (const theme of ["dark", "light"]) {
       "regimes",
       "health",
       "tape",
-      "datasets",
     ]) {
       await page.goto(`/#${route}`);
       await expect(page.locator("main h1")).toBeVisible();

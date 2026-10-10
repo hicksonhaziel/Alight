@@ -26,6 +26,38 @@ pub struct Wallet {
     owned: [Pubkey; 4],
 }
 impl Wallet {
+    /// Exact memo-only message and Live/RPC permit; no arbitrary instruction can enter this path.
+    pub(crate) fn sign_anchor(
+        &self,
+        permit: Permit,
+        draft: &alight_types::AnchorDraft,
+        message: Message,
+        fee: u64,
+    ) -> Result<VersionedTransaction, BuildError> {
+        let reservation = permit.consume();
+        let expected =
+            crate::anchor::message(draft, self.public(), message.recent_blockhash.clone())
+                .map_err(|_| BuildError::Invalid)?;
+        if reservation.source != Source::Live
+            || reservation.route != Route::Rpc
+            || reservation.id != crate::anchor::reservation_id(draft)
+            || reservation.lamports != fee
+            || !(1..=100_000).contains(&fee)
+            || message != expected
+        {
+            return Err(BuildError::Permit);
+        }
+        let bytes = bincode::serialize(&message).map_err(|_| BuildError::Invalid)?;
+        let mut tx = Transaction::new_unsigned(message);
+        tx.signatures[0] = self
+            .payer
+            .try_sign_message(&bytes)
+            .map_err(|_| BuildError::Invalid)?;
+        if !tx.signatures[0].verify(self.public().as_ref(), &bytes) {
+            return Err(BuildError::Invalid);
+        }
+        Ok(VersionedTransaction::from(tx))
+    }
     pub fn from_base58(secret: &str, expected_public: &str) -> Result<Self, BuildError> {
         let payer = Keypair::try_from_base58_string(secret).map_err(|_| BuildError::Invalid)?;
         if payer.pubkey().to_string() != expected_public {

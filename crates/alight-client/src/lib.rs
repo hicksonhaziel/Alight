@@ -295,6 +295,16 @@ impl Client {
         Ok(r)
     }
     /// Passive tape timestamps are RFC3339 UTC; the API caps windows at one day.
+    /// Bounded same-source anchor attempts; only FINALIZED establishes successful landing.
+    pub async fn anchors(&self) -> Result<AnchorPage> {
+        let page: AnchorPage = self.get("/v1/ledger/anchors", &[]).await?;
+        self.scope(page.source)?;
+        for record in &page.records {
+            self.scope(record.source)?;
+            self.scope(record.attempt.commitment.source)?;
+        }
+        Ok(page)
+    }
     /// Read-only receipt from an exact imported capture. No provider fetch or signing.
     pub async fn receipt(
         &self,

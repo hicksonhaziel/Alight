@@ -213,6 +213,7 @@ impl HttpProbe {
             "getBlock",
             "getBalance",
             "getSignatureStatuses",
+            "getTransaction",
             "getVoteAccounts",
             "getBlockProduction",
             "getRecentPrioritizationFees",

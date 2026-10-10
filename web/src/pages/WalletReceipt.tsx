@@ -3,7 +3,7 @@ import type { WalletReceipt } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
 import { integer, percent } from "../format";
-import { Empty, Notice, Panel } from "../ui";
+import { Notice } from "../ui";
 
 export function WalletReceiptPanel({ data }: { data: DashboardData }) {
   const [wallet, setWallet] = useState("");
@@ -25,12 +25,16 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
     setError("");
     setReport(null);
     try {
-      const result = await data.client.receipt(wallet.trim(), capture.trim(), {
-        region: data.health.region,
-        target_p: 0.9,
-        horizon_slots: 2,
-        max_curve_age_s: 300,
-      });
+      const result = await data.client.receipt(
+        wallet.trim(),
+        capture.trim() || undefined,
+        {
+          region: data.health.region,
+          target_p: 0.9,
+          horizon_slots: 2,
+          max_curve_age_s: 300,
+        },
+      );
       if (current === generation.current) setReport(result);
     } catch (e) {
       if (current === generation.current) setError(errorText(e));
@@ -39,14 +43,11 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
     }
   }
   return (
-    <Panel
-      title="Wallet receipts"
-      caption="Partial captured history · target 90% within 2 slots · evidence age ≤ 300 s"
-    >
+    <div className="receipt-limits">
       <p className="panel-note">
-        Evaluate an imported {data.health.source} capture. Wallet history from
-        the Data API is unverified; a wallet address alone does not fetch
-        history.
+        Evaluate saved {data.health.source} history for a wallet. Target: 90%
+        within 2 slots. Live history needs provider access; missing evidence
+        stays unavailable.
       </p>
       <form className="quote-form" onSubmit={(e) => void submit(e)}>
         <label>
@@ -64,31 +65,28 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
             placeholder="Base58 wallet address"
           />
         </label>
-        <label>
-          Capture hash
-          <input
-            value={capture}
-            disabled={busy}
-            onChange={(e) => {
-              setCapture(e.target.value);
-              setReport(null);
-            }}
-            required
-            pattern="sha256:[a-f0-9]{64}"
-            placeholder="sha256:…"
-          />
-        </label>
+        <details>
+          <summary>Select a saved capture</summary>
+          <label>
+            Capture hash
+            <input
+              value={capture}
+              disabled={busy}
+              onChange={(e) => {
+                setCapture(e.target.value);
+                setReport(null);
+              }}
+              pattern="sha256:[a-f0-9]{64}"
+              placeholder="Latest imported capture"
+            />
+          </label>
+        </details>
         <button className="button primary" type="submit" disabled={busy}>
           {busy ? "Evaluating…" : "Evaluate receipt"}
         </button>
       </form>
       {error && <Notice danger>{error}</Notice>}
-      {!report ? (
-        <Empty
-          title="No wallet receipt selected"
-          text="Import bounded history in Sim or Replay, then select its content hash. Missing history and missing frontiers remain unavailable."
-        />
-      ) : (
+      {report && (
         <>
           <div className="receipt-limits">
             <h3>
@@ -118,53 +116,56 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
             </p>
             <p>{report.threshold_definition}</p>
           </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Transaction</th>
-                  <th>Execution</th>
-                  <th>Paid tip (lamports)</th>
-                  <th>Historical comparison</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.rows.map((r) => (
-                  <tr key={r.signature}>
-                    <td className="mono" title={r.signature}>
-                      {r.signature.slice(0, 12)}…
-                    </td>
-                    <td>{r.success ? "LANDED OK" : "LANDED FAILED"}</td>
-                    <td>
-                      {r.paid_tip_lamports == null
-                        ? "Unknown"
-                        : integer(r.paid_tip_lamports)}
-                    </td>
-                    <td>
-                      {r.comparison ? (
-                        <>
-                          {integer(r.comparison.snapshot.config.tip_lamports)}{" "}
-                          lamports · 95% interval [
-                          {percent(r.comparison.snapshot.p_interval_95[0])},{" "}
-                          {percent(r.comparison.snapshot.p_interval_95[1])}] · n{" "}
-                          {r.comparison.snapshot.n_effective.toFixed(1)} · age{" "}
-                          {r.comparison.age_at_transaction_s.toFixed(1)} s ·{" "}
-                          {r.comparison.snapshot.evidence}
-                        </>
-                      ) : (
-                        r.unavailable_reason
-                      )}
-                    </td>
+          <details>
+            <summary>Transaction details and limits</summary>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Execution</th>
+                    <th>Paid tip (lamports)</th>
+                    <th>Historical comparison</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="receipt-limits">
-            {report.limits.map((limit) => (
-              <p key={limit}>{limit}</p>
-            ))}
-          </div>
+                </thead>
+                <tbody>
+                  {report.rows.map((r) => (
+                    <tr key={r.signature}>
+                      <td className="mono" title={r.signature}>
+                        {r.signature.slice(0, 12)}…
+                      </td>
+                      <td>{r.success ? "LANDED OK" : "LANDED FAILED"}</td>
+                      <td>
+                        {r.paid_tip_lamports == null
+                          ? "Unknown"
+                          : integer(r.paid_tip_lamports)}
+                      </td>
+                      <td>
+                        {r.comparison ? (
+                          <>
+                            {integer(r.comparison.snapshot.config.tip_lamports)}{" "}
+                            lamports · 95% interval [
+                            {percent(r.comparison.snapshot.p_interval_95[0])},{" "}
+                            {percent(r.comparison.snapshot.p_interval_95[1])}] ·
+                            n {r.comparison.snapshot.n_effective.toFixed(1)} ·
+                            age {r.comparison.age_at_transaction_s.toFixed(1)} s
+                            · {r.comparison.snapshot.evidence}
+                          </>
+                        ) : (
+                          r.unavailable_reason
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="receipt-limits">
+              {report.limits.map((limit) => (
+                <p key={limit}>{limit}</p>
+              ))}
+            </div>
+          </details>
         </>
       )}
       <p className="panel-note">
@@ -172,6 +173,6 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
         evidence does not establish real-swap performance. Spend above a
         threshold is a conditional diagnostic, not proven waste.
       </p>
-    </Panel>
+    </div>
   );
 }

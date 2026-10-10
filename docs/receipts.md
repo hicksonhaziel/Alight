@@ -3,7 +3,8 @@
 Receipts evaluate bounded Alight captures of normalized transactions. They
 cover one fee payer, at most 1,000 records, and at most 24 hours. Captures are
 imported into an isolated Sim/Replay database and content-addressed; public
-reads require the exact capture hash. The existing captured Yellowstone/Mirage
+reads select the latest saved wallet capture; an optional hash pins an exact
+capture. The existing captured Yellowstone/Mirage
 parser can turn recorded JSONL into Replay history without network access.
 
 ```sh
@@ -55,7 +56,10 @@ economic knee. Failed share measures visible executions only, not all wallet
 submissions. Missing context/frontier coverage is printed for each row, along
 with survivorship, uncontrolled workload and single-vantage caveats.
 
-Solami's public product/API documentation inspected on 8 October did not
-establish a captured wallet-history endpoint/payload. The Data API adapter
-remains pending; no invented payload is implemented. The recorded real-wallet
-test produces a descriptive Replay report without route/time/frontier claims.
+Solami's current documentation includes `/data/wallet/trades` and
+`/data/wallet/fees`. The latter measures registered venue tips and explicitly
+excludes base and priority fees. Trade rows cannot establish authoritative
+network fees or all failed submissions. On 10 October the configured account
+returned HTTP 402 (balance/bandwidth), so a real wallet-history response remains
+unverified. The recorded real-wallet test produces a descriptive Replay report
+without route/time/frontier claims. See the [provider contract](https://solami.dev/docs/api/get_data-wallet-fees).

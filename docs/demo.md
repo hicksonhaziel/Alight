@@ -10,9 +10,9 @@ Live Prove and mainnet anchoring are still pending.
 | 0:00–0:20 | Cockpit source badge/clock. “Alight measures landing from this host. Every quote names workload, uncertainty and age.” Use observed clock evidence; no unverified upgrade headline. |
 | 0:20–0:45 | Curve and counts. “Intervals and effective samples determine whether a recommendation is supported.” Keep INSUFFICIENT visible. |
 | 0:45–1:25 | Quote, lock, N=40 Prove with the offline operator key. “The claim freezes before later held-out outcomes.” Show the actual verdict and Wilson interval, including unfavorable or inconclusive results. Label this whole shot SIMULATED. |
-| 1:25–1:45 | Browser ledger verification, unsigned memo preparation. “The chain can be independently checked. This memo has no signature or mainnet timestamp.” |
+| 1:25–1:45 | Browser ledger verification and retained head. “The chain can be independently checked. No mainnet timestamp is claimed until an anchor is verified.” |
 | 1:45–2:05 | Regimes/observer health. “Simulated changes void crossing claims. Observer gaps are evidence, not expired transactions.” Do not imply four-observer agreement without coverage. |
-| 2:05–2:25 | Receipts/Datasets. “Missing historical support stays unknown. Download source-labelled CSV/Parquet with schema and checksums.” |
+| 2:05–2:25 | Collapsed receipts and Ledger downloads. “Missing historical support stays unknown. Download source-labelled CSV/Parquet with schema and checksums.” |
 | 2:25–2:40 | SDK/repo. “Run Sim/Replay without keys or funds. Observe uses your own read key without a funded wallet.” End on the actual verification result. |
 
 Rehearse in an isolated Sim DB with only its local API operator key. Select a

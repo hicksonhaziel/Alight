@@ -223,7 +223,21 @@ impl BlurClient {
         dex: &str,
         tracked_pools: &[String],
     ) -> Result<Self, EconError> {
+        if tracked_pools.is_empty() {
+            return Err(EconError::Configuration);
+        }
         Self::build(rest, ws, token, dex, tracked_pools, false)
+    }
+    /// REST-only pool discovery. An unfiltered instance cannot open a subscription.
+    pub fn discovery(rest: &str, ws: &str, token: &str) -> Result<Self, EconError> {
+        Self::build(
+            rest,
+            ws,
+            token,
+            "raydium_clmm,orca_whirlpool,pumpswap",
+            &[],
+            false,
+        )
     }
     fn build(
         rest: &str,
@@ -247,7 +261,6 @@ impl BlurClient {
         }
         if token.trim().is_empty()
             || dex.is_empty()
-            || tracked_pools.is_empty()
             || tracked_pools.len() > 100
             || tracked_pools.iter().any(|p| p.is_empty() || p.len() > 128)
         {
@@ -259,13 +272,18 @@ impl BlurClient {
         rest.set_query(None);
         rest.set_path(&format!("{}/", rest.path().trim_end_matches('/')));
         ws.set_query(None);
-        // Only captured filter parameters; tracked pool filtering is local until a pool filter is validated.
+        // Pool filtering is documented by the current provider contract. Local filtering remains
+        // mandatory even if the server ignores a filter; no response shape is inferred from it.
         ws.query_pairs_mut()
             .append_pair("api_key", token)
             .append_pair("chain", "solana")
             .append_pair("type", "swap")
             .append_pair("dex", dex)
             .append_pair("metadata", "false");
+        if !tracked_pools.is_empty() {
+            ws.query_pairs_mut()
+                .append_pair("pool", &tracked_pools.join(","));
+        }
         let _ = rustls::crypto::ring::default_provider().install_default();
         let client = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
@@ -362,6 +380,9 @@ impl BlurClient {
         tx: mpsc::Sender<BlurEvent>,
         mut stop: watch::Receiver<bool>,
     ) -> Result<(), EconError> {
+        if self.tracked_pools.is_empty() {
+            return Err(EconError::Configuration);
+        }
         let mut attempt = 0u32;
         while !*stop.borrow() {
             let started = std::time::Instant::now();
@@ -374,7 +395,9 @@ impl BlurClient {
             if matches!(reason, Err(EconError::Closed)) {
                 return Ok(());
             }
+            let access_denied = matches!(reason, Err(EconError::Http(401..=403)));
             let reason = match reason {
+                Err(EconError::Http(401..=403)) => "blur_access_or_bandwidth",
                 Err(EconError::Invalid) => "blur_schema",
                 Err(EconError::TooLarge) => "blur_frame_limit",
                 _ => "blur_disconnected_or_stale",
@@ -386,7 +409,11 @@ impl BlurClient {
             if started.elapsed() >= Duration::from_secs(30) {
                 attempt = 0;
             }
-            let delay = Duration::from_millis((250u64 << attempt.min(7)).min(30_000));
+            let delay = if access_denied {
+                Duration::from_secs(300)
+            } else {
+                Duration::from_millis((250u64 << attempt.min(7)).min(30_000))
+            };
             attempt = attempt.saturating_add(1);
             tokio::select! { _=tokio::time::sleep(delay)=>{}, _=stop.changed()=>return Ok(()), _=tx.closed()=>return Ok(()) }
         }
@@ -402,7 +429,12 @@ impl BlurClient {
         )
         .await
         .map_err(|_| EconError::Transport)?
-        .map_err(|_| EconError::Transport)?;
+        .map_err(|error| match error {
+            tokio_tungstenite::tungstenite::Error::Http(response) => {
+                EconError::Http(response.status().as_u16())
+            }
+            _ => EconError::Transport,
+        })?;
         let mut last_data = tokio::time::Instant::now();
         loop {
             let message =
@@ -420,6 +452,9 @@ impl BlurClient {
                         .await
                         .map_err(|_| EconError::Transport)?;
                     None
+                }
+                Message::Close(Some(frame)) if u16::from(frame.code) == 4002 => {
+                    return Err(EconError::Http(402));
                 }
                 Message::Close(_) => return Err(EconError::Transport),
                 _ => None,
