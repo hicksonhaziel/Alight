@@ -3,9 +3,9 @@
   "phase": 6,
   "status": "OFFLINE_PASS_LIVE_PENDING",
   "phase_complete": false,
-  "validated_at_utc": "2026-10-10T21:20:31.179Z",
-  "code_revision": "a3a5a6e569365b31177f89081ba88db357fcf3e4",
-  "scope": "Verified fresh read-only mainnet Observe collection after access restoration, reconnect diagnostics and slower startup retries; owned canaries, mainnet anchoring and independent fresh-clone stream acceptance remain pending.",
+  "validated_at_utc": "2026-10-10T22:36:40.654905+00:00",
+  "code_revision": "3254e1ebd06c9bda37bc828645cf2d4c8dfe24f6",
+  "scope": "Verified fresh read-only mainnet collection and a public fresh-clone Observe run with read credentials only. Funded canaries, a mainnet anchor and an independent second-person setup run remain pending.",
   "runtime": {
     "collection_enabled": true,
     "service_active": true,
@@ -59,6 +59,23 @@
         "frames": 100
       },
       "not_a_48_hour_soak": true
+    },
+    "latest_primary_check": {
+      "as_of_utc": "2026-10-10T22:37:24.155Z",
+      "status": "PASS",
+      "mode": "observe",
+      "signing_enabled": false,
+      "canaries_sent": "0",
+      "send_attempts": {},
+      "counts": {
+        "slot_events": "186020",
+        "blocks": "41779",
+        "observations": "1685",
+        "gaps": "109",
+        "open_gaps": "0",
+        "canaries": "0",
+        "budget_reserved_lamports": "0"
+      }
     }
   },
   "tasks": {
@@ -111,7 +128,37 @@
       "fresh_clone_read_only_observe_startup": "PASS",
       "no_signing_identities_in_environment": true,
       "finite_graceful_shutdown": "PASS",
-      "fresh_provider_data": "PASS_CURRENT_OBSERVE_RUNTIME_FRESH_CLONE_STREAM_CHECK_PENDING"
+      "fresh_provider_data": "PASS_FRESH_PUBLIC_CLONE_LIVE_GRPC",
+      "fresh_clone_checked_revision": "3254e1ebd06c9bda37bc828645cf2d4c8dfe24f6",
+      "dependency_cache_reused": true,
+      "new_machine": false,
+      "provider_read_check": {
+        "doctor_status": "RPC_MAINNET_VERIFIED_STREAM_UNCHECKED",
+        "graceful_shutdown": true,
+        "signing_identities_present": false,
+        "canary_records": 0,
+        "send_attempt_records": 0,
+        "first_counts": {
+          "slot_events": "38",
+          "blocks": "7",
+          "observations": "0",
+          "gaps": "1",
+          "open_gaps": "0",
+          "canaries": "0",
+          "budget_reserved_lamports": "0"
+        },
+        "last_counts": {
+          "slot_events": "260",
+          "blocks": "44",
+          "observations": "0",
+          "gaps": "1",
+          "open_gaps": "0",
+          "canaries": "0",
+          "budget_reserved_lamports": "0"
+        },
+        "first_as_of_utc": "2026-10-10T22:36:18.421Z",
+        "last_as_of_utc": "2026-10-10T22:36:26.476Z"
+      }
     }
   },
   "ui": {
@@ -140,13 +187,13 @@
       "failed": 0
     },
     "hosted_dataset_verification": "PASS",
-    "fresh_checkout": "PASS_STARTUP_FRESH_CLONE_STREAM_CHECK_PENDING",
+    "fresh_checkout": "PASS_PREVIOUS_SIM_REPLAY_AND_CURRENT_OBSERVE_LIVE_READS",
     "repository_scan": "PASS",
     "primary_ci": {
-      "run_id": "38011099233",
-      "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38011099233",
+      "run_id": "38087331625",
+      "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38087331625",
       "status": "PASS",
-      "scope": "Parent a3a5a6e passed CI; current reconnect/operations batch has focused local checks and will run CI on push."
+      "scope": "Exact tested checkout 3254e1e; this follow-up changes only the validation receipt."
     },
     "public_site_deployment": {
       "run_id": "38009516584",
@@ -234,7 +281,10 @@
     ".alight/phase6/access-restored/20261010T205607Z/continuity.json": "b90298a8a07d757dc9fe0100dfaec805f4c2cc9b3f9cc349d4a638eb8e23843a",
     ".alight/phase6/access-restored/20261010T205607Z/blur-probe.json": "a2808edcb883f4e5ff32d47ff8edba6eb611b0a7a2595d9b7700434438400799",
     ".alight/phase6/access-restored/20261010T205607Z/grpc-probe.json": "2cc981bb2c1edee72310c7c001e0bbe2d6afc6c2770c4e84acc55be74c63b62f",
-    ".alight/phase6/access-restored/20261010T205607Z/health-first.json": "0406722602b58d65c7d0af200654485dcd53d2a3720d4b08397250d78c1d5fc9"
+    ".alight/phase6/access-restored/20261010T205607Z/health-first.json": "0406722602b58d65c7d0af200654485dcd53d2a3720d4b08397250d78c1d5fc9",
+    ".alight/phase6/fresh-readcheck-20261010T223403Z/validation.json": "ed612c502581a68baa109e47e7215eae380b11dcb6115054e41e230f9ed47065",
+    ".alight/phase6/fresh-readcheck-20261010T223403Z/doctor.json": "aadba5ed9c93c86dbc3a238ec136d94f343e90cdb0147ecdf1ec21c5e635559e",
+    ".alight/phase6/fresh-readcheck-20261010T223403Z/clone.json": "7f702baaa54f5599638380e4d37c5f481b8c7085fc019cfc41ce7846b04030dc"
   },
   "hosted_bundle_sha256": {
     "LICENSE.txt": "866d466fea020b543c2bed4399dd37cc1299e40c8b3149205bff44d431a67867",
