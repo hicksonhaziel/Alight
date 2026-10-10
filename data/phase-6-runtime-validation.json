@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "phase": 6,
+  "status": "OFFLINE_PASS_LIVE_PENDING",
+  "phase_complete": false,
+  "validated_at_utc": "2026-10-10T00:39:49.901912+00:00",
+  "code_revision": "1d6eeeeaa8e684917f5b7037ef168d68a2b4c970",
+  "scope": "Supplement to the historical first-batch receipt: observe resumed, compact UI, public downloads and governed anchor sender. Not complete mainnet acceptance.",
+  "runtime": {
+    "collection_enabled": true,
+    "service_active": true,
+    "service_enabled": true,
+    "mode": "observe",
+    "blur_enabled": true,
+    "blur_verified_http_status": 402,
+    "blur_access_retry_seconds": 300,
+    "provider_fresh_data": false,
+    "collector_status": "DEGRADED",
+    "signing_enabled": false,
+    "owned_live_transactions_sent": 0,
+    "mainnet_memo_transactions_sent": 0,
+    "budget_reserved_lamports": "0",
+    "send_attempts": {},
+    "outbound_alerts_sent": 0,
+    "original_live_database": "Backed up before authorized collection resume; used only for observe collection.",
+    "subscription_expiry": "Owner reports Pro expired yesterday; billing state not independently verified."
+  },
+  "tasks": {
+    "6.1": {
+      "offline": "PASS",
+      "real_recorded_wallet_replay": "PASS_PARTIAL_DESCRIPTIVE",
+      "complete_provider_history": "PENDING_ACCOUNT_ACCESS_AND_VERIFIED_ADAPTER",
+      "historical_live_frontier_comparison": "PENDING_LIVE_EVIDENCE"
+    },
+    "6.2": {
+      "daily_csv_parquet_schema_checksums": "PASS"
+    },
+    "6.3": {
+      "hosted_download": "PASS",
+      "url": "https://hicksonhaziel.github.io/Alight/",
+      "source": "sim",
+      "day": "2026-10-05",
+      "bundle_files_byte_verified": 15,
+      "methodology_files_byte_verified": 4,
+      "mainnet_performance_claim": false
+    },
+    "6.4": {
+      "periodic_sender_and_shared_budget": "IMPLEMENTED_TESTED_OFFLINE",
+      "sender_enabled": false,
+      "read_only_mainnet_preflight": "PASS",
+      "preflight_status": "WAITING_FUNDS_OR_FEE",
+      "balance_lamports": "0",
+      "quoted_fee_lamports": "5000",
+      "reserve_lamports": "1000000",
+      "mainnet_acceptance": "PENDING_FUNDING_AND_SEND_AUTHORIZATION",
+      "explorer_record": null
+    },
+    "6.5": {
+      "agent_fresh_clone_sim_replay": "PASS",
+      "dependency_cache_reused": true,
+      "independent_second_person": "PENDING"
+    },
+    "6.6": {
+      "limitations_and_claims_review": "PASS"
+    },
+    "6.7": {
+      "script_seconds": 160,
+      "current_sim_fallback_seconds": 5.36,
+      "full_narrated_recording": "PENDING"
+    },
+    "6.8": {
+      "fresh_clone_read_only_observe_startup": "PASS",
+      "no_signing_identities_in_environment": true,
+      "finite_graceful_shutdown": "PASS",
+      "fresh_provider_data": "PENDING_ACCOUNT_ACCESS"
+    }
+  },
+  "ui": {
+    "navigation_screens": 7,
+    "removed": [
+      "separate Datasets navigation",
+      "unsigned-anchor preparation panel"
+    ],
+    "collapsed": [
+      "wallet receipts in Tape",
+      "dataset downloads in Ledger"
+    ],
+    "mainnet_anchor_links": "Only actual FINALIZED records; hidden when none."
+  },
+  "checks": {
+    "format": "PASS",
+    "workspace_beam_clippy": "PASS",
+    "workspace_beam_tests": "PASS",
+    "anchor_budget_integrity_and_opt_in_regressions": "PASS",
+    "sdk_lint_tests_generation": "PASS",
+    "web_lint_unit_tests_build": "PASS",
+    "browser": "Eight scenarios passed across full and focused runs. SDK compilation flow exceeded 60 seconds once; raised that test limit to 120 seconds and isolated rerun passed.",
+    "developer_quote_lock_prove_ledger": "PASS",
+    "dataset_regressions": {
+      "passed": 4,
+      "failed": 0
+    },
+    "hosted_dataset_verification": "PASS",
+    "fresh_checkout": "PASS_STARTUP_PROVIDER_ACCESS_PENDING",
+    "repository_scan": "PASS",
+    "primary_ci": {
+      "run_id": "38009459396",
+      "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38009459396",
+      "status_at_receipt": "IN_PROGRESS"
+    },
+    "public_site_deployment": {
+      "run_id": "38009516584",
+      "status": "PASS"
+    }
+  },
+  "code_sha256": {
+    "README.md": "9a80e104c7c3ff886d45e775db7800546937c57ca32ef3323bfb2091e6884bed",
+    ".github/workflows/datasets.yml": "37155d083360f6e0467dca4e4e9042d8333ccb14f048e5087f0daae801129021",
+    "scripts/build_dataset_site.py": "a495aa18d1397f5793eb5b91ac679c4b08c6cc72fbb4250ee12964a1cd23281b",
+    "deploy/alight-observe.service": "a5e3c507d2138f11c65f030d94f8159999c206b283077aa5c81ec371b17a50fa",
+    "bin/alightd/src/main.rs": "df89aa0093c00788764f4e1170cb984b7391b06bfbfb426e96a2d20830ae4188",
+    "bin/alightd/src/market.rs": "53610c7ad6ac3484518e40c08b0fad7e6044f3e919fab0e4144ebb8195054cb6",
+    "crates/alight-econ/src/blur.rs": "8f295a210c0aa55c07d8c2fde7409bf5a8ccbac2fb874c4ddae311e6c328e6e5",
+    "crates/alight-canary/src/anchor.rs": "afb0b6e5090a6b8e8a04e2ad0a628fa4d8de06c714e77ef5fccc012945f5724e",
+    "bin/alight/src/anchor.rs": "faecd80dfe7008ec911e0e69a918e2a6544ae2ee5d2441b38ddbafb7aff9035a",
+    "crates/alight-store/src/anchors.rs": "cf768225c80e8fe9ea931dc766859c876f8f9255b5d9987c56f75a33c36c8a54",
+    "crates/alight-store/migrations/0012_ledger_anchors.sql": "ded515c1624be047de0a61adea6def78cb7c84ec5b5966647ba3f4a51ce6ff6e",
+    "crates/alight-types/src/anchors.rs": "56b0367915e0963e25c33dde86b5f6ba12bbf1d92cfb6244fd0466b46b4ea818",
+    "web/src/App.tsx": "28d98c8aecd29572a7198a05a61807e506fed82d0424fc3915cf8676c76c1231",
+    "web/src/pages/Ledger.tsx": "ea5bdf54d86fe961be8678740954d416cbed0ff204f6f62463abb355857300c7",
+    "web/src/pages/Datasets.tsx": "f03e9dc50668d4a9499afef5d1d31e263f87089e35884f7b1d1309bef187ef05",
+    "web/src/pages/WalletReceipt.tsx": "b2ff98014e3cb9dcc3977c7c0e7526926a5857ff212e6bfa36a389e4728dc2cd",
+    "docs/anchoring.md": "d22669f57da9d1fe091fa01176adf13e3c4a185a47d9beb602f98f4a5a4a835c",
+    "docs/receipts.md": "cb61053c3ffefea8f9bbc27a882976a6d16c78206a8c0be3c15980fa6a4f3523",
+    "docs/demo.md": "e07c398bcd175a220c62a84eac4d95d4ab8bb2ce7c4b4287a172dd61d22248b7"
+  },
+  "local_artifact_sha256": {
+    ".alight/phase6/resume/hosted-downloads.json": "d47315e4343754d94cff3cb79b7ef8607aa158f03fdca19ec3a178eff2cec057",
+    ".alight/phase6/resume/fresh-checkout-validation.json": "8b25df9f1078c15f2a0f51c732aef7ef9a4d5964631e6b8fa18886bac264cbc5",
+    ".alight/phase6/resume/health-final.json": "511051f2722deea8b96e0283bcfbd33fca93b7e7f7540e8030d3f9588502192c",
+    ".alight/phase6/resume/anchor-preflight.json": "99ebbc4d36fcb9d2423eb4748b8676658e5963dbc3497fd9b928a0c2630dbb10"
+  },
+  "hosted_bundle_sha256": {
+    "LICENSE.txt": "866d466fea020b543c2bed4399dd37cc1299e40c8b3149205bff44d431a67867",
+    "SHA256SUMS": "db06da2f548fd5a126f13433759d3f58928080fb6177ae710f47aca50fd5a8be",
+    "canaries.csv": "c10009a0042b8d35c6256ba24e2209f71b8d223f4409098f13e8bee86364472b",
+    "canaries.parquet": "6659adfaae6bd0108e22c37c18c01870bb1bd7ea4412b99242eb658e677772bb",
+    "curve_snapshots.csv": "1e515dd95b1a215ddcd75d7dcd48132c0eebc2c08072aa5f3a0fdbfb01b3bdd7",
+    "curve_snapshots.parquet": "397f0fb5d2a1f293ece123756e11a281706cd0f76fb8d012ffb91dd3393dca3e",
+    "forecasts.csv": "32a56785e09d2142bb0e749952946b35fd70c72e50ae50b398f755f534b29d87",
+    "forecasts.parquet": "4c8d176606148eca2d39012c2e1fab9509669a1348ce3947a443a4602680bb20",
+    "grades.csv": "8c3c497e25a86741bb09adcc1570062d8ff92ea574bb06b765beb9a55eb6e857",
+    "grades.parquet": "bf0adb25d4245d96a037616e12fa88b5546eb7102edf30cbfe4add6520d655f5",
+    "ledger-witness.json": "6161d3cfe4c0eb3b8b8e9479433d0041530d32f44ebb3e878eaace487521cf9a",
+    "manifest.json": "be69a3cfb84272bc59aaaa52cadc356e6fdc2f739c6bd5ce3947ecba0124a754",
+    "regimes.csv": "bf14d4a508e62b19d508474ed9a0ecc46ab686c43103b648e573c0af1caab770",
+    "regimes.parquet": "6bf01562be0b111e8cd621f1081246c069f17753ce78fa0e4ef38b41c4c6f6f1",
+    "schema.json": "309b43ffbdc2b83ecc4063797965b058ac4787838a086bd601269e3043a7e1c8"
+  }
+}

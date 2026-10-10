@@ -5,9 +5,10 @@ claims for held-out Prove runs, and keeps an immutable forecast ledger. It uses
 Solami data and compares outcomes across observers. The workbench shows
 uncertainty, source, sample size, age and unfavorable verdicts.
 
-The verified path is offline Sim/Replay. Live collection is paused; funded owned
-canaries, complete four-observer agreement and mainnet anchoring remain
-unverified. The downloadable sample is **Sim**, not mainnet performance.
+The verified path is offline Sim/Replay. Observe collects data without sending
+transactions. Fresh live stream access, funded owned canaries, complete
+four-observer agreement and mainnet anchoring remain unverified. The downloadable
+sample is **Sim**, not mainnet performance.
 
 ## Quick start: no keys or wallet
 
@@ -51,7 +52,8 @@ The offline developer regression is `python3 scripts/test_phase3_developer.py`.
 Observe needs your own read key and dashboard RPC/gRPC endpoints, without a
 canary or SWQoS signing identity. Copy `.env.example` to `.env` only if no file
 exists. Set `SOLAMI_RPC_URL`, `SOLAMI_RPC_TOKEN` when required,
-`SOLAMI_GRPC_URL`, and `SOLAMI_GRPC_TOKEN` (or `SOLAMI_API_KEY`). Optional
+`SOLAMI_GRPC_URL`, `SOLAMI_GRPC_TOKEN` (or `SOLAMI_API_KEY`), and
+`SOLAMI_DATA_API_URL` for the public tip-address metadata endpoint. Optional
 Mirage/Blur/Webhook permissions are separate; missing coverage stays visible.
 
 ```sh
@@ -90,7 +92,7 @@ minimum uniform exploration, 81-cell `full` profile. Optional
 LocalP90 fees); RPC stays untipped. Lean omits Medium/Large and X2/X10 and
 cannot support the registered four-tier Signal analysis alone.
 
-No owned live transaction cost has been measured in this paused run. A landed
+No owned live transaction cost has been measured. A landed
 canary pays the executed tip plus the RPC-estimated fee; priority fee is in
 micro-lamports per CU. Assuming a 5,000-lamport base fee and zero priority fee,
 uniform mean nominal costs are 405,000 (`full`) / 245,000 (`lean`) lamports.
@@ -142,8 +144,9 @@ Datasets include CSV/Parquet, schema, checksums and the original full forecast
 chain witness. `--format csv` needs no PyArrow. `export --api` keeps the earlier
 forecast-only JSON behavior. Ledger's collapsed downloads section serves reviewed bundles with
 their own source labels. Data uses CC BY 4.0; private wallet captures are
-excluded. Public downloads are built from the same reviewed catalog and published
-through GitHub Pages after CI. Unsigned memo preparation and `anchor preflight`
+excluded. [Public downloads](https://hicksonhaziel.github.io/Alight/) are built
+from the same reviewed catalog and published through GitHub Pages after CI.
+Unsigned memo preparation and `anchor preflight`
 send nothing. The periodic sender requires separate explicit mainnet opt-in;
 mainnet acceptance is pending. See [anchor controls](docs/anchoring.md).
 
