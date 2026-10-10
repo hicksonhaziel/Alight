@@ -34,6 +34,7 @@ fn observe_doctor_accepts_only_read_configuration_without_loading_or_printing_ke
         .env("SOLAMI_RPC_URL", "https://read-only.invalid")
         .env("SOLAMI_GRPC_URL", "https://stream.invalid")
         .env("SOLAMI_GRPC_TOKEN", "local-test-read-access")
+        .env("SOLAMI_DATA_API_URL", "https://metadata.invalid")
         .env("ALIGHT_CANARY_KEYPAIR", "must-not-load-signing-identity")
         .env("SOLAMI_SWQOS_KEY", "must-not-load-route-identity")
         .output()
@@ -50,4 +51,34 @@ fn observe_doctor_accepts_only_read_configuration_without_loading_or_printing_ke
     assert!(!output.contains("local-test-read-access"));
     assert!(!output.contains("must-not-load"));
     assert!(!output.contains("https://"));
+}
+
+#[test]
+fn observe_doctor_rejects_missing_metadata_and_unsupported_stream_aliases() {
+    let dir = tempfile::tempdir().expect("dir");
+    for (grpc_key, metadata) in [("SOLAMI_GRPC_URL", false), ("SOLAMI_STREAM_URL", true)] {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_alight"));
+        command
+            .args(["doctor", "--mode", "observe"])
+            .current_dir(dir.path())
+            .env_clear()
+            .env("SOLAMI_RPC_URL", "https://read-only.invalid")
+            .env(grpc_key, "https://stream.invalid")
+            .env("SOLAMI_GRPC_TOKEN", "local-test-read-access");
+        if metadata {
+            command.env("SOLAMI_DATA_API_URL", "https://metadata.invalid");
+        }
+        let output = command.output().expect("doctor");
+        assert_eq!(output.status.code(), Some(3));
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).expect("JSON");
+        assert_eq!(value["status"], "MISSING_READ_CONFIGURATION");
+        assert_eq!(value["provider_requests"], 0);
+        assert_eq!(value["signing_enabled"], false);
+        let missing = value["missing_configuration"].as_array().expect("missing");
+        assert!(missing.contains(&serde_json::json!(if metadata {
+            "SOLAMI_GRPC_URL"
+        } else {
+            "SOLAMI_DATA_API_URL"
+        })));
+    }
 }

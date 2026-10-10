@@ -637,6 +637,16 @@ coverage is always partial; missing submissions are not inferred. Chain time,
 transport route, workload class and regime are optional and are never guessed
 from a tip recipient or observer receive time.
 
+For captured RPC history, `from_utc`/`through_utc` bound chain time when it is
+present; the actual fetch timestamp may be later. Without chain time, they bound
+observer receive time. Chain time must never follow receive time. The read-only
+`receipt fetch-rpc` path retrieves one finalized signature page (1–32 rows), then
+at most that many `getTransaction` responses after a mainnet genesis guard.
+Only rows where the requested wallet is the fee payer are retained, with source
+`replay`, observer `rpc`, and unknown route/workload/regime/index. This is partial
+landed history, with null/unavailable rows counted in the command summary, never
+complete wallet submissions or a Data API adapter. It changes no schema or DB.
+
 `WalletReceiptRequest` fixes the region, target probability, slot horizon and
 maximum historical curve age in seconds. A comparison uses the newest stored
 curve cohort at or before the transaction's chain time, with the same source,

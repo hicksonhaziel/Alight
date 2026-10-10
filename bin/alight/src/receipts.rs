@@ -18,9 +18,14 @@ fn read<T: serde::de::DeserializeOwned>(path: &str, max: u64) -> Result<T, Strin
 }
 fn write(path: &str, value: &impl serde::Serialize) -> Result<(), String> {
     let bytes = serde_json::to_vec_pretty(value).map_err(|_| "Cannot encode receipt")?;
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options
         .open(path)
         .map_err(|_| "Output must be a new file in an existing directory")?;
     if file
@@ -37,7 +42,7 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
     let command = args
         .get(1)
         .map(String::as_str)
-        .ok_or("Usage: alight receipt capture|evaluate|import [options]")?;
+        .ok_or("Usage: alight receipt capture|fetch-rpc|evaluate|import [options]")?;
     let allowed: &[&str] = match command {
         "capture" => &[
             "--input",
@@ -49,7 +54,17 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
         ],
         "evaluate" => &["--database", "--input", "--request", "--output"],
         "import" => &["--database", "--input"],
-        _ => return Err("Usage: alight receipt capture|evaluate|import [options]".into()),
+        "fetch-rpc" => &[
+            "--wallet",
+            "--recipients",
+            "--from",
+            "--through",
+            "--limit",
+            "--output",
+        ],
+        _ => {
+            return Err("Usage: alight receipt capture|fetch-rpc|evaluate|import [options]".into());
+        }
     };
     let mut options = BTreeMap::new();
     for pair in args[2..].chunks(2) {
@@ -66,6 +81,38 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
             .copied()
             .ok_or_else(|| format!("{k} is required"))
     };
+    if command == "fetch-rpc" {
+        let output = required("--output")?;
+        if Path::new(output).exists() {
+            return Err("Output must be a new file".into());
+        }
+        let recipients: Vec<String> = read(required("--recipients")?, 65536)?;
+        let limit = options
+            .get("--limit")
+            .unwrap_or(&"16")
+            .parse()
+            .map_err(|_| "--limit must be 1–32")?;
+        let config = alight_ingest::Config::load_observer().map_err(|e| e.to_string())?;
+        let result = alight_ingest::wallet_history::fetch(
+            &config,
+            required("--wallet")?,
+            required("--from")?,
+            required("--through")?,
+            recipients,
+            limit,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+        write(output, &result.capture)?;
+        println!(
+            "{}",
+            serde_json::json!({"source":"replay","history":"partial_finalized_fee_payer",
+            "provider_requests":result.provider_requests,"address_signatures":result.address_signatures,
+            "transactions":result.capture.rows.len(),"outside_window":result.outside_window,
+            "not_fee_payer":result.not_fee_payer,"unavailable":result.unavailable,"transactions_sent":0})
+        );
+        return Ok(0);
+    }
     let capture: WalletHistoryCapture = if command == "capture" {
         let recipients: Vec<String> = read(required("--recipients")?, 65536)?;
         let wallet = required("--wallet")?;

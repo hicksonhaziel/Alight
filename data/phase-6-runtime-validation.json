@@ -3,9 +3,9 @@
   "phase": 6,
   "status": "OFFLINE_PASS_LIVE_PENDING",
   "phase_complete": false,
-  "validated_at_utc": "2026-10-10T00:39:49.901912+00:00",
-  "code_revision": "1d6eeeeaa8e684917f5b7037ef168d68a2b4c970",
-  "scope": "Supplement to the historical first-batch receipt: observe resumed, compact UI, public downloads and governed anchor sender. Not complete mainnet acceptance.",
+  "validated_at_utc": "2026-10-10T00:54:40.257871+00:00",
+  "code_revision": "0bb886f6c89c8ab174d65aca306510b80bf5737b",
+  "scope": "Resumed Observe, compact UI, public downloads, governed disabled anchor sender and bounded read-only RPC wallet receipts. Not complete mainnet acceptance.",
   "runtime": {
     "collection_enabled": true,
     "service_active": true,
@@ -29,8 +29,11 @@
     "6.1": {
       "offline": "PASS",
       "real_recorded_wallet_replay": "PASS_PARTIAL_DESCRIPTIVE",
-      "complete_provider_history": "PENDING_ACCOUNT_ACCESS_AND_VERIFIED_ADAPTER",
-      "historical_live_frontier_comparison": "PENDING_LIVE_EVIDENCE"
+      "historical_live_frontier_comparison": "PENDING_LIVE_EVIDENCE",
+      "bounded_finalized_rpc_history": "PASS",
+      "real_wallet_report_acceptance": "PASS_DESCRIPTIVE_LIMITS_PRINTED",
+      "complete_wallet_submission_history": false,
+      "data_api_adapter": "PENDING_ACCOUNT_ACCESS_AND_VERIFIED_PAYLOAD"
     },
     "6.2": {
       "daily_csv_parquet_schema_checksums": "PASS"
@@ -106,15 +109,34 @@
     "primary_ci": {
       "run_id": "38009459396",
       "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38009459396",
-      "status_at_receipt": "IN_PROGRESS"
+      "status": "PASS",
+      "scope": "Prior full code batch 1d6eeee; new RPC/doctor work checked locally and will run CI on push."
     },
     "public_site_deployment": {
       "run_id": "38009516584",
       "status": "PASS"
+    },
+    "doctor_regressions": {
+      "passed": 3,
+      "failed": 0
+    },
+    "rpc_parser_regressions": {
+      "passed": 2,
+      "failed": 0
+    },
+    "rpc_cli_scope_regression": {
+      "passed": 1,
+      "failed": 0
+    },
+    "affected_beam_clippy": "PASS",
+    "affected_beam_tests": "PASS",
+    "affected_beam_test_counts": {
+      "passed": 28,
+      "failed": 0
     }
   },
   "code_sha256": {
-    "README.md": "9a80e104c7c3ff886d45e775db7800546937c57ca32ef3323bfb2091e6884bed",
+    "README.md": "150d5c33ee2f5174e5d475d7a0ee38781f0805271be08b268871b6864f5e38cb",
     ".github/workflows/datasets.yml": "37155d083360f6e0467dca4e4e9042d8333ccb14f048e5087f0daae801129021",
     "scripts/build_dataset_site.py": "a495aa18d1397f5793eb5b91ac679c4b08c6cc72fbb4250ee12964a1cd23281b",
     "deploy/alight-observe.service": "a5e3c507d2138f11c65f030d94f8159999c206b283077aa5c81ec371b17a50fa",
@@ -131,14 +153,32 @@
     "web/src/pages/Datasets.tsx": "f03e9dc50668d4a9499afef5d1d31e263f87089e35884f7b1d1309bef187ef05",
     "web/src/pages/WalletReceipt.tsx": "b2ff98014e3cb9dcc3977c7c0e7526926a5857ff212e6bfa36a389e4728dc2cd",
     "docs/anchoring.md": "d22669f57da9d1fe091fa01176adf13e3c4a185a47d9beb602f98f4a5a4a835c",
-    "docs/receipts.md": "cb61053c3ffefea8f9bbc27a882976a6d16c78206a8c0be3c15980fa6a4f3523",
-    "docs/demo.md": "e07c398bcd175a220c62a84eac4d95d4ab8bb2ce7c4b4287a172dd61d22248b7"
+    "docs/receipts.md": "5e43471f4d95fbf3fef5806d286642b9031ae13596a147f659a27b10d9b82385",
+    "docs/demo.md": "e07c398bcd175a220c62a84eac4d95d4ab8bb2ce7c4b4287a172dd61d22248b7",
+    "crates/alight-tape/src/rpc_history.rs": "08a144e8ac0a38ccd6e096c940f909e1f6c500314077b760547b0539d0795aec",
+    "data/fixtures/rpc_wallet_signatures.json": "20f1716d196af23ed85fb10391498ec4efed677af637b41c2ec0210c0b85e599",
+    "crates/alight-tape/src/lib.rs": "87cb11e4a50031470405e3aa3dfb199ca5a4c9efb2d585b333e0d0e380f49199",
+    "crates/alight-ingest/src/lib.rs": "eb9f2ad100a0bc97de4fc9a9998eabf359a382328f67388b263991c89155772b",
+    "data/fixtures/rpc_wallet_transaction.json": "34deaf56b5bb4debf6a4944387356109bbaab776f1775bf9ea36a50e28aa93ac",
+    "bin/alight/src/main.rs": "9c26e395a685a775249a85294fbef0cb9bd50899f3f2a526481eca063ec91393",
+    "bin/alight/src/judge.rs": "8563f5a96593f0fa8107d756c1a1b1e065bf9add89f52747fb784c7f509e9640",
+    "crates/alight-tape/tests/rpc_history.rs": "aa804baac12f0a439ef1e7feba4b0f204ead40b53a52c9b72da30395c5cd4d3d",
+    "crates/alight-tape/src/receipts.rs": "bf40cb1070a7930cb4a268022681e3e4db1f2342e9327eedb0e49330f483210a",
+    "bin/alight/tests/wallet_history.rs": "5402f85a2dbb2e30016ecdab25ea5a29867eba78e0b51043c61ff754a9470033",
+    "bin/alight/src/receipts.rs": "83f23618bfb4b2e3d076218e63cf2f9a70ef29289c627e33f09be3fc61fed038",
+    "crates/alight-ingest/src/wallet_history.rs": "efb1849e68f8626de1f352f2d71b7fdf76fa269daf1c13c74750348ef7c6ecd5",
+    "bin/alight/tests/judge.rs": "2442aaed535d57fc681fd36e6303fdccb35ec0c6d40447028fc2d2e0f83563c0",
+    "docs/contracts.md": "0a055e4053384f92dba44a92550be7050e6ef22cb5cdb5a114603db433dd51ba"
   },
   "local_artifact_sha256": {
     ".alight/phase6/resume/hosted-downloads.json": "d47315e4343754d94cff3cb79b7ef8607aa158f03fdca19ec3a178eff2cec057",
     ".alight/phase6/resume/fresh-checkout-validation.json": "8b25df9f1078c15f2a0f51c732aef7ef9a4d5964631e6b8fa18886bac264cbc5",
     ".alight/phase6/resume/health-final.json": "511051f2722deea8b96e0283bcfbd33fca93b7e7f7540e8030d3f9588502192c",
-    ".alight/phase6/resume/anchor-preflight.json": "99ebbc4d36fcb9d2423eb4748b8676658e5963dbc3497fd9b928a0c2630dbb10"
+    ".alight/phase6/resume/anchor-preflight.json": "99ebbc4d36fcb9d2423eb4748b8676658e5963dbc3497fd9b928a0c2630dbb10",
+    ".alight/phase6/rpc-wallet/capture-summary.json": "72e878b2a02b80ce094c9f8bd3b7bc29297f6bd1e0744ddad70ac29381728ed3",
+    ".alight/phase6/rpc-wallet/receipt.json": "77a0cf89deb2f9d7f638309c85dfc248570ec7ceac5d8b2ad9b0674308865a09",
+    ".alight/phase6/rpc-wallet/capture.json": "063eb4c8f1f8b3cf99e1acc2e11010526865e0b595193c883b22260bb51da7e4",
+    ".alight/phase6/rpc-wallet/health-no-sends.json": "142025edd372f6de35394a44e524b7f0e72b70ebed940e5dbeebe078e610f6ba"
   },
   "hosted_bundle_sha256": {
     "LICENSE.txt": "866d466fea020b543c2bed4399dd37cc1299e40c8b3149205bff44d431a67867",
@@ -156,5 +196,25 @@
     "regimes.csv": "bf14d4a508e62b19d508474ed9a0ecc46ab686c43103b648e573c0af1caab770",
     "regimes.parquet": "6bf01562be0b111e8cd621f1081246c069f17753ce78fa0e4ef38b41c4c6f6f1",
     "schema.json": "309b43ffbdc2b83ecc4063797965b058ac4787838a086bd601269e3043a7e1c8"
+  },
+  "rpc_wallet_report": {
+    "address_signatures": 4,
+    "history": "partial_finalized_fee_payer",
+    "not_fee_payer": 0,
+    "outside_window": 0,
+    "provider_requests": 6,
+    "source": "replay",
+    "transactions": 4,
+    "transactions_sent": 0,
+    "unavailable": 0,
+    "fees_lamports": "20249",
+    "failed_transactions": 0,
+    "known_paid_tips_lamports": "0",
+    "unknown_tip_payments": 4,
+    "compared_transactions": 0,
+    "limits_printed": 8,
+    "window": "2026-10-09 UTC",
+    "sol_spent": 0,
+    "original_live_database_modified_by_receipt_job": false
   }
 }

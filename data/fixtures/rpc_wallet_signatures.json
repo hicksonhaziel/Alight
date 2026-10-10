@@ -1,0 +1,50 @@
+{
+  "capture_kind": "sanitized_real_rpc_response",
+  "method": "getSignaturesForAddress",
+  "commitment": "finalized",
+  "limit": 4,
+  "raw_response_sha256": "eb3352e6edaf0b18dd0a2036866eb7c7c1845428a50d67f65c303f624644df85",
+  "response": {
+    "id": 1,
+    "jsonrpc": "2.0",
+    "result": [
+      {
+        "blockTime": 1791526252,
+        "confirmationStatus": "finalized",
+        "err": null,
+        "memo": null,
+        "signature": "4xzwnyJrohD9U4bKzhnSKuCkftcsyDor47Zo4SVnpyA4drW8hinVfMWBkBtqVcy7cGqkpEhL3oj4FAnNrWxCku6K",
+        "slot": 454781760,
+        "transactionIndex": 307
+      },
+      {
+        "blockTime": 1791526052,
+        "confirmationStatus": "finalized",
+        "err": null,
+        "memo": null,
+        "signature": "9w8c1aWiZ6JSwA6npg1A8eERiwya1ioPpvNYydG9vgJBPYujpyXAEwWx8AxeZPvhWRt7S7DJ6h29DCtVTGaYaoi",
+        "slot": 454781012,
+        "transactionIndex": 279
+      },
+      {
+        "blockTime": 1791526017,
+        "confirmationStatus": "finalized",
+        "err": null,
+        "memo": null,
+        "signature": "5KoH74yHYTBfyqopQqc8eND2TQmtxnNoqZNoaem1i4aHjDDWxk6N1bu2VZcraYSjtFTLzpQZkHwBhLUqbcuDZfje",
+        "slot": 454780885,
+        "transactionIndex": 514
+      },
+      {
+        "blockTime": 1791526006,
+        "confirmationStatus": "finalized",
+        "err": null,
+        "memo": null,
+        "signature": "2jzGH6xGucMMxhr1Dqfk7MPxeUa9dmF6aPKP6FriDqscXP23s7HCGEps7pqaGNt8F3LYqmBo6HpYtBDW6WhLH3nT",
+        "slot": 454780844,
+        "transactionIndex": 220
+      }
+    ]
+  },
+  "captured_at_utc": "2026-10-10T00:49:21.359232+00:00"
+}

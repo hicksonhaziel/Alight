@@ -53,8 +53,7 @@ pub fn validate(capture: &WalletHistoryCapture) -> Result<(), ReceiptError> {
         let received = utc(&tx.received.wall_utc)?;
         if tx.source != capture.source
             || tx.account_keys.first() != Some(&capture.wallet)
-            || received < from
-            || received > through
+            || (row.chain_time_utc.is_none() && (received < from || received > through))
             || row.regime_id.as_ref().is_some_and(|r| !name(r))
         {
             return Err(ReceiptError::Invalid);

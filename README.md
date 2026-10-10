@@ -109,10 +109,10 @@ Reservations are worst-case exposure, not balance reconciliation.
 | Beam HTTP | Tipped submission through the Solami RPC endpoint; not an independent HTTP backend |
 | Yellowstone gRPC | Filtered primary observation, clock/block identity and tip tape |
 | Mirage | Secondary transport via captured Yellowstone-compatible frames |
-| RPC | Leaders, commitment/absence checks, block sampling and untipped submission |
+| RPC | Leaders, commitment/absence checks, block sampling, bounded read-only wallet history and untipped submission |
 | Blur | Observe/live worker discovers up to three liquid pools, subscribes with pool filters and stores bounded delay-cost snapshots; stale/sparse fallback |
 | Webhooks | Exact-body HMAC observation; complete live registration/coverage unverified |
-| Data API | Wallet-history adapter pending a verified payload; receipts use bounded Sim/Replay captures |
+| Data API | Wallet-history adapter pending a verified payload; receipts support bounded recorded captures and finalized RPC history as Replay |
 
 Quotes refuse unsupported recommendations and carry intervals, effective n,
 age, workload/route/region/window and evidence class. Dollar estimates assume

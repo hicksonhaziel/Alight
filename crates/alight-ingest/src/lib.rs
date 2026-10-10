@@ -16,6 +16,7 @@ pub mod leaders;
 pub mod rpc;
 #[cfg(feature = "stream")]
 pub mod stream;
+pub mod wallet_history;
 pub mod webhook;
 
 pub const MAINNET_GENESIS: &str = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
@@ -213,6 +214,7 @@ impl HttpProbe {
             "getBlock",
             "getBalance",
             "getSignatureStatuses",
+            "getSignaturesForAddress",
             "getTransaction",
             "getVoteAccounts",
             "getBlockProduction",

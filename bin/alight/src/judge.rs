@@ -22,16 +22,22 @@ pub async fn doctor(mode: RunMode, network: bool, output: Option<&str>) -> Resul
     } else {
         let config =
             Config::load_observer().map_err(|_| "Cannot load read-only observer configuration")?;
-        let configured = config.get("SOLAMI_RPC_URL").is_some()
-            && (config.get("SOLAMI_GRPC_URL").is_some()
-                || config.get("SOLAMI_STREAM_URL").is_some())
-            && (config.get("SOLAMI_GRPC_TOKEN").is_some()
-                || config.get("SOLAMI_STREAM_TOKEN").is_some()
-                || config.get("SOLAMI_API_KEY").is_some());
+        // Match the daemon's actual startup requirements; unsupported aliases must
+        // not make a fresh checkout appear ready to collect.
+        let mut missing: Vec<&str> = ["SOLAMI_RPC_URL", "SOLAMI_GRPC_URL", "SOLAMI_DATA_API_URL"]
+            .into_iter()
+            .filter(|key| config.get(key).is_none())
+            .collect();
+        if config.get("SOLAMI_GRPC_TOKEN").is_none() && config.get("SOLAMI_API_KEY").is_none() {
+            missing.push("SOLAMI_GRPC_TOKEN or SOLAMI_API_KEY");
+        }
+        let configured = missing.is_empty();
+        report["missing_configuration"] = json!(missing);
         report["credentials_present"] =
             serde_json::to_value(config.presence()).map_err(|_| "Cannot encode presence")?;
         report["requirements"] = json!([
             "Own read key and dashboard RPC/gRPC endpoints",
+            "SOLAMI_DATA_API_URL for public tip-address metadata",
             "No canary or SWQoS signing identity for observe",
             "Live sending separately requires a dedicated funded canary payer, authenticated route and existing budget/reserve gates"
         ]);

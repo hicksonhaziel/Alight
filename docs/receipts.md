@@ -6,6 +6,8 @@ imported into an isolated Sim/Replay database and content-addressed; public
 reads select the latest saved wallet capture; an optional hash pins an exact
 capture. The existing captured Yellowstone/Mirage
 parser can turn recorded JSONL into Replay history without network access.
+The read-only RPC fallback retrieves one finalized signature page and its
+in-window transactions. It needs RPC read access, no signing identity or SOL.
 
 ```sh
 # recipients.json is an explicitly reviewed list of tip recipient public keys.
@@ -19,6 +21,29 @@ alight receipt evaluate --database .alight/judge/replay.db \
   --input .alight/judge/wallet-capture.json --request receipt-request.json \
   --output .alight/judge/wallet-receipt.json
 ```
+
+To fetch a bounded real-wallet sample instead of reading recorded JSONL:
+```sh
+alight receipt fetch-rpc --wallet WALLET --recipients recipients.json \
+  --from 2026-10-09T00:00:00Z --through 2026-10-09T23:59:59Z --limit 4 \
+  --output .alight/judge/rpc-wallet-capture.json
+```
+Use a window covering the wallet's recent transactions, then import/evaluate
+that capture with the commands above. The default limit is 16, maximum 32;
+the job makes at most `limit + 2` read requests, with no retries or pagination.
+Provider bandwidth/access charges can still apply. The JSON summary counts
+signatures outside the window, unavailable rows and transactions paid by
+another account. An empty page is not proof that the wallet made no submissions.
+Null transaction data is not converted into zero fees. Unsupported transaction
+versions or conflicting signature/slot/time/status evidence fail closed.
+
+RPC captures retain execution fees and chain time, with the actual later fetch
+timestamp. They remain **Replay**, with unknown transport, workload, regime and
+block index. They cannot be imported as Live or establish a supported historical
+Beam comparison without additional evidence. This fallback is not a Data API
+wallet-history integration. Its source contracts are Solana's
+[signature history](https://solana.com/docs/rpc/http/getsignaturesforaddress) and
+[transaction response](https://solana.com/docs/rpc/http/gettransaction).
 
 Example request:
 ```json
