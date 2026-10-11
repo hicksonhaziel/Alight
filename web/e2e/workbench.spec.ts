@@ -60,7 +60,7 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Network cockpit" }),
+    page.getByRole("heading", { name: "Network overview" }),
   ).toBeVisible();
   await expect(page.locator(".topbar .source-badge")).toHaveText("SIMULATED");
   await expect(
@@ -178,15 +178,16 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
 });
 
 for (const theme of ["dark", "light"]) {
-  test(`seven screens are accessible in ${theme} theme and source labels remain visible`, async ({
+  test(`grouped workflows and legacy links are accessible in ${theme} theme`, async ({
     page,
   }) => {
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Network cockpit" }),
+      page.getByRole("heading", { name: "Network overview" }),
     ).toBeVisible();
     if (theme === "light")
       await page.getByRole("button", { name: "Use light theme" }).click();
+    await expect(page.locator(".desktop-sidebar nav a")).toHaveCount(5);
     for (const route of [
       "cockpit",
       "quote",
@@ -198,6 +199,15 @@ for (const theme of ["dark", "light"]) {
     ]) {
       await page.goto(`/#${route}`);
       await expect(page.locator("main h1")).toBeVisible();
+      const parent =
+        route === "prove" ? "quote" : route === "regimes" ? "health" : route;
+      await expect(
+        page.locator(`.desktop-sidebar nav a[href="#${parent}"]`),
+      ).toHaveAttribute("aria-current", "page");
+      if (route === "regimes")
+        await expect(
+          page.getByRole("heading", { name: "Measured signals", exact: true }),
+        ).toBeVisible();
       await expect(page.locator(".topbar .source-badge")).toHaveText(
         "SIMULATED",
       );
@@ -232,7 +242,7 @@ test("mobile, keyboard navigation, reduced motion, and offline errors are usable
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Network cockpit" }),
+    page.getByRole("heading", { name: "Network overview" }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -246,7 +256,7 @@ test("mobile, keyboard navigation, reduced motion, and offline errors are usable
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page
     .getByRole("dialog", { name: "Navigation", exact: true })
-    .getByRole("link", { name: "Quote console", exact: true })
+    .getByRole("link", { name: "Quote & Prove", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Quote console", exact: true }),

@@ -5,8 +5,6 @@ import {
   ChartNoAxesCombined,
   CircleHelp,
   Command,
-  FlaskConical,
-  GitBranch,
   KeyRound,
   LayoutDashboard,
   Menu,
@@ -26,7 +24,6 @@ import { Cockpit } from "./pages/Cockpit";
 import { Quote } from "./pages/Quote";
 import { Prove } from "./pages/Prove";
 import { Ledger } from "./pages/Ledger";
-import { Regimes } from "./pages/Regimes";
 import { Health } from "./pages/Health";
 import { Tape } from "./pages/Tape";
 const navigation: {
@@ -37,21 +34,15 @@ const navigation: {
 }[] = [
   {
     id: "cockpit",
-    name: "Cockpit",
+    name: "Overview",
     description: "Clock, curves and canary activity",
     icon: LayoutDashboard,
   },
   {
     id: "quote",
-    name: "Quote console",
-    description: "Find a supported configuration",
+    name: "Quote & Prove",
+    description: "Find a configuration and test a frozen claim",
     icon: ChartNoAxesCombined,
-  },
-  {
-    id: "prove",
-    name: "Prove",
-    description: "Test a frozen claim",
-    icon: FlaskConical,
   },
   {
     id: "ledger",
@@ -60,15 +51,9 @@ const navigation: {
     icon: ShieldCheck,
   },
   {
-    id: "regimes",
-    name: "Regimes",
-    description: "Observed condition labels",
-    icon: GitBranch,
-  },
-  {
     id: "health",
-    name: "Observer health",
-    description: "Freshness, gaps and disagreements",
+    name: "Network health",
+    description: "Observers, conditions, gaps and disagreements",
     icon: Activity,
   },
   {
@@ -92,8 +77,10 @@ export function App() {
     [draftKey, setDraftKey] = useState("");
   const [frozen, setFrozen] = useState<ForecastEntry | null>(null);
   const { data, connection, error } = useDashboard(reconnect);
-  const page =
+  const screen =
       route.split("/")[0] === "datasets" ? "ledger" : route.split("/")[0],
+    page =
+      screen === "prove" ? "quote" : screen === "regimes" ? "health" : screen,
     selected = navigation.find((n) => n.id === page);
   let reference: string | undefined;
   try {
@@ -161,7 +148,7 @@ export function App() {
         className="brand"
         href="#cockpit"
         onClick={() => setMenu(false)}
-        aria-label="Alight cockpit"
+        aria-label="Alight overview"
       >
         <img src="/alight-mark.svg" alt="" />
         <span>
@@ -211,7 +198,7 @@ export function App() {
           >
             <Icon size={17} aria-hidden />
             <span>{name}</span>
-            {id === "prove" &&
+            {id === "quote" &&
               data?.proves.some(
                 (p) => !["COMPLETE", "VOIDED"].includes(p.state),
               ) && <span className="nav-count">Active</span>}
@@ -416,7 +403,7 @@ export function App() {
               </button>
             </div>
           )}
-          <div className="page-content" key={`${page}-${reference ?? ""}`}>
+          <div className="page-content" key={`${screen}-${reference ?? ""}`}>
             {error && <Notice danger>{error}</Notice>}
             {!data ? (
               error ? (
@@ -449,33 +436,53 @@ export function App() {
                 text="Choose a screen from the navigation."
               >
                 <a href="#cockpit" className="button primary">
-                  Open cockpit
+                  Open overview
                 </a>
               </Empty>
             ) : page === "quote" ? (
-              <Quote
-                data={data}
-                operator={operator}
-                connect={() => setOperatorOpen(true)}
-                locked={(entry) => {
-                  setFrozen(entry);
-                  location.hash = `prove/${encodeURIComponent(entry.hash)}`;
-                }}
-              />
-            ) : page === "prove" ? (
-              <Prove
-                data={data}
-                operator={operator}
-                connect={() => setOperatorOpen(true)}
-                initial={frozen}
-                reference={reference}
-              />
+              <>
+                <nav className="workflow-nav" aria-label="Quote and Prove">
+                  <a
+                    href="#quote"
+                    aria-current={screen === "quote" ? "page" : undefined}
+                  >
+                    Quote
+                  </a>
+                  <a
+                    href="#prove"
+                    aria-current={screen === "prove" ? "page" : undefined}
+                  >
+                    Prove & history
+                  </a>
+                </nav>
+                {screen === "quote" ? (
+                  <Quote
+                    data={data}
+                    operator={operator}
+                    connect={() => setOperatorOpen(true)}
+                    locked={(entry) => {
+                      setFrozen(entry);
+                      location.hash = `prove/${encodeURIComponent(entry.hash)}`;
+                    }}
+                  />
+                ) : (
+                  <Prove
+                    data={data}
+                    operator={operator}
+                    connect={() => setOperatorOpen(true)}
+                    initial={frozen}
+                    reference={reference}
+                  />
+                )}
+              </>
             ) : page === "ledger" ? (
               <Ledger data={data} />
-            ) : page === "regimes" ? (
-              <Regimes data={data} />
             ) : page === "health" ? (
-              <Health data={data} reference={reference} />
+              <Health
+                data={data}
+                reference={reference}
+                conditionsOpen={screen === "regimes"}
+              />
             ) : page === "tape" ? (
               <Tape data={data} />
             ) : (

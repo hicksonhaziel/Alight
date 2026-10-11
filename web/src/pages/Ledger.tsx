@@ -144,7 +144,7 @@ export function Ledger({ data }: { data: DashboardData }) {
   return (
     <>
       <Header
-        eyebrow="AUDIT / 04"
+        eyebrow="AUDIT"
         title="Forecast ledger"
         description="Immutable claims. Later outcomes. A chain you can verify yourself."
       >

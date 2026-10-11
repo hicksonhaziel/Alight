@@ -36,7 +36,7 @@ export function Tape({ data }: { data: DashboardData }) {
   return (
     <>
       <Header
-        eyebrow="MARKET / 07"
+        eyebrow="MARKET"
         title="Tape & receipts"
         description="Observed transfers, their coverage and what they can tell you."
       />

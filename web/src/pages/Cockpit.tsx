@@ -12,12 +12,14 @@ import type { FeeBucket, SizeClass } from "../../../sdk/ts/src/index";
 import {
   age,
   compact,
+  canaryName,
   dateTime,
   integer,
   latestCurves,
   percent,
   ratio,
   routeNames,
+  regimeName,
   sol,
 } from "../format";
 import { Header, Panel, Status, Empty, EvidenceMeta } from "../ui";
@@ -49,8 +51,8 @@ export function Cockpit({ data }: { data: DashboardData }) {
   return (
     <>
       <Header
-        eyebrow="OBSERVATORY / 01"
-        title="Network cockpit"
+        eyebrow="OBSERVATORY"
+        title="Network overview"
         description="Landing evidence, current conditions and the cost of each send."
       >
         <a className="button primary" href="#quote">
@@ -131,8 +133,12 @@ export function Cockpit({ data }: { data: DashboardData }) {
       <div className="cockpit-grid">
         <Panel
           title="Landing curves"
-          caption="M0 cell estimates · 95% intervals · owned canary evidence"
-          action={<span className="tiny mono">{data.curves.regime_id}</span>}
+          caption="Landing estimates · 95% intervals · owned canary evidence"
+          action={
+            <a className="tiny" href="#regimes">
+              {regimeName(data.curves.regime_id)}
+            </a>
+          }
         >
           <div className="chart-controls">
             <label>
@@ -266,7 +272,7 @@ export function Cockpit({ data }: { data: DashboardData }) {
                     href={`#health/${encodeURIComponent(c.id)}`}
                     key={c.id}
                     className={`canary-dot ${finalized && c.outcome === "LANDED_OK" ? "landed" : finalized && c.outcome && c.outcome !== "UNRESOLVED" ? "failed" : "pending"}`}
-                    aria-label={`${c.id}, ${c.outcome ?? "PENDING"}, ${routeNames[c.config.route]}, ${integer(c.config.tip_lamports)} lamports`}
+                    aria-label={`${canaryName(c.id)}, ${c.outcome ?? "PENDING"}, ${routeNames[c.config.route]}, ${integer(c.config.tip_lamports)} lamports`}
                     title={`${c.id} · ${c.outcome ?? "PENDING"} · ${routeNames[c.config.route]} · ${integer(c.config.tip_lamports)} lamports · ${c.landed_slot != null && BigInt(c.landed_slot) >= BigInt(c.sent_slot) ? `${BigInt(c.landed_slot) - BigInt(c.sent_slot)} slots to landing` : "Landing latency unavailable"}`}
                   />
                 ))}
@@ -308,7 +314,7 @@ export function Cockpit({ data }: { data: DashboardData }) {
                             className="mono row-link"
                             href={`#health/${encodeURIComponent(c.id)}`}
                           >
-                            {compact(c.id, 6)}
+                            {canaryName(c.id, 6)}
                           </a>
                         </td>
                         <td>{routeNames[c.config.route]}</td>

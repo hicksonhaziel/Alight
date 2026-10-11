@@ -1,23 +1,20 @@
 import { GitBranch } from "lucide-react";
 import type { DashboardData } from "../data";
-import { dateTime, integer } from "../format";
-import { Empty, Header, Notice, Panel } from "../ui";
+import { dateTime, integer, regimeName } from "../format";
+import { Empty, Notice, Panel } from "../ui";
 import { SignalHistory, signalNames } from "../signals";
 export function Regimes({ data }: { data: DashboardData }) {
   return (
     <>
-      <Header
-        eyebrow="CONDITIONS / 05"
-        title="Regime history"
-        description="Keep evidence within the conditions that produced it."
-      />
       <div className="regime-current">
         <span className="regime-icon">
           <GitBranch size={24} strokeWidth={1.5} />
         </span>
         <div>
           <span className="eyebrow">CURRENT EVIDENCE LABEL</span>
-          <h2 className="mono">{data.curves.regime_id}</h2>
+          <h2 title={data.curves.regime_id}>
+            {regimeName(data.curves.regime_id)}
+          </h2>
           <p>
             {data.health.source === "sim"
               ? "SIMULATED"
@@ -55,14 +52,16 @@ export function Regimes({ data }: { data: DashboardData }) {
                 </span>
                 <div>
                   <div className="timeline-title">
-                    <h3 className="mono">{r.regime_id}</h3>
+                    <h3 title={r.regime_id}>{regimeName(r.regime_id)}</h3>
                     <span className={`source-badge ${r.source}`}>
                       {r.origin.toUpperCase()}
                     </span>
                   </div>
                   <p>
                     {dateTime(r.detected_at_utc)} UTC · from{" "}
-                    <span className="mono">{r.previous_regime_id}</span>
+                    <span title={r.previous_regime_id}>
+                      {regimeName(r.previous_regime_id)}
+                    </span>
                   </p>
                   {r.annotation && <p className="tiny">{r.annotation}</p>}
                   <div className="table-wrap">
@@ -156,7 +155,7 @@ export function Regimes({ data }: { data: DashboardData }) {
         ) : (
           <Empty
             title="Historical coverage has not been verified"
-            text="No mainnet backfill has run while collection is paused. The historical slot-time steps remain an unverified acceptance item."
+            text="No historical reconstruction is recorded for this source. Live collection does not establish past coverage."
           />
         )}
       </Panel>
@@ -173,7 +172,7 @@ export function Regimes({ data }: { data: DashboardData }) {
                 </span>
                 <div>
                   <div className="timeline-title">
-                    <h3 className="mono">{r.id}</h3>
+                    <h3 title={r.id}>{regimeName(r.id)}</h3>
                     <span className={`source-badge ${data.health.source}`}>
                       {data.health.source === "sim"
                         ? "SIMULATED"

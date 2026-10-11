@@ -83,7 +83,9 @@ export function Quote({
       );
       if (!configs.size) {
         setError(
-          "No stored candidate configurations match these routes and size. Try the supported Sim selection: Beam HTTP, small.",
+          health.source === "sim"
+            ? "No stored candidate configurations match this selection. Try Beam HTTP with a small canary in Sim."
+            : "No owned landing evidence matches this selection yet. Passive market collection does not provide quote training outcomes.",
         );
         return;
       }
@@ -146,7 +148,7 @@ export function Quote({
   return (
     <>
       <Header
-        eyebrow="DECISION / 02"
+        eyebrow="DECISION"
         title="Quote console"
         description="Choose your objective. Inspect the evidence before locking a claim."
       />

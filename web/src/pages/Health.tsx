@@ -6,14 +6,23 @@ import type {
 } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
-import { compact, dateTime, integer, sendToSeenMs } from "../format";
+import {
+  canaryName,
+  compact,
+  dateTime,
+  integer,
+  sendToSeenMs,
+} from "../format";
 import { Header, Panel, Status, Empty, Loading, Notice } from "../ui";
+import { Regimes } from "./Regimes";
 export function Health({
   data,
   reference,
+  conditionsOpen = false,
 }: {
   data: DashboardData;
   reference?: string;
+  conditionsOpen?: boolean;
 }) {
   const [details, setDetails] = useState<CanaryEvidencePage | null>(null),
     [error, setError] = useState(""),
@@ -48,10 +57,14 @@ export function Health({
   return (
     <>
       <Header
-        eyebrow="DIAGNOSTICS / 06"
-        title="Observer health"
-        description="Freshness, recorded gaps and evidence that disagrees."
+        eyebrow="DIAGNOSTICS"
+        title="Network health"
+        description="Observer freshness, changing conditions and recorded gaps."
       />
+      <details className="conditions-details" open={conditionsOpen}>
+        <summary>Network conditions & history</summary>
+        <Regimes data={data} />
+      </details>
       <div className="observer-grid">
         {data.health.observers.map((o) => (
           <Panel
@@ -208,7 +221,9 @@ export function Health({
             {data.diagnostics.disagreements.map((e) => (
               <a href={`#health/${encodeURIComponent(e.canary_id)}`} key={e.id}>
                 <div>
-                  <strong className="mono">{compact(e.canary_id, 10)}</strong>
+                  <strong className="mono" title={e.canary_id}>
+                    {canaryName(e.canary_id, 10)}
+                  </strong>
                   <span>
                     {e.kind.replaceAll("_", " ")}
                     {e.missing_observers.length
@@ -400,7 +415,9 @@ function CanaryLinks({ rows }: { rows: WorkbenchCanary[] }) {
       {rows.map(({ canary: c, resolution_reason }) => (
         <a href={`#health/${encodeURIComponent(c.id)}`} key={c.id}>
           <div>
-            <strong className="mono">{compact(c.id, 10)}</strong>
+            <strong className="mono" title={c.id}>
+              {canaryName(c.id, 10)}
+            </strong>
             <span>
               {resolution_reason?.replaceAll("_", " ") ??
                 "Inspect original observations"}
@@ -414,7 +431,7 @@ function CanaryLinks({ rows }: { rows: WorkbenchCanary[] }) {
   ) : (
     <Empty
       title="No canaries to inspect"
-      text="Owned canary records appear here after collection or a Sim run."
+      text="Owned canary records appear here after a governed canary run or a Sim run. Passive collection alone does not create them."
     />
   );
 }

@@ -8,12 +8,17 @@ export const routeNames = {
   beam_quic: "Beam QUIC",
   rpc: "Solami RPC",
 };
+/** Friendly display only; evidence identifiers remain unchanged in contracts and exports. */
+export const regimeName = (id: string) =>
+  /^phase\d+-unclassified$/.test(id) ? "Unclassified conditions" : id;
 export const percent = (value: number | null | undefined) =>
   value == null ? "—" : `${(value * 100).toFixed(1)}%`;
 export const compact = (text: string, length = 8) =>
   text.length > length * 2 + 1
     ? `${text.slice(0, length)}…${text.slice(-length)}`
     : text;
+export const canaryName = (id: string, length = 8) =>
+  compact(id.replace(/^phase\d+-/, ""), length);
 export const dateTime = (text: string) =>
   new Date(text).toLocaleString(undefined, {
     month: "short",

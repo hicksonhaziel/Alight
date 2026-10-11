@@ -9,7 +9,14 @@ import {
 } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
-import { compact, dateTime, integer, percent, routeNames } from "../format";
+import {
+  compact,
+  dateTime,
+  integer,
+  percent,
+  routeNames,
+  regimeName,
+} from "../format";
 import { loadBundle } from "../ledger";
 import {
   Empty,
@@ -34,8 +41,8 @@ export function Prove({
   reference?: string;
 }) {
   const [forecast, setForecast] = useState(
-    reference && initial?.hash !== reference ? null : initial,
-  ),
+      reference && initial?.hash !== reference ? null : initial,
+    ),
     [report, setReport] = useState<ProveReport | null>(null),
     [members, setMembers] = useState<TrainingCanary[]>([]),
     [n, setN] = useState(40),
@@ -123,7 +130,7 @@ export function Prove({
   return (
     <>
       <Header
-        eyebrow="VERIFICATION / 03"
+        eyebrow="VERIFICATION"
         title="Prove a claim"
         description="Freeze one configuration. Test it against later, held-out canaries."
       >
@@ -176,7 +183,9 @@ export function Prove({
                   </div>
                   <div>
                     <dt>Regime</dt>
-                    <dd>{report.lock.regime_id}</dd>
+                    <dd title={report.lock.regime_id}>
+                      {regimeName(report.lock.regime_id)}
+                    </dd>
                   </div>
                   <div>
                     <dt>Locked · UTC</dt>
@@ -315,7 +324,7 @@ export function Prove({
               <p>
                 {routeNames[prediction.config.route]} ·{" "}
                 {integer(prediction.config.tip_lamports)} lamports ·{" "}
-                {forecast.forecast.regime_id}
+                {regimeName(forecast.forecast.regime_id)}
               </p>
               <p className="mono hash">{forecast.hash}</p>
               <p>
