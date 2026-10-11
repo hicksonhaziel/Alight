@@ -2,9 +2,10 @@
 
 Receipts evaluate bounded Alight captures of normalized transactions. They
 cover one fee payer, at most 1,000 records, and at most 24 hours. Captures are
-imported into an isolated Sim/Replay database and content-addressed; public
-reads select the latest saved wallet capture; an optional hash pins an exact
-capture. The existing captured Yellowstone/Mirage
+imported into an isolated Sim/Replay database and content-addressed. Sim/Replay
+reads select the latest saved capture; an optional hash pins an exact capture.
+In Live/Observe, the same wallet form fetches a bounded Data API trade index
+and verifies each transaction through finalized RPC. The captured Yellowstone/Mirage
 parser can turn recorded JSONL into Replay history without network access.
 The read-only RPC fallback retrieves one finalized signature page and its
 in-window transactions. It needs RPC read access, no signing identity or SOL.
@@ -40,8 +41,8 @@ versions or conflicting signature/slot/time/status evidence fail closed.
 RPC captures retain execution fees and chain time, with the actual later fetch
 timestamp. They remain **Replay**, with unknown transport, workload, regime and
 block index. They cannot be imported as Live or establish a supported historical
-Beam comparison without additional evidence. This fallback is not a Data API
-wallet-history integration. Its source contracts are Solana's
+Beam comparison without additional evidence. This fallback uses signature
+history instead of the Data API trade index. Its source contracts are Solana's
 [signature history](https://solana.com/docs/rpc/http/getsignaturesforaddress) and
 [transaction response](https://solana.com/docs/rpc/http/gettransaction).
 
@@ -87,10 +88,39 @@ excludes base and priority fees. Trade rows cannot establish authoritative
 network fees or all failed submissions. On 10 October the configured account
 returned HTTP 402 (balance/bandwidth). A bounded recheck on 11 October returned
 HTTP 200 for both endpoints, including two real trade rows and a wallet-tip
-summary. Access and response fields are now verified; the receipt engine still
-uses finalized RPC or recorded captures, with no Data API adapter wired in.
-These trade and aggregate-tip responses do not establish complete transaction
-history, network fees or failed submissions. The recorded real-wallet test
-produces a descriptive Replay report without route/time/frontier claims.
+summary. The adapter now uses the trade index to locate transactions and
+finalized RPC to establish their network fees and executed payments. It never
+uses a swap's `fee_amount` as a network fee or allocates an aggregate venue total
+to individual transactions. Multiple swaps in one signature count once; slot,
+signature and chain time must agree with RPC. Conflicts fail closed, while null
+finalized results and transactions paid by another wallet are counted as missing
+coverage. Transport, workload and regime remain unknown; no historical tip
+comparison is invented. Trade selection cannot estimate failed share.
+
+Live/Observe enables these reads when Data API and RPC credentials are present
+and `ALIGHT_WALLET_HISTORY_ENABLED` is true (the default). Each job reads at most 8 trades
+from the preceding 24 hours, with at most 12 provider requests, a 25-second
+deadline, no pagination and no retries. Reads use a five-minute in-memory cache
+of at most 16 wallets; only one provider job may start per 30 seconds. Failures
+stay unavailable, with the same cooldown. Provider credentials remain server-side.
+No database capture, forecast, budget reservation or transaction is written.
+`live` identifies the fresh production provider read; transaction dates are
+shown separately. A pinned Live hash can select only a still-cached capture and
+never starts a fetch; it expires or disappears on restart. Sim/Replay remains
+offline, and imported files still cannot assert Live evidence.
+
+For a reproducible historical capture, use the CLI (limit 1–16, default 16):
+```sh
+alight receipt fetch-data-api --wallet WALLET --recipients recipients.json \
+  --from 2026-10-09T00:00:00Z --through 2026-10-09T23:59:59Z --limit 2 \
+  --output .alight/judge/data-api-wallet-capture.json
+```
+This produces Replay history for the existing import/evaluate flow. Its summary
+counts indexed trades, distinct signatures and missing coverage. The separate
+venue-tip total always covers the provider's rolling 24 hours at fetch time,
+even for a historical transaction window; it is not a receipt subtotal.
+These indexed trades cannot establish complete transaction history or failed
+submissions. A zero-row result means no usable records in this bounded sample,
+not proof that the wallet was inactive.
 See the [provider contract](https://solami.dev/docs/api/get_data-wallet-fees)
-and [integration checks](../data/integration-readcheck.json).
+and [integration checks](../data/wallet-history-integration.json).

@@ -34,7 +34,10 @@ failed share is not a submission failure rate. Wallet transport and chain time
 are not inferred from recipients or receive time. Unknown payments stay unknown;
 missing contemporaneous frontiers are not replaced with today's quote. Spend
 above a supported tip is conditional arithmetic, not proven waste or proof of
-equal swap performance. The Data API wallet-history adapter remains unverified.
+equal swap performance. The bounded Data API adapter indexes executed swaps and
+uses finalized RPC for network fees; it does not reconstruct dropped submissions
+or establish a wallet failure rate. Its rolling venue-tip total has separate
+coverage and is never allocated to individual transactions.
 
 Blur economics depend on user-supplied size, edge, adverse-selection factor and
 SOL conversion plus sufficiently recent pool evidence. Combining pool returns

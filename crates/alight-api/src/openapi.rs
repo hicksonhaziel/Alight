@@ -97,7 +97,7 @@ pub fn document() -> Value {
     let mut paths = Map::new();
     let mut receipt = operation("WalletReceipt", false, "200");
     receipt["description"] = json!(
-        "Partial imported Sim/replay history only; no network fetch. A missing capture returns HISTORY_UNAVAILABLE. Comparisons require matched historical evidence; unknown route is descriptive."
+        "Read-only partial wallet history. Sim/replay evaluate saved captures without network access. Live/observe can fetch at most 8 indexed trades from the preceding 24 hours via Solami Data API, with finalized RPC fees, 25-second deadline, 5-minute cache and one provider job per 30 seconds. Pinned captures never trigger a network fetch and cached Live pins expire. Provider history does not establish failed-share or transport/frontier context. Missing history returns HISTORY_UNAVAILABLE. No database writes or transaction sends."
     );
     receipt["parameters"] = json!([
         {"name":"wallet","in":"path","required":true,"schema":{"type":"string","minLength":32,"maxLength":44}},

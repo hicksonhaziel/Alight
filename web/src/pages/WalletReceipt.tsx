@@ -45,9 +45,11 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
   return (
     <div className="receipt-limits">
       <p className="panel-note">
-        Evaluate saved {data.health.source} history for a wallet. Target: 90%
-        within 2 slots. Live history needs provider access; missing evidence
-        stays unavailable.
+        {data.health.source === "live"
+          ? "Read the wallet’s latest 24 hours of indexed trades and finalized transaction fees."
+          : `Evaluate saved ${data.health.source} history for a wallet.`}{" "}
+        Target: 90% within 2 slots. Missing history or comparison evidence stays
+        unavailable.
       </p>
       <form className="quote-form" onSubmit={(e) => void submit(e)}>
         <label>
@@ -97,22 +99,22 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
               {report.from_utc} — {report.through_utc}
             </p>
             <p>
-              Fees: {integer(report.fees_lamports)} lamports · known paid tips:{" "}
-              {integer(report.known_paid_tips_lamports)} lamports
+              Visible fees: {integer(report.fees_lamports)} lamports · known
+              paid tips: {integer(report.known_paid_tips_lamports)} lamports
             </p>
             <p>
               Visible failed share:{" "}
               {report.visible_failed_share == null
                 ? "Unavailable"
-                : percent(report.visible_failed_share)}{" "}
-              ({report.failed_transactions}/{report.transactions}) ·{" "}
-              {report.unknown_tip_payments} unknown tip payments
+                : `${percent(report.visible_failed_share)} (${report.failed_transactions}/${report.transactions})`}{" "}
+              · {report.unknown_tip_payments} unknown tip payments
             </p>
             <p>
               Spend above supported tip threshold:{" "}
-              {integer(report.spend_above_threshold_lamports)} lamports over{" "}
-              {report.compared_transactions} compared transactions ·{" "}
-              {report.duplicates_removed} duplicate deliveries removed
+              {report.compared_transactions === 0
+                ? "Unavailable — no supported historical comparisons"
+                : `${integer(report.spend_above_threshold_lamports)} lamports over ${report.compared_transactions} compared transactions`}{" "}
+              · {report.duplicates_removed} duplicate deliveries removed
             </p>
             <p>{report.threshold_definition}</p>
           </div>

@@ -72,6 +72,11 @@ pub fn raw_ref(raw: &Value) -> Result<String, StoreError> {
     ))
 }
 
+// Seek the observation's exact source/slot before checking owned signatures.
+// Without this constraint SQLite can choose a covering source-only scan for
+// every old block, monopolizing the single WAL connection during retention.
+const RETENTION_BLOCKS_SQL: &str = "DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o INDEXED BY observations_slot JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')";
+
 impl Store {
     /// Opens an existing database without migrations, chmod, creation or application writes.
     /// Used for offline receipts and validation; time and amount units follow stored contracts.
@@ -558,7 +563,10 @@ impl Store {
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         let mut tx = self.pool.begin().await?;
         let slots: Vec<String> = sqlx::query_scalar("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
-        let blocks: Vec<String> = sqlx::query_scalar("DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
+        let blocks: Vec<String> = sqlx::query_scalar(RETENTION_BLOCKS_SQL)
+            .bind(&cutoff)
+            .fetch_all(&mut *tx)
+            .await?;
         let deleted = (slots.len() + blocks.len()) as u64;
         if deleted > 0 {
             // Inspect only evidence touched by this batch. Unary + removes the outer
@@ -762,5 +770,79 @@ impl Store {
                 .await?
                 .try_get("utc")?,
         )
+    }
+}
+
+#[cfg(test)]
+mod retention_plan_tests {
+    use super::*;
+    #[tokio::test]
+    async fn retention_seeks_exact_observation_slots_and_preserves_all_owned_fork_candidates() {
+        let dir = tempfile::tempdir().expect("directory");
+        let store = Store::open(&dir.path().join("retention.db"), 16 * 1024 * 1024)
+            .await
+            .expect("store");
+        let plan = sqlx::query(&format!("EXPLAIN QUERY PLAN {RETENTION_BLOCKS_SQL}"))
+            .bind("2026-10-04T00:00:00.000Z")
+            .fetch_all(&store.pool)
+            .await
+            .expect("plan");
+        assert!(plan.iter().any(|row| {
+            let detail: String = row.get("detail");
+            detail.contains("observations_slot") && detail.contains("source=? AND slot_key=?")
+        }));
+        // Minimal SQL ownership fixtures: retention inspects membership, not execution payloads.
+        sqlx::query("INSERT INTO canaries(id,source,signature,payload_json) VALUES('owned','live','owned-signature','{}')")
+            .execute(&store.pool).await.expect("owned signature");
+        sqlx::query("INSERT INTO observations(source,observer,signature,slot_key,block_key,index_scope,index_key,success_key,payload_json) VALUES('live','grpc','owned-signature',?,'candidate-a','unknown','','','{}')")
+            .bind(slot_key(100)).execute(&store.pool).await.expect("owned observation");
+        for (slot, candidate) in [(100, "candidate-a"), (100, "candidate-b"), (101, "unowned")] {
+            let raw = serde_json::json!({"candidate":candidate});
+            store
+                .record(
+                    ObserverKind::Grpc,
+                    &IngestEvent::BlockMeta(alight_types::BlockMetaEvent {
+                        slot,
+                        block_id: candidate.into(),
+                        parent_slot: None,
+                        parent_block_id: None,
+                        block_time_unix_s: None,
+                        block_height: None,
+                        executed_transactions: None,
+                        source: Source::Live,
+                        raw_ref: raw_ref(&raw).expect("hash"),
+                        received: alight_types::ReceiveTime {
+                            clock_id: "test".into(),
+                            mono_ns: 0,
+                            wall_utc: "2026-10-03T00:00:00.000Z".into(),
+                        },
+                    }),
+                    &raw,
+                )
+                .await
+                .expect("block");
+        }
+        assert_eq!(
+            store
+                .prune_metadata("2026-10-04T00:00:00Z")
+                .await
+                .expect("prune"),
+            1
+        );
+        let candidates: Vec<String> =
+            sqlx::query_scalar("SELECT block_id FROM blocks ORDER BY block_id")
+                .fetch_all(&store.pool)
+                .await
+                .expect("preserved");
+        assert_eq!(candidates, vec!["candidate-a", "candidate-b"]);
+        assert_eq!(
+            store
+                .counts(Source::Live)
+                .await
+                .expect("counts")
+                .observations,
+            1
+        );
+        store.close().await;
     }
 }

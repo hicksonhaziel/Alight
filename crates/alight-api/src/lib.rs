@@ -50,6 +50,7 @@ pub struct Options {
     pub max_streams: u32,
     pub daily_budget_sol: Option<String>,
     pub burst_budget_sol: Option<String>,
+    pub wallet_history: Option<Arc<dyn alight_ingest::data_api_history::DataApiHistoryProvider>>,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -66,6 +67,7 @@ impl Default for Options {
             max_streams: 32,
             daily_budget_sol: None,
             burst_budget_sol: None,
+            wallet_history: None,
         }
     }
 }
@@ -93,6 +95,7 @@ pub struct ApiState {
     controls: Arc<AsyncMutex<()>>,
     daily: Option<String>,
     burst: Option<String>,
+    wallet_history: Option<Arc<receipts::LiveHistory>>,
 }
 impl ApiState {
     pub fn new(store: Store, options: Options) -> Result<Self, ConfigurationError> {
@@ -114,6 +117,7 @@ impl ApiState {
             || source == Source::Live
                 && (options.simulated_as_of_utc.is_some() || options.simulation.is_some())
             || source == Source::Replay && options.simulation.is_some()
+            || source != Source::Live && options.wallet_history.is_some()
             || options
                 .webhook_secret
                 .as_ref()
@@ -172,6 +176,9 @@ impl ApiState {
             controls: Arc::new(AsyncMutex::new(())),
             daily: options.daily_budget_sol,
             burst: options.burst_budget_sol,
+            wallet_history: options
+                .wallet_history
+                .map(|provider| Arc::new(receipts::LiveHistory::new(provider))),
         })
     }
     async fn now(&self) -> String {

@@ -6698,7 +6698,7 @@
     },
     "/v1/receipt/{wallet}": {
       "get": {
-        "description": "Partial imported Sim/replay history only; no network fetch. A missing capture returns HISTORY_UNAVAILABLE. Comparisons require matched historical evidence; unknown route is descriptive.",
+        "description": "Read-only partial wallet history. Sim/replay evaluate saved captures without network access. Live/observe can fetch at most 8 indexed trades from the preceding 24 hours via Solami Data API, with finalized RPC fees, 25-second deadline, 5-minute cache and one provider job per 30 seconds. Pinned captures never trigger a network fetch and cached Live pins expire. Provider history does not establish failed-share or transport/frontier context. Missing history returns HISTORY_UNAVAILABLE. No database writes or transaction sends.",
         "parameters": [
           {
             "in": "path",

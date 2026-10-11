@@ -664,10 +664,24 @@ Example request (all time units explicit):
 Migration `0011_wallet_history.sql` adds immutable content-addressed captures.
 No historical canary, forecast, grade or curve bytes are rewritten. Public
 `GET /v1/receipt/{wallet}?capture=sha256:...` evaluates an explicitly selected
-stored capture in the API's source; it performs no provider fetch or send.
-Without a capture hash, the API selects the latest imported same-source wallet
-capture by coverage end (stable hash tie-break), rechecks its content hash, and
-returns unavailable when none exists. This adds no network request or migration.
+stored capture in the API's source; a pinned request never starts a provider
+fetch or send. Without a hash, Sim/Replay selects the latest imported same-source
+capture by coverage end (stable hash tie-break) and rechecks its content hash.
+Live/Observe optionally fetches the latest bounded 24-hour Solami trade index
+and finalized RPC records, cached in memory for five minutes (16 wallets).
+The existing response shape is unchanged; `population` is
+`partial_data_api_indexed_finalized_fee_payer_transactions`, `source` is `live`
+for this fresh provider read, and dated rows retain unknown route/context.
+`visible_failed_share` is null because the swap index selects executed trades.
+Coverage counts, fetch time, rolling venue-tip total and its separate scope are
+printed in `limits`. Fees remain authoritative RPC lamports per unique signature;
+swap fees and aggregate venue totals are never substituted or added.
+Live hashes pin only still-cached snapshots; missing/expired pins return 404
+without a fetch. There is no durable Live import or new migration. Each public
+provider job has a 25-second deadline, <=8 trades, <=12 read requests, no retries
+or pagination, and a global 30-second cooldown including failed jobs. Provider
+failure is 503, busy/cooldown is 429, not an empty successful report. Existing
+read-only authentication/rate limits and signing-disabled Observe behavior apply.
 
 Static `DatasetCatalog` and `DatasetManifest` schemas describe reviewed public
 `/datasets/index.json` and `/datasets/{id}/manifest.json`. They declare each

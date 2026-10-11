@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-11T23:57:41.654063+00:00",
+  "local_date": "2026-10-12",
+  "base_revision": "2d79c718aa0cc927e67b449549ee83dcabd23693",
+  "status": "INTEGRATED_READ_ONLY_WITH_COVERAGE_LIMITS",
+  "evidence_files_sha256": {
+    "crates/alight-ingest/src/data_api_history.rs": "f93b6ad91722bbfc453a9c612512674e57b88322f43e3ab039187bb9ae42282b",
+    "crates/alight-api/src/receipts.rs": "2416884c8db24f3c32ab4f482387358e80cd32036924b9925b879d5cd1be6283",
+    "crates/alight-tape/src/receipts.rs": "5ed9523d3a184ded304b4243f2453decc271d998b4eeca57d32d77cf958d3a44",
+    "crates/alight-store/src/lib.rs": "55ac5860f523cd30dd7b000e0fba08698cec2758202ab157679636458a569974",
+    "data/fixtures/data_api_wallet_history.json": "302e1c6a0e392a357a1b8a3522655e7fc7d00e91ac3a1f17a3b641a187f006a4",
+    "sdk/ts/openapi.json": "e64501d17d5bf91436d81bee9721b63af5a90d02c894cbfc916a26507038b9ab",
+    "web/src/pages/WalletReceipt.tsx": "785e83ad25a44a34625e3313cbd30f3200c96886483a37c90416a82a3df01620"
+  },
+  "live_typescript_sdk_receipt": {
+    "status": "PASS",
+    "checked_at_utc": "2026-10-11T23:35:43.501Z",
+    "source": "live",
+    "population": "partial_data_api_indexed_finalized_fee_payer_transactions",
+    "transactions": 8,
+    "fees_lamports": "59208",
+    "compared_transactions": 0,
+    "visible_failed_share": null,
+    "pinned_hash_stable": true,
+    "collector_status": "PASS",
+    "signing_enabled": false,
+    "canaries_sent": "0",
+    "send_attempts": {},
+    "counts_before": {
+      "slot_events": "969077",
+      "blocks": "228752",
+      "observations": "7433",
+      "gaps": "210",
+      "open_gaps": "0",
+      "canaries": "0",
+      "budget_reserved_lamports": "0"
+    },
+    "counts_after": {
+      "slot_events": "969274",
+      "blocks": "228796",
+      "observations": "7435",
+      "gaps": "210",
+      "open_gaps": "0",
+      "canaries": "0",
+      "budget_reserved_lamports": "0"
+    }
+  },
+  "live_cli_capture": {
+    "history": "partial_data_api_indexed_finalized_fee_payer",
+    "not_fee_payer": 0,
+    "outside_window": 0,
+    "provider_requests": 5,
+    "rolling_24h_venue_tips_sol": "0",
+    "source": "replay",
+    "trade_rows": 2,
+    "transactions": 2,
+    "transactions_sent": 0,
+    "unavailable": 0,
+    "unique_signatures": 2,
+    "fees_lamports": "10139",
+    "compared_transactions": 0
+  },
+  "browser": {
+    "status": "PASS",
+    "checked_at_utc": "2026-10-11T23:57:03.879Z",
+    "view": "Tape & receipts \u2192 Wallet receipts",
+    "transactions": 8,
+    "fees_lamports": "59208",
+    "failed_share": "Unavailable",
+    "comparison": "Unavailable \u2014 no supported historical comparisons",
+    "new_pages": 0,
+    "screenshot": "receipt-live.jpg"
+  },
+  "api_contract": {
+    "served_openapi_matches_sdk": true,
+    "wire_schema_changed": false,
+    "pinned_live_hash_stable": true,
+    "live_pin_lifetime": "five-minute in-memory cache; restart clears it"
+  },
+  "checks": [
+    {
+      "command": "cargo test -p alight-ingest -p alight-tape -p alight-api --locked --offline",
+      "status": "PASS",
+      "tests": 34
+    },
+    {
+      "command": "cargo test -p alight --test wallet_history --locked --offline",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "command": "cargo test -p alight-store retention --locked --offline",
+      "status": "PASS",
+      "tests": 2
+    },
+    {
+      "command": "cargo test -p alight-client --locked --offline",
+      "status": "PASS",
+      "tests": 2
+    },
+    {
+      "command": "cargo clippy -p alight-api -p alight-ingest -p alight-tape -p alight -p alightd --all-targets --locked --offline -- -D warnings",
+      "status": "PASS"
+    },
+    {
+      "command": "cargo clippy -p alight-store --all-targets --locked --offline -- -D warnings",
+      "status": "PASS"
+    },
+    {
+      "command": "cargo build -p alight -p alightd --bins --locked --offline",
+      "status": "PASS"
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "status": "PASS"
+    },
+    {
+      "command": "npm --prefix sdk/ts run lint; npm --prefix sdk/ts test; node sdk/ts/generate.mjs --check",
+      "status": "PASS",
+      "tests": 4
+    },
+    {
+      "command": "npm --prefix web run lint; npm --prefix web test; npm --prefix web run build",
+      "status": "PASS",
+      "tests": 3
+    },
+    {
+      "command": "python3 scripts/check_repository.py; git diff --check",
+      "status": "PASS"
+    }
+  ],
+  "retention_query": {
+    "existing_slot_index_required": true,
+    "read_only_5000_candidate_selection_ms": 49,
+    "owned_fork_candidates_preserved_test": "PASS",
+    "raw_evidence_lookup_plan": "existing expression index seeks for slots, blocks and observations",
+    "limitation": "A pool timeout recurred once after the rebuilt daemon started; this is not a completed stability soak."
+  },
+  "runtime_final": {
+    "health_checked_at_utc": "2026-10-11T23:56:26.631Z",
+    "service": {
+      "ActiveState": "active",
+      "MainPID": "947045",
+      "NRestarts": "1"
+    },
+    "collector_status": "DEGRADED",
+    "observers": [
+      {
+        "source": "live",
+        "observer": "grpc",
+        "status": "STALE",
+        "last_receive_utc": "2026-10-11T23:44:34.190Z",
+        "age_ms": "713257",
+        "cursor_slot": "455836788",
+        "open_gaps": "1"
+      },
+      {
+        "source": "live",
+        "observer": "mirage",
+        "status": "PASS",
+        "last_receive_utc": "2026-10-11T23:56:27.245Z",
+        "age_ms": "202",
+        "cursor_slot": "455840054",
+        "open_gaps": "0"
+      },
+      {
+        "source": "live",
+        "observer": "rpc",
+        "status": "STALE",
+        "last_receive_utc": null,
+        "age_ms": null,
+        "cursor_slot": null,
+        "open_gaps": "0"
+      }
+    ],
+    "blur_latest_market_utc": "2026-10-11T23:44:40.768000+00:00",
+    "signing_enabled": false,
+    "canaries_sent": "0",
+    "send_attempts": {},
+    "note": "Mirage is receiving; gRPC and Blur have stale/reconnect warnings. Collection has not been paused."
+  },
+  "limits": [
+    "At most eight indexed trade rows in the preceding 24 hours; no complete wallet history or failed-submission denominator.",
+    "Only finalized fee-payer transactions contribute RPC network fees; missing/conflicting records never become zero-fee success.",
+    "Venue-tip aggregate has separate rolling-window/registry coverage and is never added to transaction totals.",
+    "Route, workload and regime remain unknown; historical comparisons and savings remain unavailable.",
+    "Receipt reads do not sign, reserve budgets, write captures or send transactions. Provider read bandwidth/access charges may apply.",
+    "This integration does not complete funded canary/anchor acceptance, independent human usability checks or the remaining Phase 6 stability evidence."
+  ]
+}

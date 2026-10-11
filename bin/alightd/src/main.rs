@@ -640,6 +640,22 @@ async fn run() -> Result<(), Error> {
             webhook_secret: config.get("SOLAMI_WEBHOOK_SECRET").map(str::to_owned),
             daily_budget_sol: config.get("ALIGHT_DAILY_BUDGET_SOL").map(str::to_owned),
             burst_budget_sol: config.get("ALIGHT_BURST_BUDGET_SOL").map(str::to_owned),
+            wallet_history: if config
+                .get("ALIGHT_WALLET_HISTORY_ENABLED")
+                .unwrap_or("true")
+                == "true"
+                && config
+                    .get("SOLAMI_DATA_API_TOKEN")
+                    .or(config.get("SOLAMI_API_KEY"))
+                    .is_some()
+            {
+                Some(Arc::new(
+                    alight_ingest::data_api_history::DataApiHistory::new(&config)
+                        .map_err(|_| Error::Configuration)?,
+                ))
+            } else {
+                None
+            },
             ..Default::default()
         },
     )

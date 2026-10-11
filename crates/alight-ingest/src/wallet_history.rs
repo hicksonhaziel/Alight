@@ -17,6 +17,7 @@ pub enum HistoryError {
     Transaction,
 }
 
+#[derive(Clone)]
 pub struct HistoryCapture {
     pub capture: WalletHistoryCapture,
     pub provider_requests: u32,

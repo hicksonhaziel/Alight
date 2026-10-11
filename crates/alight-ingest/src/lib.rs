@@ -11,6 +11,7 @@ use thiserror::Error;
 
 pub mod adapter;
 pub mod clock;
+pub mod data_api_history;
 pub mod leaders;
 #[cfg(feature = "stream")]
 pub mod rpc;

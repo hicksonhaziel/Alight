@@ -113,7 +113,7 @@ Reservations are worst-case exposure, not balance reconciliation.
 | RPC | Leaders, commitment/absence checks, block sampling, bounded read-only wallet history and untipped submission |
 | Blur | Observe/live worker discovers up to three liquid pools, subscribes with pool filters and stores bounded delay-cost snapshots; stale/sparse fallback |
 | Webhooks | Exact-body HMAC observation; complete live registration/coverage unverified |
-| Data API | Wallet-history adapter pending a verified payload; receipts support bounded recorded captures and finalized RPC history as Replay |
+| Data API | Bounded wallet-trade index verified against finalized RPC fees; Live/Observe receipts are cached, and CLI captures remain Replay with partial coverage |
 
 Quotes refuse unsupported recommendations and carry intervals, effective n,
 age, workload/route/region/window and evidence class. Dollar estimates assume

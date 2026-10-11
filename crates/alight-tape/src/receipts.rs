@@ -34,10 +34,16 @@ fn name(text: &str) -> bool {
 /// Validates a maximum 24-hour, 1,000-transaction partial capture; times are UTC.
 /// Captured transactions must have this wallet as fee payer. Imports cannot assert Live history.
 pub fn validate(capture: &WalletHistoryCapture) -> Result<(), ReceiptError> {
+    validate_inner(capture, false)
+}
+fn validate_inner(
+    capture: &WalletHistoryCapture,
+    live_provider_read: bool,
+) -> Result<(), ReceiptError> {
     let from = utc(&capture.from_utc)?;
     let through = utc(&capture.through_utc)?;
     if capture.schema_version != 1
-        || capture.source == Source::Live
+        || (capture.source == Source::Live && !live_provider_read)
         || !public_key(&capture.wallet)
         || from > through
         || through - from > chrono::Duration::days(1)
@@ -130,7 +136,28 @@ pub async fn evaluate(
     capture: &WalletHistoryCapture,
     request: &WalletReceiptRequest,
 ) -> Result<WalletReceipt, ReceiptError> {
-    validate(capture)?;
+    evaluate_inner(store, capture, request, false).await
+}
+/// Evaluates fresh provider-fetched finalized RPC records in a Live API. Imports still reject Live.
+/// The provider must leave transport/workload/regime unknown; indexed swaps do not prove these.
+pub async fn evaluate_live_history(
+    store: &Store,
+    capture: &WalletHistoryCapture,
+    request: &WalletReceiptRequest,
+) -> Result<WalletReceipt, ReceiptError> {
+    if capture.source != Source::Live
+        || capture.rows.iter().any(|row| {
+            row.transaction.observer != ObserverKind::Rpc
+                || row.route.is_some()
+                || row.size_class.is_some()
+                || row.regime_id.is_some()
+        })
+    {
+        return Err(ReceiptError::Invalid);
+    }
+    evaluate_inner(store, capture, request, true).await
+}
+pub fn validate_request(request: &WalletReceiptRequest) -> Result<(), ReceiptError> {
     if !name(&request.region)
         || !request.target_p.is_finite()
         || !(0.0..=1.0).contains(&request.target_p)
@@ -140,6 +167,16 @@ pub async fn evaluate(
     {
         return Err(ReceiptError::Invalid);
     }
+    Ok(())
+}
+async fn evaluate_inner(
+    store: &Store,
+    capture: &WalletHistoryCapture,
+    request: &WalletReceiptRequest,
+    live_provider_read: bool,
+) -> Result<WalletReceipt, ReceiptError> {
+    validate_inner(capture, live_provider_read)?;
+    validate_request(request)?;
     let mut unique = BTreeMap::<String, &WalletHistoryRow>::new();
     for row in &capture.rows {
         if let Some(old) = unique.get(&row.transaction.signature) {
@@ -177,7 +214,7 @@ pub async fn evaluate(
             "Historical comparisons never use future curves or today's quote; missing chain time/frontiers remain descriptive.".into(),
             "Spend above a supported tip is conditional arithmetic, not proof of waste or no probability gain. Uncontrolled wallet workloads may rationally pay more.".into(),
             "Canary curves do not establish real-swap performance; source, region, sample size, intervals and evidence age scope every comparison.".into(),
-            "The Solami Data API wallet-history adapter and complete wallet coverage remain unverified.".into(),
+            "History adapters do not establish complete wallet submission coverage.".into(),
         ],
     };
     let mut cohorts = BTreeMap::new();

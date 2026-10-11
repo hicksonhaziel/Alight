@@ -39,10 +39,9 @@ fn write(path: &str, value: &impl serde::Serialize) -> Result<(), String> {
     Ok(())
 }
 pub async fn run(args: &[String]) -> Result<u8, String> {
-    let command = args
-        .get(1)
-        .map(String::as_str)
-        .ok_or("Usage: alight receipt capture|fetch-rpc|evaluate|import [options]")?;
+    let command = args.get(1).map(String::as_str).ok_or(
+        "Usage: alight receipt capture|fetch-rpc|fetch-data-api|evaluate|import [options]",
+    )?;
     let allowed: &[&str] = match command {
         "capture" => &[
             "--input",
@@ -54,7 +53,7 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
         ],
         "evaluate" => &["--database", "--input", "--request", "--output"],
         "import" => &["--database", "--input"],
-        "fetch-rpc" => &[
+        "fetch-rpc" | "fetch-data-api" => &[
             "--wallet",
             "--recipients",
             "--from",
@@ -63,7 +62,10 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
             "--output",
         ],
         _ => {
-            return Err("Usage: alight receipt capture|fetch-rpc|evaluate|import [options]".into());
+            return Err(
+                "Usage: alight receipt capture|fetch-rpc|fetch-data-api|evaluate|import [options]"
+                    .into(),
+            );
         }
     };
     let mut options = BTreeMap::new();
@@ -81,7 +83,7 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
             .copied()
             .ok_or_else(|| format!("{k} is required"))
     };
-    if command == "fetch-rpc" {
+    if command == "fetch-rpc" || command == "fetch-data-api" {
         let output = required("--output")?;
         if Path::new(output).exists() {
             return Err("Output must be a new file".into());
@@ -93,6 +95,30 @@ pub async fn run(args: &[String]) -> Result<u8, String> {
             .parse()
             .map_err(|_| "--limit must be 1–32")?;
         let config = alight_ingest::Config::load_observer().map_err(|e| e.to_string())?;
+        if command == "fetch-data-api" {
+            let provider = alight_ingest::data_api_history::DataApiHistory::new(&config)
+                .map_err(|e| e.to_string())?;
+            let result = provider
+                .capture(
+                    required("--wallet")?,
+                    required("--from")?,
+                    required("--through")?,
+                    Some(recipients),
+                    limit,
+                )
+                .await
+                .map_err(|e| e.to_string())?;
+            write(output, &result.history.capture)?;
+            println!(
+                "{}",
+                serde_json::json!({"source":"replay","history":"partial_data_api_indexed_finalized_fee_payer",
+                "provider_requests":result.history.provider_requests,"trade_rows":result.trade_rows,
+                "unique_signatures":result.unique_signatures,"transactions":result.history.capture.rows.len(),
+                "outside_window":result.history.outside_window,"not_fee_payer":result.history.not_fee_payer,
+                "unavailable":result.history.unavailable,"rolling_24h_venue_tips_sol":result.venue_tips_sol,"transactions_sent":0})
+            );
+            return Ok(0);
+        }
         let result = alight_ingest::wallet_history::fetch(
             &config,
             required("--wallet")?,
