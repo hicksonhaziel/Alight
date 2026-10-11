@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-11T00:42:14.005781+00:00",
+  "code_revision": "0f9c6e3c062fe4d8f692b6ac59118e1a2137f189",
+  "status": "PASS_WITH_COVERAGE_LIMITS",
+  "wallet_history_access": {
+    "checked_at_utc": "2026-10-11T00:41:07.006609+00:00",
+    "wallet_history": [
+      {
+        "path": "/data/wallet/trades",
+        "http_status": 200,
+        "bytes": 1479,
+        "shape": "array",
+        "rows": 2,
+        "row_fields": [
+          "base_amount",
+          "base_decimals",
+          "base_reserve",
+          "block_time",
+          "dex",
+          "fee_amount",
+          "fee_mint",
+          "fee_pct",
+          "ix_index",
+          "mint",
+          "pool",
+          "price",
+          "price_impact_pct",
+          "price_usd",
+          "quote_amount",
+          "quote_decimals",
+          "quote_reserve",
+          "side",
+          "signature",
+          "slot",
+          "trader",
+          "tx_index",
+          "volume_usd"
+        ]
+      },
+      {
+        "path": "/data/wallet/fees",
+        "http_status": 200,
+        "bytes": 155,
+        "shape": "object",
+        "fields": [
+          "tips_usd",
+          "total_paid_usd",
+          "total_sol",
+          "total_usd",
+          "trading_usd",
+          "venues",
+          "wallet"
+        ]
+      }
+    ],
+    "provider_requests": 2,
+    "transactions_sent": 0,
+    "secrets_printed": false
+  },
+  "live_api": {
+    "checked_at_utc": "2026-10-11T00:41:17.218400+00:00",
+    "live_api": [
+      {
+        "path": "/v1/clock",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/curve",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/diagnostics",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/health",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/leaders",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/ledger",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/ledger/anchors",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/ledger/payloads",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/ledger/verify",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/observers",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/openapi.json",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": null
+      },
+      {
+        "path": "/v1/proves",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/tape",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      },
+      {
+        "path": "/v1/workbench",
+        "http_status": 200,
+        "contract": "PASS",
+        "source": "live"
+      }
+    ],
+    "openapi_matches_sdk": true,
+    "proxy_openapi_matches": true,
+    "transactions_sent": 0
+  },
+  "live_typescript_sdk": {
+    "checked_at_utc": "2026-10-11T00:41:42.566Z",
+    "sdk": "typescript",
+    "endpoint": "workbench_proxy",
+    "checks": [
+      {
+        "method": "health",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "clock",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "leaders",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "observers",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "diagnostics",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "curves",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "workbench",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "proves",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "ledger",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "ledgerPayloads",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "verifyLedger",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "anchors",
+        "status": "PASS",
+        "source": "live"
+      },
+      {
+        "method": "datasets",
+        "status": "PASS",
+        "source": null
+      },
+      {
+        "method": "stream",
+        "status": "PASS",
+        "source": "live"
+      }
+    ],
+    "transactions_sent": 0
+  },
+  "offline_checks": {
+    "rust_api_sdk_daemon_cli_tests": {
+      "passed": 17,
+      "failed": 0
+    },
+    "typescript_sdk_tests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "typescript_lint": "PASS",
+    "generated_sdk_contracts": "PASS",
+    "rust_typescript_cli_quote_prove_ledger_flow": {
+      "status": "PASS",
+      "source": "sim",
+      "held_out_canaries_per_flow": 40,
+      "resolved_per_flow": 40,
+      "rust_verdict": "CONSISTENT",
+      "typescript_verdict": "CONSISTENT",
+      "cli_export_and_exit_codes": "PASS",
+      "provider_requests": 0,
+      "chain_transactions_sent": 0
+    }
+  },
+  "runtime_after_checks": {
+    "source": "live",
+    "mode": "observe",
+    "collector_status": "PASS",
+    "signing_enabled": false,
+    "canaries_sent": "0",
+    "send_attempts": {}
+  },
+  "limits": [
+    "Wallet Data API access is restored; no receipt adapter is wired in.",
+    "Trade and venue-tip responses are not complete wallet submission history or authoritative network fees.",
+    "SDK write flows were exercised only against isolated Sim daemons.",
+    "Funded route sends and mainnet anchoring remain unverified.",
+    "This check does not complete Phase 6 or replace historical validation receipts."
+  ]
+}

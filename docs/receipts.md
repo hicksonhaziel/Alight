@@ -85,6 +85,12 @@ Solami's current documentation includes `/data/wallet/trades` and
 `/data/wallet/fees`. The latter measures registered venue tips and explicitly
 excludes base and priority fees. Trade rows cannot establish authoritative
 network fees or all failed submissions. On 10 October the configured account
-returned HTTP 402 (balance/bandwidth), so a real wallet-history response remains
-unverified. The recorded real-wallet test produces a descriptive Replay report
-without route/time/frontier claims. See the [provider contract](https://solami.dev/docs/api/get_data-wallet-fees).
+returned HTTP 402 (balance/bandwidth). A bounded recheck on 11 October returned
+HTTP 200 for both endpoints, including two real trade rows and a wallet-tip
+summary. Access and response fields are now verified; the receipt engine still
+uses finalized RPC or recorded captures, with no Data API adapter wired in.
+These trade and aggregate-tip responses do not establish complete transaction
+history, network fees or failed submissions. The recorded real-wallet test
+produces a descriptive Replay report without route/time/frontier claims.
+See the [provider contract](https://solami.dev/docs/api/get_data-wallet-fees)
+and [integration checks](../data/integration-readcheck.json).
