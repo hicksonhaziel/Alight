@@ -75,7 +75,8 @@ pub fn raw_ref(raw: &Value) -> Result<String, StoreError> {
 // Seek the observation's exact source/slot before checking owned signatures.
 // Without this constraint SQLite can choose a covering source-only scan for
 // every old block, monopolizing the single WAL connection during retention.
-const RETENTION_BLOCKS_SQL: &str = "DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o INDEXED BY observations_slot JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')";
+// Keep each WAL transaction small enough for ingest and API reads to interleave.
+const RETENTION_BLOCKS_SQL: &str = "DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o INDEXED BY observations_slot JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 250) RETURNING json_extract(payload_json,'$.data.raw_ref')";
 
 // A large IN list otherwise makes SQLite prefer the low-selectivity transient
 // index and walk all transient evidence. Unary + keeps the integer predicate
@@ -611,7 +612,7 @@ impl Store {
             .with_timezone(&chrono::Utc)
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         let mut tx = self.pool.begin().await?;
-        let slots: Vec<String> = sqlx::query_scalar("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
+        let slots: Vec<String> = sqlx::query_scalar("DELETE FROM slot_events WHERE rowid IN (SELECT rowid FROM slot_events WHERE source='live' AND received_utc<? LIMIT 250) RETURNING json_extract(payload_json,'$.data.raw_ref')").bind(&cutoff).fetch_all(&mut *tx).await?;
         let blocks: Vec<String> = sqlx::query_scalar(RETENTION_BLOCKS_SQL)
             .bind(&cutoff)
             .fetch_all(&mut *tx)
@@ -823,6 +824,94 @@ impl Store {
 #[cfg(test)]
 mod retention_plan_tests {
     use super::*;
+    #[tokio::test]
+    async fn metadata_cleanup_releases_after_250_rows_per_table_and_preserves_other_sources() {
+        let dir = tempfile::tempdir().expect("directory");
+        let store = Store::open(&dir.path().join("bounded.db"), 16 * 1024 * 1024)
+            .await
+            .expect("store");
+        let mut records = Vec::new();
+        for slot in 0..600 {
+            let raw = serde_json::json!({"retention_test_slot": slot});
+            let received = alight_types::ReceiveTime {
+                clock_id: "retention-test".into(),
+                mono_ns: slot,
+                wall_utc: "2026-10-03T00:00:00.000Z".into(),
+            };
+            records.push((
+                IngestEvent::Slot(alight_types::SlotEvent {
+                    slot,
+                    block_id: None,
+                    status: alight_types::SlotStatus::Processed,
+                    received: received.clone(),
+                    leader: None,
+                    source: Source::Live,
+                    raw_ref: raw_ref(&raw).expect("hash"),
+                }),
+                raw.clone(),
+            ));
+            records.push((
+                IngestEvent::BlockMeta(alight_types::BlockMetaEvent {
+                    slot,
+                    block_id: format!("block-{slot}"),
+                    parent_slot: None,
+                    parent_block_id: None,
+                    block_time_unix_s: None,
+                    block_height: None,
+                    executed_transactions: None,
+                    source: Source::Live,
+                    raw_ref: raw_ref(&raw).expect("hash"),
+                    received,
+                }),
+                raw,
+            ));
+        }
+        for batch in records.chunks(32) {
+            let frames: Vec<_> = batch
+                .iter()
+                .map(|(event, raw)| (ObserverKind::Grpc, event, raw))
+                .collect();
+            store.record_batch(&frames).await.expect("batch");
+        }
+        let (mut replay, raw) = records[0].clone();
+        if let IngestEvent::Slot(event) = &mut replay {
+            event.source = Source::Replay;
+        }
+        store
+            .record(ObserverKind::Grpc, &replay, &raw)
+            .await
+            .expect("replay");
+        for (deleted, remaining) in [(500, 350), (500, 100), (200, 0), (0, 0)] {
+            assert_eq!(
+                store
+                    .prune_metadata("2026-10-04T00:00:00Z")
+                    .await
+                    .expect("prune"),
+                deleted
+            );
+            let counts = store.health_counts(Source::Live).await.expect("counts");
+            assert_eq!(counts.slot_events, remaining);
+            assert_eq!(counts.blocks, remaining);
+        }
+        assert_eq!(
+            store
+                .health_counts(Source::Replay)
+                .await
+                .expect("replay count")
+                .slot_events,
+            1
+        );
+        let raw_rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM raw_evidence")
+            .fetch_one(&store.pool)
+            .await
+            .expect("raw count");
+        assert_eq!(
+            raw_rows, 1,
+            "evidence referenced by Replay must survive Live cleanup"
+        );
+        store.close().await;
+    }
+
     #[tokio::test]
     async fn large_retention_batch_seeks_only_touched_raw_hashes() {
         let dir = tempfile::tempdir().expect("directory");

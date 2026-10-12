@@ -114,6 +114,9 @@ cap is 8 GiB in Compose; reaching it stops writes and sends safely. Back up or
 export durable evidence before its long-term growth reaches that cap.
 Raw-evidence cleanup seeks each affected hash through its primary key; it
 avoids scanning the transient-evidence partition while holding the WAL writer.
+Each transaction prunes at most 250 slot records and 250 unowned block records;
+the daemon releases the connection between batches. The per-pass limit remains
+100,000 records per table. Retention never deletes owned observations or canaries.
 
 Live controls in `.env` are exact daily/burst SOL caps, a 30–3,600 second send
 interval (120 by default), a seeded policy with a uniform fraction, a wallet
