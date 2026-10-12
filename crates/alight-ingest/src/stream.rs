@@ -391,38 +391,90 @@ async fn grpc_session(
         )
         .build();
     request.from_slot = from_slot;
-    let (sink, mut updates) =
-        tokio::time::timeout(Duration::from_secs(15), client.subscribe(request))
-            .await
-            .map_err(|_| "grpc_subscription_timeout")?
-            .map_err(|_| {
-                if from_slot.is_some() {
-                    "replay_unavailable"
-                } else {
-                    "grpc_subscription"
-                }
-            })?;
+    let (sink, updates) = tokio::time::timeout(Duration::from_secs(15), client.subscribe(request))
+        .await
+        .map_err(|_| "grpc_subscription_timeout")?
+        .map_err(|_| {
+            if from_slot.is_some() {
+                "replay_unavailable"
+            } else {
+                "grpc_subscription"
+            }
+        })?;
+    grpc_updates(
+        updates,
+        &sink,
+        tx,
+        stop,
+        &options.tip_accounts,
+        GrpcTimeouts {
+            forced: force,
+            data: Duration::from_secs(30),
+            ping: Duration::from_secs(5),
+        },
+    )
+    .await
+}
+
+// Keep useful-data liveness separate from transport heartbeats. A provider can
+// continue Ping/Pong while no subscribed slots, blocks or transactions arrive.
+struct GrpcTimeouts {
+    forced: Option<Duration>,
+    data: Duration,
+    ping: Duration,
+}
+
+async fn grpc_updates<S, E>(
+    mut updates: S,
+    sink: &mpsc::Sender<geyser::SubscribeRequest>,
+    tx: &mpsc::Sender<Frame>,
+    stop: &mut watch::Receiver<bool>,
+    tip_accounts: &[String],
+    timeouts: GrpcTimeouts,
+) -> Result<(), &'static str>
+where
+    S: futures_util::Stream<Item = Result<geyser::SubscribeUpdate, E>> + Unpin,
+{
     let clock = ReceiveClock::new();
-    let deadline =
-        tokio::time::Instant::now() + force.unwrap_or(Duration::from_secs(365 * 24 * 3600));
+    let forced_deadline = tokio::time::Instant::now()
+        + timeouts
+            .forced
+            .unwrap_or(Duration::from_secs(365 * 24 * 3600));
+    let mut data_deadline = tokio::time::Instant::now() + timeouts.data;
     loop {
-        let update = tokio::select! {r=tokio::time::timeout(Duration::from_secs(30),updates.message())=>r.map_err(|_|"grpc_stale")?.map_err(|_|"grpc_stream")?.ok_or("grpc_closed")?,_=stop.changed()=>return Ok(()),_=tokio::time::sleep_until(deadline)=>return Err("forced_disconnect")};
+        let update = tokio::select! {
+            biased;
+            _ = stop.changed() => return Ok(()),
+            _ = tokio::time::sleep_until(forced_deadline) => return Err("forced_disconnect"),
+            _ = tokio::time::sleep_until(data_deadline) => return Err("grpc_stale"),
+            update = updates.next() => update.ok_or("grpc_closed")?.map_err(|_| "grpc_stream")?,
+        };
         if matches!(update.update_oneof, Some(UpdateOneof::Ping(_))) {
-            sink.send(geyser::SubscribeRequest {
+            let request = geyser::SubscribeRequest {
                 ping: Some(geyser::SubscribeRequestPing { id: 1 }),
                 ..Default::default()
-            })
-            .await
-            .map_err(|_| "grpc_ping")?;
-        } else {
-            emit(
-                update,
-                ObserverKind::Grpc,
-                &clock,
-                tx,
-                &options.tip_accounts,
-            )
-            .await?;
+            };
+            tokio::select! {
+                biased;
+                _ = stop.changed() => return Ok(()),
+                _ = tokio::time::sleep_until(forced_deadline) => return Err("forced_disconnect"),
+                _ = tokio::time::sleep_until(data_deadline) => return Err("grpc_stale"),
+                result = tokio::time::timeout(timeouts.ping, sink.send(request)) => {
+                    result.map_err(|_| "grpc_ping_timeout")?.map_err(|_| "grpc_ping")?;
+                }
+            }
+        } else if matches!(
+            update.update_oneof,
+            Some(UpdateOneof::Slot(_) | UpdateOneof::BlockMeta(_) | UpdateOneof::Transaction(_))
+        ) {
+            // A useful frame has already arrived. Writer backpressure is not a
+            // provider stall: preserve the frame until delivery or shutdown.
+            tokio::select! {
+                biased;
+                _ = stop.changed() => return Ok(()),
+                result = emit(update, ObserverKind::Grpc, &clock, tx, tip_accounts) => result?,
+            }
+            data_deadline = tokio::time::Instant::now() + timeouts.data;
         }
     }
 }
@@ -504,6 +556,211 @@ async fn mirage_session(
 mod tests {
     use super::*;
     use solami::solana::storage::confirmed_block as proto;
+
+    fn heartbeat(ping: bool) -> geyser::SubscribeUpdate {
+        geyser::SubscribeUpdate {
+            update_oneof: Some(if ping {
+                UpdateOneof::Ping(geyser::SubscribeUpdatePing {})
+            } else {
+                UpdateOneof::Pong(geyser::SubscribeUpdatePong { id: 1 })
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn grpc_heartbeats_cannot_extend_useful_data_deadline() {
+        let updates = Box::pin(futures_util::stream::unfold(0u64, |n| async move {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+            Some((Ok::<_, ()>(heartbeat(n % 2 == 0)), n + 1))
+        }));
+        let (sink, mut replies) = mpsc::channel(32);
+        let draining = tokio::spawn(async move { while replies.recv().await.is_some() {} });
+        let (tx, mut frames) = mpsc::channel(32);
+        let (_stop, mut stop) = watch::channel(false);
+        let result = tokio::time::timeout(
+            Duration::from_secs(1),
+            grpc_updates(
+                updates,
+                &sink,
+                &tx,
+                &mut stop,
+                &[],
+                GrpcTimeouts {
+                    forced: None,
+                    data: Duration::from_millis(30),
+                    ping: Duration::from_millis(10),
+                },
+            ),
+        )
+        .await
+        .expect("heartbeat traffic must not keep the session alive indefinitely");
+        assert_eq!(result, Err("grpc_stale"));
+        assert!(
+            frames.try_recv().is_err(),
+            "heartbeats are not observations"
+        );
+        drop(sink);
+        draining.await.expect("ping reply drain");
+    }
+
+    #[tokio::test]
+    async fn grpc_useful_data_refreshes_deadline() {
+        let updates = Box::pin(futures_util::stream::unfold(0u64, |n| async move {
+            if n == 2 {
+                std::future::pending::<()>().await;
+            }
+            if n == 1 {
+                tokio::time::sleep(Duration::from_millis(300)).await;
+            }
+            Some((
+                Ok::<_, ()>(geyser::SubscribeUpdate {
+                    update_oneof: Some(UpdateOneof::Slot(geyser::SubscribeUpdateSlot {
+                        slot: 100 + n,
+                        parent: Some(99 + n),
+                        status: 1,
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                }),
+                n + 1,
+            ))
+        }));
+        let (sink, _replies) = mpsc::channel(1);
+        let (tx, mut frames) = mpsc::channel(32);
+        let (_stop, mut stop) = watch::channel(false);
+        let result = tokio::time::timeout(
+            Duration::from_secs(2),
+            grpc_updates(
+                updates,
+                &sink,
+                &tx,
+                &mut stop,
+                &[],
+                GrpcTimeouts {
+                    // The second data frame extends liveness past this forced
+                    // stop; without a refresh the original 500 ms deadline wins.
+                    forced: Some(Duration::from_millis(600)),
+                    data: Duration::from_millis(500),
+                    ping: Duration::from_millis(10),
+                },
+            ),
+        )
+        .await
+        .expect("offline stream must finish");
+        assert_eq!(result, Err("forced_disconnect"));
+        for expected in [100, 101] {
+            let frame = frames.try_recv().expect("useful slot frame");
+            assert_eq!(frame.observer, ObserverKind::Grpc);
+            let IngestEvent::Slot(slot) = frame.event else {
+                panic!("expected slot event");
+            };
+            assert_eq!(slot.slot, expected);
+        }
+        assert!(frames.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn grpc_ping_response_cannot_block_past_its_own_deadline() {
+        let updates = futures_util::stream::once(std::future::ready(Ok::<_, ()>(heartbeat(true))))
+            .chain(futures_util::stream::pending());
+        let (sink, _undrained_replies) = mpsc::channel(1);
+        sink.send(geyser::SubscribeRequest::default())
+            .await
+            .expect("fill ping channel");
+        let (tx, _frames) = mpsc::channel(1);
+        let (_stop, mut stop) = watch::channel(false);
+        let result = tokio::time::timeout(
+            Duration::from_secs(1),
+            grpc_updates(
+                updates,
+                &sink,
+                &tx,
+                &mut stop,
+                &[],
+                GrpcTimeouts {
+                    forced: None,
+                    data: Duration::from_millis(500),
+                    ping: Duration::from_millis(10),
+                },
+            ),
+        )
+        .await
+        .expect("full request channel must not hang the observer");
+        assert_eq!(result, Err("grpc_ping_timeout"));
+    }
+
+    #[tokio::test]
+    async fn grpc_writer_backpressure_preserves_received_frame_past_data_deadline() {
+        let (sink, _replies) = mpsc::channel(1);
+        let (tx, mut frames) = mpsc::channel(1);
+        let clock = ReceiveClock::new();
+        emit(
+            geyser::SubscribeUpdate {
+                update_oneof: Some(UpdateOneof::Slot(geyser::SubscribeUpdateSlot {
+                    slot: 100,
+                    parent: Some(99),
+                    status: 1,
+                    ..Default::default()
+                })),
+                ..Default::default()
+            },
+            ObserverKind::Grpc,
+            &clock,
+            &tx,
+            &[],
+        )
+        .await
+        .expect("fill writer channel");
+        let (received, first_poll) = tokio::sync::oneshot::channel();
+        let updates = Box::pin(
+            futures_util::stream::once(async move {
+                received.send(()).expect("signal incoming frame");
+                Ok::<_, ()>(geyser::SubscribeUpdate {
+                    update_oneof: Some(UpdateOneof::Slot(geyser::SubscribeUpdateSlot {
+                        slot: 101,
+                        parent: Some(100),
+                        status: 1,
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                })
+            })
+            .chain(futures_util::stream::pending()),
+        );
+        let (_stop, mut stop) = watch::channel(false);
+        let session = tokio::spawn(async move {
+            grpc_updates(
+                updates,
+                &sink,
+                &tx,
+                &mut stop,
+                &[],
+                GrpcTimeouts {
+                    forced: None,
+                    data: Duration::from_millis(10),
+                    ping: Duration::from_millis(10),
+                },
+            )
+            .await
+        });
+        first_poll.await.expect("stream received the useful frame");
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        frames.recv().await.expect("drain initial frame");
+        let delivered = tokio::time::timeout(Duration::from_secs(1), frames.recv())
+            .await
+            .expect("backpressured frame must be delivered")
+            .expect("received frame must not be dropped");
+        let IngestEvent::Slot(slot) = delivered.event else {
+            panic!("expected slot event");
+        };
+        assert_eq!(slot.slot, 101);
+        let result = tokio::time::timeout(Duration::from_secs(1), session)
+            .await
+            .expect("normal stale deadline resumes after delivery")
+            .expect("session task");
+        assert_eq!(result, Err("grpc_stale"));
+    }
 
     #[test]
     fn native_transaction_preserves_loaded_keys_full_width_index_and_execution_fee() {

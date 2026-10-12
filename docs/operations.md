@@ -66,7 +66,10 @@ target/debug/alight run --mode observe
 Observe collects Live evidence without loading signing identities or starting
 canary/anchor senders. Streams consume provider bandwidth. RPC/Webhook freshness
 can age when owned transactions stop; probe requests do not refresh it. The
-optional Blur worker runs when its read token is configured. It discovers up to
+gRPC observer reconnects after 30 seconds without a subscribed slot, block or
+transaction update, even if transport heartbeats continue. Ping replies are
+bounded to five seconds. Reconnect gaps remain visible in Network health.
+The optional Blur worker runs when its read token is configured. It discovers up to
 three pools, uses one filtered socket, and bounds each price series to 300
 seconds/10,000 trades. Sparse/stale/gapped market evidence leaves quotes
 probability-only. `ALIGHT_BLUR_ENABLED=false` disables that worker.
