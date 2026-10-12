@@ -7,9 +7,11 @@ uncertainty, source, sample size, age and unfavorable verdicts.
 
 Sim/Replay are verified offline. Observe collects data without sending
 transactions; fresh gRPC/Mirage observations and Blur market snapshots were
-verified on 10 October 2026. Funded owned canaries, complete four-observer
-agreement and mainnet anchoring remain unverified. The downloadable sample
-is **Sim**, not mainnet performance.
+verified on 10 October 2026. A bounded 12 October pilot finalized five owned
+canaries across RPC, Beam QUIC and Beam HTTP, spending 0.000325 SOL with exact
+wallet reconciliation. This is submission evidence, not calibrated performance;
+complete four-observer agreement and mainnet anchoring remain unverified.
+The downloadable sample is **Sim**, not mainnet performance.
 
 ## Quick start: no keys or wallet
 
@@ -85,7 +87,7 @@ a personal trading wallet. The sender requires reserve/balance gates, durable
 daily/burst reservations and available observer evidence. Only `alight-canary`
 signs/sends. To intentionally enable collection and governed sending later:
 `alight run --mode live --db data/alight.db`. No live start is part of the
-offline quick start; no funded performance is claimed.
+offline quick start.
 
 Defaults: 0.20 SOL daily cap, 0.05 SOL burst cap, 120-second interval, 30%
 minimum uniform exploration, 81-cell `full` profile. Optional
@@ -93,8 +95,13 @@ minimum uniform exploration, 81-cell `full` profile. Optional
 LocalP90 fees); RPC stays untipped. Lean omits Medium/Large and X2/X10 and
 cannot support the registered four-tier Signal analysis alone.
 
-No owned live transaction cost has been measured. A landed
-canary pays the executed tip plus the RPC-estimated fee; priority fee is in
+The [bounded pilot receipt](data/funded-pilot-validation.json) records two
+untipped RPC canaries and three 100,000-lamport Beam-tip canaries: 25,000
+lamports in finalized network fees plus 300,000 in executed tips. It returned
+to Observe with signing disabled; this five-canary sample cannot establish a
+landing probability or route-speed comparison.
+
+A landed canary pays the executed tip plus the network fee; priority fee is in
 micro-lamports per CU. Assuming a 5,000-lamport base fee and zero priority fee,
 uniform mean nominal costs are 405,000 (`full`) / 245,000 (`lean`) lamports.
 At 720 sends/day that is 0.2916 / 0.1764 SOL **before priority fees**, assuming
@@ -106,8 +113,7 @@ Reservations are worst-case exposure, not balance reconciliation.
 
 | Product | Implemented use and evidence limit |
 | --- | --- |
-| Beam QUIC | Governed tipped canary submission; funded landings unverified |
-| Beam HTTP | Tipped submission through the Solami RPC endpoint; not an independent HTTP backend |
+| Beam (QUIC and HTTP) | Governed tipped submission; one QUIC and two HTTP canaries finalized in the bounded pilot. HTTP uses the Solami RPC endpoint, not an independent HTTP backend |
 | Yellowstone gRPC | Filtered primary observation, clock/block identity and tip tape |
 | Mirage | Secondary transport via captured Yellowstone-compatible frames |
 | RPC | Leaders, commitment/absence checks, block sampling, bounded read-only wallet history and untipped submission |

@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "status": "BOUNDED_MAINNET_PILOT_PASS",
+  "source": "live",
+  "validated_at_utc": "2026-10-12T11:46:23.123978+00:00",
+  "base_revision": "59dd8e8e11fcd43597d49af1efd2bb5aa205ebdf",
+  "scope": "Ten-minute governed mainnet canary smoke test, not calibration or a soak test.",
+  "controls": {
+    "authorized_total_lamports": 3000000,
+    "duration_seconds": 600,
+    "interval_seconds": 120,
+    "burst_lamports": 600000,
+    "minimum_reserve_lamports": 1000000,
+    "profile": "lean",
+    "max_pending": 2,
+    "operator_writes_during_pilot": false
+  },
+  "session": {
+    "started_at_utc": "2026-10-12T11:29:07.367549+00:00",
+    "return_to_observe_due_utc": "2026-10-12T11:39:07.367549+00:00",
+    "authorized_max_lamports": 3000000,
+    "operator_writes_disabled": true,
+    "no_anchor_sender_started": true,
+    "returned_to_observe_at_utc": "2026-10-12T11:39:09Z"
+  },
+  "chain": {
+    "checked_at_utc": "2026-10-12T11:38:48.747664+00:00",
+    "commitment": "finalized",
+    "balance_before_lamports": 10852061,
+    "balance_after_lamports": 10527061,
+    "balance_slot": 456033130,
+    "network_fee_lamports": 25000,
+    "tip_lamports": 300000,
+    "total_spent_lamports": 325000,
+    "balance_reconciles": true,
+    "canaries": [
+      {
+        "id": "8e79cbf6-1b23-4a3f-b1a4-80c70698b7d0",
+        "signature": "2Fu8EaeyCqCXR6N6zcSYypAtDkst3Dk3B1AjTSK86UBo8XLgJEp87FWrYgdyycy4hYKqdnGsgMRdx8Y93xUrA1kj",
+        "route": "rpc",
+        "sent_at_utc": "2026-10-12T11:29:37.007Z",
+        "sent_slot": 456030630,
+        "landed_slot": 456030634,
+        "slots_from_send": 4,
+        "outcome": "LANDED_OK",
+        "finalized": true,
+        "network_fee_lamports": 5000,
+        "tip_lamports": 0,
+        "payer_debit_lamports": 5000,
+        "reserved_lamports": 5000,
+        "memo_matches": true,
+        "observers_seen": [
+          "grpc",
+          "mirage",
+          "rpc"
+        ]
+      },
+      {
+        "id": "f8cdb515-772f-4400-9896-970bec897b29",
+        "signature": "5HpdimcKw7DQe17ShwSTusRUoHBzzdZcM4Yezk5h3WrTkKBYHs28iaJYgBaTKHc5ZzjKjEUn5pRJMXbaPwKFbApp",
+        "route": "rpc",
+        "sent_at_utc": "2026-10-12T11:31:39.428Z",
+        "sent_slot": 456031196,
+        "landed_slot": 456031200,
+        "slots_from_send": 4,
+        "outcome": "LANDED_OK",
+        "finalized": true,
+        "network_fee_lamports": 5000,
+        "tip_lamports": 0,
+        "payer_debit_lamports": 5000,
+        "reserved_lamports": 5000,
+        "memo_matches": true,
+        "observers_seen": [
+          "grpc",
+          "mirage",
+          "rpc"
+        ]
+      },
+      {
+        "id": "d25db1de-175f-4e6a-8c01-02bc92f67b89",
+        "signature": "4qgw17mdmMnAQgkng5m1XWyvhtQ6SGJa6Nj6JajrMHjmsBNKEg3B7QpuhedEY275AjiCpKDdJmpz1jos3nC56ww6",
+        "route": "beam_quic",
+        "sent_at_utc": "2026-10-12T11:33:41.948Z",
+        "sent_slot": 456031756,
+        "landed_slot": 456031783,
+        "slots_from_send": 27,
+        "outcome": "LANDED_OK",
+        "finalized": true,
+        "network_fee_lamports": 5000,
+        "tip_lamports": 100000,
+        "payer_debit_lamports": 105000,
+        "reserved_lamports": 105000,
+        "memo_matches": true,
+        "observers_seen": [
+          "grpc",
+          "mirage",
+          "rpc"
+        ]
+      },
+      {
+        "id": "4ae629af-b87c-4815-8218-837f43444e78",
+        "signature": "Emgh2FddCnGmFsRjiGFVoL3cepejBwobsDecUEFtVspS3eZFocpYrKitW2oUC9G6WxyvrWN1ncneJNNosQJKaWD",
+        "route": "beam_http",
+        "sent_at_utc": "2026-10-12T11:35:51.229Z",
+        "sent_slot": 456032359,
+        "landed_slot": 456032361,
+        "slots_from_send": 2,
+        "outcome": "LANDED_OK",
+        "finalized": true,
+        "network_fee_lamports": 5000,
+        "tip_lamports": 100000,
+        "payer_debit_lamports": 105000,
+        "reserved_lamports": 105000,
+        "memo_matches": true,
+        "observers_seen": [
+          "grpc",
+          "mirage",
+          "rpc"
+        ]
+      },
+      {
+        "id": "f93ef79e-01c2-4d81-b061-090e00595102",
+        "signature": "HcKB7gzrDgYRhwbCrCSgDw8bHv3wRzCyyeXDcfvcJyM6X8o7csKEjURaHEMbxqVdJqy7mTKMFvyPDpUfcZQ2kjZ",
+        "route": "beam_http",
+        "sent_at_utc": "2026-10-12T11:37:54.285Z",
+        "sent_slot": 456032924,
+        "landed_slot": 456032927,
+        "slots_from_send": 3,
+        "outcome": "LANDED_OK",
+        "finalized": true,
+        "network_fee_lamports": 5000,
+        "tip_lamports": 100000,
+        "payer_debit_lamports": 105000,
+        "reserved_lamports": 105000,
+        "memo_matches": true,
+        "observers_seen": [
+          "grpc",
+          "mirage",
+          "rpc"
+        ]
+      }
+    ],
+    "wallet_pubkey_sha256": "0f6cf4a86d1ea721645dbc859b01881c214bce7c7ad77b22a4b4fdcbb7dc4861"
+  },
+  "integrity": {
+    "consistent_local_backup_bytes": 1609310208,
+    "before_integrity_check": [
+      "ok"
+    ],
+    "after_quick_check": [
+      "ok"
+    ],
+    "foreign_key_violations_before": 0,
+    "foreign_key_violations_after": 0,
+    "canary_payload_mismatches": 0,
+    "canary_source_counts": {
+      "live": 5
+    },
+    "unknown_or_prepared_sends": 0
+  },
+  "budget": {
+    "authorized_lamports": 3000000,
+    "reserved_lamports": 325000,
+    "actual_spent_lamports": 325000,
+    "cap_respected": true
+  },
+  "additional_sending": {
+    "prove_sessions": 0,
+    "anchor_attempts": 0,
+    "outbound_alerts_sent": 0
+  },
+  "checks": {
+    "sdk_lint": "PASS",
+    "sdk_tests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "web_lint": "PASS",
+    "web_tests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "web_build": "PASS",
+    "browser_recovery": {
+      "status": "PASS",
+      "controlled_observe_restart_drills": 2,
+      "interruption_shown": true,
+      "reconnected_without_reload_or_manual_reconnect": true,
+      "stale_error_cleared_on_successful_refresh": true,
+      "five_finalized_canaries_preserved": true
+    },
+    "repository_scan": "PASS"
+  },
+  "limits": [
+    "Five Small canaries across three route configurations do not establish calibrated landing probabilities or route superiority.",
+    "gRPC, Mirage and RPC each observed these signatures; complete block-identity pair agreement is still incomplete.",
+    "Webhook live registration and four-observer coverage remain unverified.",
+    "No mainnet anchor or held-out Prove was sent.",
+    "Sparse or stale Blur evidence must remain unavailable for economics.",
+    "This pilot and the controlled Observe restart drills do not satisfy a long-duration soak acceptance."
+  ],
+  "local_artifact_sha256": {
+    "integrity-before.json": "70840287cd1f84f470ae8720ea34d2c8bca30b6862a55e1c50bff73b03708264",
+    "integrity-after.json": "23b7edacadaf69371aa1277907d895e8a9ab4770777b55da846ee9a6f0aa4dde",
+    "chain-final.json": "13a83bdf928a773b86a5ecb75d8b044a16b874dba01e23c59cb70275c8418ed3",
+    "balance-after.json": "07eaac6eca60be384f6dec8727a3fc5b2b1a83511eeef834faf582b237c25ea1",
+    "health-pilot.jpg": "66b4dcb7295f2f28351e951064a9416dd21abcc78ef581d452ef8c05bb35e807"
+  },
+  "runtime_after": {
+    "as_of_utc": "2026-10-12T11:46:18.905Z",
+    "mode": "observe",
+    "signing_enabled": false,
+    "collector_status": "PASS",
+    "counts": {
+      "slot_events": "1018510",
+      "blocks": "242551",
+      "observations": "8803",
+      "gaps": "259",
+      "open_gaps": "0",
+      "canaries": "5",
+      "budget_reserved_lamports": "325000"
+    },
+    "observers": [
+      {
+        "source": "live",
+        "observer": "grpc",
+        "status": "PASS",
+        "last_receive_utc": "2026-10-12T11:46:18.999Z",
+        "age_ms": "864",
+        "cursor_slot": "456035233",
+        "open_gaps": "0"
+      },
+      {
+        "source": "live",
+        "observer": "mirage",
+        "status": "PASS",
+        "last_receive_utc": "2026-10-12T11:46:19.070Z",
+        "age_ms": "793",
+        "cursor_slot": "456035232",
+        "open_gaps": "0"
+      },
+      {
+        "source": "live",
+        "observer": "rpc",
+        "status": "STALE",
+        "last_receive_utc": "2026-10-12T11:38:04.598Z",
+        "age_ms": "495265",
+        "cursor_slot": "456032927",
+        "open_gaps": "0"
+      }
+    ]
+  },
+  "market_after": {
+    "latest_distinct_pools": [
+      {
+        "pool": "6KCmCfW5GSf7nQ7hfk8ds2aTiZXUYLcKAsmH3ZLZW6p3",
+        "as_of_utc": "2026-10-12T11:46:11.400Z",
+        "data_age_s": 2.4,
+        "disconnected": false,
+        "stale": false,
+        "sparse": true,
+        "trade_samples": 96
+      },
+      {
+        "pool": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+        "as_of_utc": "2026-10-12T11:46:11.400Z",
+        "data_age_s": null,
+        "disconnected": true,
+        "stale": true,
+        "sparse": true,
+        "trade_samples": 0
+      },
+      {
+        "pool": "FRvYyNTGzQRQfsbDZntcqQwHJpmHZKtMh7N85uDG1i4H",
+        "as_of_utc": "2026-10-12T11:46:11.400Z",
+        "data_age_s": 3.4,
+        "disconnected": false,
+        "stale": false,
+        "sparse": true,
+        "trade_samples": 98
+      }
+    ],
+    "fresh_pools": 2,
+    "total_pools": 3
+  }
+}

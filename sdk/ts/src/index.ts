@@ -43,17 +43,20 @@ export class AlightClient {
     const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),this.timeoutMs);
     try {
       const response=await fetch(url,{method:encoded===undefined?'GET':'POST',headers,...(encoded===undefined?{}:{body:encoded}),signal:controller.signal,redirect:'error',credentials:'omit'});
-      const reader=response.body?.getReader(); if(!reader) throw new AlightError('CONTRACT');
+      // Gateways can return empty/HTML 5xx responses while the API restarts.
+      // Successful responses still fail closed on malformed contracts; uncertain writes require reconciliation.
+      const invalidResponse=()=>new AlightError(!response.ok&&response.status>=500?(encoded===undefined?'TRANSPORT':'TRANSPORT_RECONCILE_WRITES'):'CONTRACT',response.status);
+      const reader=response.body?.getReader(); if(!reader) throw invalidResponse();
       const parts: Uint8Array[]=[]; let size=0;
       try {
         while(true) { const {done,value}=await reader.read(); if(done) break; size+=value.length; if(size>8*1024*1024) { controller.abort(); throw new AlightError('RESPONSE_TOO_LARGE'); } parts.push(value); }
       } finally { reader.releaseLock(); }
       const bytes=new Uint8Array(size); let offset=0; for(const p of parts) { bytes.set(p,offset); offset+=p.length; }
-      let payload: unknown; try { payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)); } catch { throw new AlightError('CONTRACT'); }
-      this.validate(response.ok?name:'ApiErrorResponse',payload);
+      let payload: unknown; try { payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)); } catch { throw invalidResponse(); }
+      try { this.validate(response.ok?name:'ApiErrorResponse',payload); } catch { throw invalidResponse(); }
       if(!response.ok) { const error=payload as T.ApiErrorResponse; this.scope(error.source); throw new AlightError(/^[A-Z_]{1,64}$/.test(error.code)?error.code:'API_ERROR',response.status); }
       return payload as R;
-    } catch(error) { if(error instanceof AlightError) throw error; throw new AlightError('TRANSPORT_RECONCILE_WRITES'); }
+    } catch(error) { if(error instanceof AlightError) throw error; throw new AlightError(encoded===undefined?'TRANSPORT':'TRANSPORT_RECONCILE_WRITES'); }
     finally { clearTimeout(timer); }
   }
   async health(): Promise<T.ApiHealth> { const r=await this.request<T.ApiHealth>('ApiHealth','/v1/health'); this.scope(r.source); return r; }

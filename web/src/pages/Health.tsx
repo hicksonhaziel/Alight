@@ -74,7 +74,9 @@ export function Health({
                 ? "gRPC stream"
                 : o.observer === "mirage"
                   ? "Mirage"
-                  : o.observer
+                  : o.observer === "rpc"
+                    ? "RPC canary checks"
+                    : o.observer
             }
             action={
               <Status
@@ -113,6 +115,8 @@ export function Health({
         ))}
       </div>
       <Notice>
+        RPC checks pending canaries; its last receive time can become stale while
+        idle. This alone does not establish an RPC outage.{" "}
         Receive lag is relative to the earliest observer sharing the host
         monotonic clock. It does not measure network propagation or validator
         independence. Incomplete block identities remain incomplete; missing

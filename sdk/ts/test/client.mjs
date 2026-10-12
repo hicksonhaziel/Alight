@@ -38,3 +38,24 @@ test('HTTP source, auth redaction, strict contract and bounded failure handling'
     await assert.rejects(client.health(),e=>e.code==='RESPONSE_TOO_LARGE');
   }finally{await new Promise(r=>server.close(r));}
 });
+test('temporary gateway failures allow later reads while uncertain writes are never retried',async()=>{
+  let status=502,body='<html>temporary gateway outage</html>';
+  const seen=[];
+  const server=createServer((req,res)=>{seen.push(req.method);res.writeHead(status);res.end(body);});
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  const client=new AlightClient({endpoint:`http://127.0.0.1:${server.address().port}`,source:'sim',operatorKey:'local-recovery-operator-key'});
+  try {
+    await assert.rejects(client.observers(),e=>e.code==='TRANSPORT'&&e.status===502&&!e.message.includes('gateway'));
+    status=503;body='{}';
+    await assert.rejects(client.observers(),e=>e.code==='TRANSPORT'&&e.status===503);
+    const before=seen.length;
+    await assert.rejects(client.prove({forecast_hash:'sha256:example',request_id:'recovery-test',n:40,seed:'42'}),e=>e.code==='TRANSPORT_RECONCILE_WRITES'&&e.status===503);
+    assert.equal(seen.length,before+1);
+    status=200;body='{"source":"sim","observers":[]}';
+    assert.deepEqual(await client.observers(),{source:'sim',observers:[]});
+    body='<html>invalid successful response</html>';
+    await assert.rejects(client.observers(),e=>e.code==='CONTRACT');
+    status=503;body='{"source":"live","code":"UNAVAILABLE","message":"redacted"}';
+    await assert.rejects(client.observers(),e=>e.code==='SOURCE_MISMATCH');
+  } finally {await new Promise(r=>server.close(r));}
+});

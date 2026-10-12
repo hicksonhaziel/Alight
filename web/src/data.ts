@@ -45,6 +45,7 @@ export function errorText(error: unknown): string {
       RATE_LIMITED: "The server is busy. Wait a moment and try again.",
       LEDGER_INVALID:
         "Ledger verification failed. Inspect the stored evidence before using these forecasts.",
+      TRANSPORT: "The API connection was interrupted.",
       TRANSPORT_RECONCILE_WRITES:
         "The connection ended. Check the ledger and Prove history before repeating an action.",
     };
@@ -120,10 +121,12 @@ export function useDashboard(reconnect: number) {
             client.workbench(),
             client.diagnostics(),
           ]);
-          if (!stopped)
+          if (!stopped) {
             setData((old) =>
               old ? { ...old, curves, evidence, diagnostics } : old,
             );
+            setError("");
+          }
         }
       } catch (e) {
         fatal(e);
