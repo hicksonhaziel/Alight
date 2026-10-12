@@ -397,6 +397,17 @@ missing canaries and sampling gaps for review. A passing sampled run is not a
 security certification or proof that no brief interruption occurred between
 samples. Keep the computer awake; restarting the monitor preserves its deadline
 and failures. Archive its local state before explicitly starting a new run.
+Observer freshness is evaluated after reading observer state, so a frame received
+during a health request cannot appear future dated. Genuine future timestamps
+remain stale. Metadata cleanup logs only row counts and elapsed milliseconds for
+batches taking at least 500 ms, to diagnose API delays without logging payloads.
+
+The bounded 12 October Live validation is recorded in
+[`data/live-prove-validation.json`](../data/live-prove-validation.json): a frozen
+60.8% four-slot RPC claim, 30 successes among 40 held-out members, CONSISTENT,
+with finalized fee and wallet reconciliation. It is a functional check of one
+configuration; the receipt retains the warm-up cursor limitation and pending
+48-hour stability review. Unattended collection was restored to Observe.
 
 The 12 October dependency review updated rustls to 0.23.45 for
 [GHSA-2mjx-qc3c-rqvc](https://github.com/rustls/rustls/security/advisories/GHSA-2mjx-qc3c-rqvc).

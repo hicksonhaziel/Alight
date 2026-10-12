@@ -27,7 +27,7 @@ import { LandingChart } from "../charts";
 export function Cockpit({ data }: { data: DashboardData }) {
   const [horizon, setHorizon] = useState(4),
     [size, setSize] = useState<SizeClass>("small"),
-    [fee, setFee] = useState<FeeBucket>("local_median");
+    [fee, setFee] = useState<FeeBucket>("zero");
   const all = latestCurves(data.curves.curves),
     curves = all.filter(
       (c) =>

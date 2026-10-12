@@ -653,8 +653,7 @@ async fn browser_ledger(
     }))
 }
 async fn observer_views(s: &ApiState) -> Result<Vec<ObserverHealthView>, ApiError> {
-    let now = utc(&s.now().await).map_err(|_| s.unavailable())?;
-    let mut views = Vec::new();
+    let mut readings = Vec::new();
     for observer in [
         ObserverKind::Grpc,
         ObserverKind::Mirage,
@@ -672,6 +671,14 @@ async fn observer_views(s: &ApiState) -> Result<Vec<ObserverHealthView>, ApiErro
             .observer_health(observer, s.source)
             .await
             .map_err(|_| s.unavailable())?;
+        readings.push((observer, value));
+    }
+    // Ingest can advance a later observer while earlier database reads wait.
+    // Sample the clock after the reads so a fresh frame cannot acquire a
+    // negative age merely because it arrived during this request.
+    let now = utc(&s.now().await).map_err(|_| s.unavailable())?;
+    let mut views = Vec::new();
+    for (observer, value) in readings {
         let last = value["last_receive_utc"].as_str().map(str::to_owned);
         let age = last
             .as_deref()
@@ -701,7 +708,6 @@ async fn observer_views(s: &ApiState) -> Result<Vec<ObserverHealthView>, ApiErro
     Ok(views)
 }
 async fn health_view(s: &ApiState) -> Result<ApiHealth, ApiError> {
-    let now = s.now().await;
     let counts = s
         .store
         .health_counts(s.source)
@@ -718,6 +724,7 @@ async fn health_view(s: &ApiState) -> Result<ApiHealth, ApiError> {
         budget_reserved_lamports: n(counts.budget_reserved_lamports)?,
     };
     let observers = observer_views(s).await?;
+    let now = s.now().await;
     let ready = observers
         .iter()
         .filter(|o| matches!(o.observer, ObserverKind::Grpc | ObserverKind::Mirage))
@@ -1211,5 +1218,82 @@ async fn stream_socket(mut socket: WebSocket, state: ApiState, _permit: OwnedSem
                 if !matches!(tokio::time::timeout(Duration::from_secs(2),socket.send(Message::Text(bytes.into()))).await,Ok(Ok(()))) {return;}
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod health_time_tests {
+    use super::*;
+    use alight_types::{IngestEvent, ReceiveTime, SlotEvent, SlotStatus};
+
+    async fn frame(store: &Store, observer: ObserverKind, slot: u64, at: &str) {
+        let raw = json!({"health_time_test_slot": slot});
+        let event = IngestEvent::Slot(SlotEvent {
+            slot,
+            block_id: None,
+            status: SlotStatus::Processed,
+            received: ReceiveTime {
+                clock_id: "health-time-test".into(),
+                mono_ns: slot,
+                wall_utc: at.into(),
+            },
+            leader: None,
+            source: Source::Live,
+            raw_ref: alight_store::raw_ref(&raw).expect("hash"),
+        });
+        store.record(observer, &event, &raw).await.expect("frame");
+    }
+
+    #[tokio::test]
+    async fn concurrent_ingest_cannot_make_fresh_observers_appear_future_dated() {
+        let dir = tempfile::tempdir().expect("directory");
+        let store = Store::open(&dir.path().join("health.db"), 16 * 1024 * 1024)
+            .await
+            .expect("store");
+        let state = ApiState::new(
+            store.clone(),
+            Options {
+                mirage_enabled: true,
+                ..Default::default()
+            },
+        )
+        .expect("state");
+        let now = state.now().await;
+        frame(&store, ObserverKind::Grpc, 0, &now).await;
+        frame(&store, ObserverKind::Mirage, 0, &now).await;
+        let writer_store = store.clone();
+        let writer = tokio::spawn(async move {
+            for slot in 1..=250 {
+                for observer in [ObserverKind::Grpc, ObserverKind::Mirage] {
+                    let now = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+                    frame(&writer_store, observer, slot, &now).await;
+                }
+            }
+        });
+        for _ in 0..40 {
+            let health = health_view(&state)
+                .await
+                .map_err(|_| "health")
+                .expect("health");
+            for observer in health.observers.iter().take(2) {
+                assert!(observer.age_ms.is_some(), "{observer:?}");
+                assert_eq!(observer.status, "PASS");
+                assert!(
+                    utc(observer.last_receive_utc.as_deref().expect("receive")).expect("time")
+                        <= utc(&health.as_of_utc).expect("as of")
+                );
+            }
+        }
+        writer.await.expect("writer");
+        // A genuine future timestamp remains invalid; the fix does not clamp it to zero.
+        let future = (Utc::now() + chrono::Duration::minutes(1))
+            .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        frame(&store, ObserverKind::Mirage, 251, &future).await;
+        let views = observer_views(&state)
+            .await
+            .map_err(|_| "future check")
+            .expect("future check");
+        assert_eq!(views[1].status, "STALE");
+        assert_eq!(views[1].age_ms, None);
     }
 }

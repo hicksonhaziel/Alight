@@ -44,7 +44,10 @@ export function Prove({
       reference && initial?.hash !== reference ? null : initial,
     ),
     [report, setReport] = useState<ProveReport | null>(null),
-    [members, setMembers] = useState<TrainingCanary[]>([]),
+    [members, setMembers] = useState<{
+      runId: string;
+      rows: TrainingCanary[];
+    } | null>(null),
     [n, setN] = useState(40),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -92,7 +95,7 @@ export function Prove({
         ]);
         if (!active) return;
         setReport(r);
-        setMembers(rows.canaries);
+        setMembers({ runId: id, rows: rows.canaries });
         if (!["COMPLETE", "VOIDED"].includes(r.state))
           timer = setTimeout(refresh, 2000);
       } catch (e) {
@@ -127,6 +130,7 @@ export function Prove({
     }
   };
   const prediction = forecast?.forecast.quote.recommendation;
+  const currentMembers = members && members.runId === reportId ? members.rows : null;
   return (
     <>
       <Header
@@ -254,8 +258,14 @@ export function Prove({
             caption={`${report.attempts} / ${report.lock.n} attempts · exact configuration · excluded from model training`}
           >
             <div className="prove-members">
-              {members.length ? (
-                members.map(({ canary: c, finalized }, i) => (
+              {currentMembers === null ? (
+                error ? (
+                  <p>Member evidence unavailable.</p>
+                ) : (
+                  <Loading shape="summary" text="Loading canary members…" />
+                )
+              ) : currentMembers.length ? (
+                currentMembers.map(({ canary: c, finalized }, i) => (
                   <a
                     key={c.id}
                     href={`#health/${encodeURIComponent(c.id)}`}

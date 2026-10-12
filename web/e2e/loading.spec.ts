@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 
 test("initial skeleton is accessible, responsive, motion-aware and replaced by real Sim data", async ({ page }) => {
   let release!: () => void;
@@ -26,6 +26,35 @@ test("initial skeleton is accessible, responsive, motion-aware and replaced by r
   await expect(page.getByRole("heading", { name: "Network overview" })).toBeVisible();
   await expect(page.locator(".topbar .source-badge")).toHaveText("SIMULATED");
   await expect(page.locator(".page-skeleton")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Priority fee" })).toHaveValue("zero");
+});
+
+test("Prove member loading and request failure never imply an empty run", async ({ page }) => {
+  // Reuse the captured report shape; the browser-only fixture performs no writes.
+  const { prove_report: report } = JSON.parse(readFileSync("../data/live-prove-validation.json", "utf8"));
+  report.lock.source = "sim";
+  report.lock.id = "loading-check";
+  report.lock.seed = "42";
+  await page.route("**/v1/prove/loading-check", (route) => route.fulfill({
+    contentType: "application/json", body: JSON.stringify(report),
+  }));
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/v1/prove/loading-check/canaries", async (route) => {
+    await gate;
+    await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ code: "UNAVAILABLE", message: "Evidence unavailable" }) });
+  });
+  await page.goto("/#prove/loading-check");
+  try {
+    await expect(page.getByRole("status", { name: "Loading canary members…" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No members yet" })).toHaveCount(0);
+  } finally {
+    release();
+  }
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByText("Member evidence unavailable.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status", { name: "Loading canary members…" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "No members yet" })).toHaveCount(0);
 });
 
 test("tape loading never flashes empty evidence and a failed request ends the skeleton", async ({ page }) => {

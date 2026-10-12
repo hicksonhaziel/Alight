@@ -248,7 +248,14 @@ async fn retention_loop(
         let cutoff = (chrono::Utc::now() - chrono::Duration::hours(hours))
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         for _ in 0..20 {
+            let started = std::time::Instant::now();
             let pruned = tokio::select! {_=stop.changed()=>return Ok(()),r=store.prune_metadata(&cutoff)=>r}?;
+            if started.elapsed() >= Duration::from_millis(500) {
+                eprintln!(
+                    "metadata retention batch: rows={pruned} elapsed_ms={}",
+                    started.elapsed().as_millis()
+                );
+            }
             if pruned == 0 {
                 break;
             }
