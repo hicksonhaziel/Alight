@@ -89,6 +89,8 @@ Also inspect the [owned Webhook delivery](data/webhook-owned-validation.json),
 The anchor and public sample dataset are **Sim**, not Live performance.
 The [final review receipt](data/final-review-validation.json) records a later
 30-minute Live check, finalized fee reconciliation, and remaining coverage gaps.
+The [Live quote receipt](data/live-quote-validation.json) captures a subsequent
+supported RPC quote with its timestamp, evidence age, sample count and fee audit.
 
 These results validate a working measurement loop for the tested configuration.
 They do not establish swap performance, broad calibration, route rankings, or

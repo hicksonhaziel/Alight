@@ -1,0 +1,854 @@
+{
+  "schema_version": 1,
+  "source": "live",
+  "status": "PASS",
+  "captured_at_utc": "2026-10-12T21:15:27.222126+00:00",
+  "purpose": "Verify a fresh supported RPC Small zero-priority untipped quote without weakening evidence thresholds, and reconcile bounded mainnet fees.",
+  "code_commit": "bf122c9dadbd826acfe1ae1a13fc0c66da692218",
+  "installed_binary_sha256": "5032ddb51955ddb02769a99cf3b31113e0ac8d2dd5fedae4e82e427bd70d8298",
+  "runtime_note": "Rust implementation is unchanged from the reviewed 15f9afc binary; bf122c9 adds software licensing, package metadata, documentation and the local launcher. No database history or stability window was reset.",
+  "predeclared_request": {
+    "minimum_probability": 0.25,
+    "within_slots": 4,
+    "route": "rpc",
+    "size_class": "small",
+    "cu_limit": 25000,
+    "priority_fee_micro_lamports_per_cu": 0,
+    "tip_lamports": 0
+  },
+  "support_rules_unchanged": {
+    "minimum_effective_samples": 30,
+    "maximum_latest_resolved_send_age_seconds": 300,
+    "maximum_unresolved_share": 0.25,
+    "half_life_seconds": 3600
+  },
+  "quote": {
+    "checked_at_utc": "2026-10-12T21:15:27.222126+00:00",
+    "source": "live",
+    "read_only": true,
+    "request": {
+      "model": {
+        "context": {
+          "source": "live",
+          "regime_id": "phase1-unclassified",
+          "region": "local",
+          "as_of_utc": "2026-10-12T21:15:26.991Z"
+        },
+        "candidates": [
+          {
+            "route": "rpc",
+            "tip_lamports": "0",
+            "cu_price_micro_lamports": "0",
+            "cu_limit": 25000,
+            "fee_bucket": "zero",
+            "tip_tier": "none",
+            "size_class": "small"
+          }
+        ],
+        "covariates": {
+          "congestion": null
+        },
+        "leader_class_next": [],
+        "target": {
+          "kind": "probability",
+          "target_p": 0.25,
+          "horizon_slots": 4
+        }
+      },
+      "ttl_s": 120,
+      "economics": null,
+      "frozen_model_hash": null
+    },
+    "preview": {
+      "quote": {
+        "contract_version": 1,
+        "methodology_hash": "sha256:0da0241b9ce652df77f7b9ee40a713f7bfa93e3c62207c28e290da3d1c9a3f86",
+        "context": {
+          "source": "live",
+          "regime_id": "phase1-unclassified",
+          "region": "local",
+          "as_of_utc": "2026-10-12T21:15:26.991Z"
+        },
+        "target": {
+          "kind": "probability",
+          "target_p": 0.25,
+          "horizon_slots": 4
+        },
+        "evidence": "MEASURED",
+        "recommendation": {
+          "config": {
+            "route": "rpc",
+            "tip_lamports": "0",
+            "cu_price_micro_lamports": "0",
+            "cu_limit": 25000,
+            "fee_bucket": "zero",
+            "tip_tier": "none",
+            "size_class": "small"
+          },
+          "p_hat": 0.5141083871859999,
+          "p_interval_95": [
+            0.3512503519892034,
+            0.6754402441311689
+          ],
+          "evidence": "MEASURED",
+          "n_effective": 33.05663399910011,
+          "data_age_s": 129.857,
+          "observation_window": [
+            "2026-10-12T11:29:37.007+00:00",
+            "2026-10-12T21:13:17.134+00:00"
+          ],
+          "unresolved_share": 0.0,
+          "samples_needed": null,
+          "m1_weight": 0.0
+        },
+        "latency": null,
+        "samples_needed": null,
+        "reason": null
+      },
+      "economics": null,
+      "baselines": [
+        {
+          "id": "B1",
+          "config": {
+            "route": "rpc",
+            "tip_lamports": "0",
+            "cu_price_micro_lamports": "0",
+            "cu_limit": 25000,
+            "fee_bucket": "zero",
+            "tip_tier": "none",
+            "size_class": "small"
+          },
+          "p_hat": 0.5141083871859999,
+          "model_snapshot_hash": null,
+          "unavailable_reason": null,
+          "tape": null
+        },
+        {
+          "id": "B2",
+          "config": {
+            "route": "rpc",
+            "tip_lamports": "0",
+            "cu_price_micro_lamports": "0",
+            "cu_limit": 25000,
+            "fee_bucket": "zero",
+            "tip_tier": "none",
+            "size_class": "small"
+          },
+          "p_hat": 0.5141083871859999,
+          "model_snapshot_hash": null,
+          "unavailable_reason": null,
+          "tape": null
+        },
+        {
+          "id": "B3",
+          "config": null,
+          "p_hat": null,
+          "model_snapshot_hash": null,
+          "unavailable_reason": "no_fresh_five_minute_tape_median",
+          "tape": null
+        },
+        {
+          "id": "B4",
+          "config": null,
+          "p_hat": null,
+          "model_snapshot_hash": null,
+          "unavailable_reason": "no_frozen_model",
+          "tape": null
+        }
+      ],
+      "requested_economics": null,
+      "model_snapshot_hash": "sha256:5ae98dfa8a2227b6314018ed3c64e9d9571724e679ba0a4d822540836586bb21"
+    }
+  },
+  "attempts": [
+    {
+      "kind": "invalid_interval_interrupted",
+      "started_at_utc": "2026-10-12T20:16:40.982998+00:00",
+      "returned_at_utc": "2026-10-12T20:17:21.538901+00:00",
+      "new_canaries": 0,
+      "new_reserved_lamports": 0,
+      "note": "A 20-second interval failed the daemon 30-second minimum. Generic worker-failure output and the unchanged database are retained privately; the watchdog restored Observe."
+    },
+    {
+      "kind": "provider_startup_interrupted",
+      "started_at_utc": "2026-10-12T20:29:22.754000+00:00",
+      "returned_at_utc": "2026-10-12T20:32:13.681913+00:00",
+      "new_canaries": 0,
+      "new_reserved_lamports": 0,
+      "note": "Provider metadata/network startup failed before a working API/send loop. Observe restart failures are retained in the existing stability history."
+    },
+    {
+      "kind": "corrected_bounded_warmup",
+      "started_at_utc": "2026-10-12T20:41:50.436133+00:00",
+      "returned_at_utc": "2026-10-12T21:06:57.624325+00:00",
+      "maximum_seconds": 1500,
+      "interval_seconds": 30,
+      "stop_reason": "independent_timer",
+      "new_canaries": 26,
+      "new_reserved_lamports": 130000
+    },
+    {
+      "kind": "final_five_minute_continuation",
+      "started_at_utc": "2026-10-12T21:08:26.031682+00:00",
+      "returned_at_utc": "2026-10-12T21:13:31.125250+00:00",
+      "maximum_seconds": 300,
+      "interval_seconds": 30,
+      "stop_reason": "independent_timer",
+      "new_canaries": 8,
+      "new_reserved_lamports": 40000
+    }
+  ],
+  "budget": {
+    "aggregate_additional_reservation_cap_lamports": 200000,
+    "aggregate_maximum_canaries": 40,
+    "baseline_reserved_lamports": 980000,
+    "daily_reservation_cap_lamports": 1180000,
+    "recording_reserve_lamports": 9000000,
+    "new_reserved_lamports": 170000,
+    "actual_fees_lamports": 160000,
+    "actual_tips_lamports": 0,
+    "baseline_finalized_balance_lamports": 9907061,
+    "finalized_balance_lamports": 9747061
+  },
+  "finalized_chain_audit": {
+    "schema_version": 1,
+    "source": "live",
+    "read_only": true,
+    "started_at_utc": "2026-10-12T21:14:00.853824+00:00",
+    "checks": [
+      {
+        "name": "observe_signing_disabled",
+        "passed": true
+      },
+      {
+        "name": "old_ids_preserved",
+        "passed": true
+      },
+      {
+        "name": "old_reservations_preserved",
+        "passed": true
+      },
+      {
+        "name": "no_pending_canaries",
+        "passed": true
+      },
+      {
+        "name": "cap_and_new_reservations",
+        "passed": true
+      },
+      {
+        "name": "all_finalized_outcomes_verified",
+        "passed": true
+      },
+      {
+        "name": "balance_reconciles",
+        "passed": true
+      },
+      {
+        "name": "recording_reserve_preserved",
+        "passed": true
+      },
+      {
+        "name": "snapshot_stable",
+        "passed": true
+      },
+      {
+        "name": "observe_still_signing_disabled",
+        "passed": true
+      }
+    ],
+    "new_canaries": 34,
+    "reserved_lamports": 170000,
+    "payer": "BR28XLDiosxXbTaNFoTvb2UigfKQjxEBqTaPEkjaEoD2",
+    "transactions": [
+      {
+        "id": "10c3e0de-e26b-45c3-90f5-5e503d74d087",
+        "signature": "45xvNsTuCj1SpHgivtJ2EHoS5FCZF9UQn3Eu9oghBBwtQiu6H3mdrNHZLQbmjSC6muoR18tyNiqMcAZe1omD1Ux6",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "10e660f6-cc2a-4718-9aa1-2c6207b0d10d",
+        "signature": "bbrM3qTRXw34utQyhZCyw3txuvMTmZ6brFJXhrF1ab7QqWnCsdGeySFDW2AqYoiAA4Ez866AJQ7XwEaFJhd3nSy",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "178ee720-d583-460d-a9ee-f9c1f5be6658",
+        "signature": "2qZEq74ZCRGULXjH99vhfkD7N4SEdDHegFbSprP99LT35oY3H1v2xzUazhURkHB2Ji1PmcNCrezZ6czv9B51JHmj",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "1f5e50dd-ce6f-455a-bb87-61c749aa48d0",
+        "signature": "2tbsGb52scU1ECkMEaGPBB4HWbPBJqv1zKL2mudFPBbiVg61Nnu5bD5g4H3aMN9hyupnLsZ1wP1RjpupVXoYs6L7",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "254b8a0b-338f-4a6a-adf2-c98e0ddd5725",
+        "signature": "3tZwEbhhWWaotDPCxchbGQHtwasXeLYJpNtaJxYkMs1w6eMTzM6yTmuZtvdhmmjkC6jWkfeJd3YsN5DsYw8pkBCT",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "2e46d7dd-cafd-42cc-bb87-e0f287243d48",
+        "signature": "2NQvsmXP7Uh6gFMEKqgz1YEumB7xicqJKUiAJHpaEcbCyADRJoAmeHF5mBxDLGGZSJyMCUhnRBSKMdeymYRTusVm",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "3213bb2c-8776-417b-b011-98a5858585a7",
+        "signature": "28qyJcb6ECn8xsGxX6sGiTD4akXQziCV6e64mFZsVap1dFAym5T28owdh6L47BdkuoHjZtsKk7i1EnEe1YGc78u4",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "3895f972-916b-401c-ae0d-df0451d1c047",
+        "signature": "41s3JJfe21CM9fu5FqBAijgoudWdNLCmJNwgjWuPS8Vgx653C8ULzEJpaP42gKehsRLN69UPdo7P9EcWYkyc88oL",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "426662bd-3bd3-4300-b7f4-5b94bd311a41",
+        "signature": "2D93UdveSJq4XBoBLWPXRXiJ3HvTpuDBvAyzfcZWARBYy3MdmZfczXECAK5Zzif3YAxzEjyehSZANqdDoMpi77ZC",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "438412de-7da2-4c6d-a42e-d8ff4504659d",
+        "signature": "2mZz6y2MQnpdXFKYJ7UDkpxZcjLjYFLqKKMGSAGmPK2QEGbRdmuh7vTV1ciFRt9gJm2fUtbbJitVKA7beEj9t7aw",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "4990ae71-62e8-4521-9163-fa671428cdb0",
+        "signature": "4NeHakzENh1H1sTbo9XcY8shizBr7W574mUQVCeAryTxWD2AnPotQZTrpd7hd7TMip9xJm8TL47pU5ahi2SYatZk",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "53383b66-2a3a-47b2-be4e-f842ced9d6d2",
+        "signature": "4LTcob8NB989xd8GeWznXx8HZvUjCpVnJc16qrEJZYMTF9us1UhWUdvwYWqsuWJsdBfivXMbTFfXJ5hMHtX6UUYj",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "533b00e9-7ac3-4fb1-ad25-c60781899484",
+        "signature": "NPdYJcgTKTFvMvJGcCg9VgnzUitWQVhvYd8KW8ouDZhu1iRrhv5dceE7dUxyr1w9MH9FmQMn2hE6baDQ3JKWuZv",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "5a377e06-eab6-4752-8417-c181e3c8bb61",
+        "signature": "5v7S5DSYUgXoEMhosr4nmGVcwhDHpPR6wK3jZ4Tt5bb4HqV8rY4pCqHgqQCg1e2Rz6QS99toYZYnfsXHmjnjGZJQ",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "66c2926f-d3c5-43e8-957e-592ae1f600ae",
+        "signature": "4Lhgmcfmpb8AMEaYDJAe3WNgicgCjuVwpJ98byawiFXWWkArhTLxsdzJhP8WYVLaELNgXykQSaqX1mfscZo8iars",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "6c703ea8-70f8-462a-ae44-b102ffa89a88",
+        "signature": "3V8LKr7VS46RQK3Jq92rikq4X4tZYMKSaKSUkUN3zSNJ3oAV6FrshZAYxnuzpdZJXta1fZso2iFYMUzUABawUhhR",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "70d844f8-961e-486e-b5d6-d079e260215b",
+        "signature": "4M9E2wkQKWonE9SZxMr39RhSMYDgUynyuLttDvWv4tNMmeQtceKXr15wXq9CPBTQD5ASevzCBBiGT52pAjxiPw1E",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "7e556272-543e-48ee-baa5-4ebb939ceb7f",
+        "signature": "3CrJynsVP1uRzPCxHh62zEpK4ob5gXFTdRwec7AjkwMeR2BJ4WkUf5LnZQG9D7UMCC9AgjsK5rz4VrQpgT2ggfiw",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "822dc2ad-fe94-4ec1-8992-3f0d371cc50a",
+        "signature": "JnB4iZfXYN3WpsBH89nBvAWhfsd6xJtiQZRCRYzriK4oYZJpLqAbTtq919XcVc2dUovdGyJkQnLP9AeFKN3igiV",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "87411579-fc7c-4e91-9aa3-c1ef0f036e0b",
+        "signature": "apTwE4wjsKgyY9fSiNvSgqdFDQnmYJhfJkBNMDquTcwyBNAj5QGazf2VQ5cQ4UcjEkWtcnazfxrCt7F8r9VMP2W",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "886f4907-1922-404a-9d89-78ee485efb74",
+        "signature": "2h8yQ4ojJvAg5hbce3djELzvUfLR6RUid4o5eQ5NWtWAWWUYBzMxtfEBKp1jLGrSv1xo41iidgjfYKbRuXg9q169",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "8d12354a-2822-4791-a619-7ae4a51b8439",
+        "signature": "5MEu2K3N1AiPnsitDP6vefWd8SorzMHKuANeEdzGMYAxJUw124Qv9Y7a8sBvuYR3YEfUbS49aTJQFgSUJP2Ae34L",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "903b472a-6d49-4bc8-a457-991ca21204cc",
+        "signature": "2m5Acef7PAo9aGtTdF5hfRzSsaQLp2pW75EauYct3myhdcjfStwijuKZTTkWewXkKUg4uizXx2dbwa5xQAsbzZiq",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "92a0e561-be5d-43ad-8fb9-25b7f0ed140b",
+        "signature": "DfVoH7s385H8ssMX9SDXYyXZdf5iu2jiMBRpigs9JAartvjKtnz2MwDU5fvdyUt2wjDNDyFKv5XrbLRzXPgTBiF",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "9aa4ad54-df03-4fc8-a62f-cdff71722e12",
+        "signature": "XmBTq4YMJ9mcrmwXp7oGsHMHY7hNm7gbAMyj6sGj8NHFSi5T8WPtus9kPXuSbWshQyTJbL7qSEcLn8GycpmZ2Y1",
+        "outcome": "EXPIRED",
+        "verified": true,
+        "fee_lamports": 0,
+        "stored_expiry_proof": {
+          "verified": true,
+          "checked_block_height": 434223666,
+          "last_valid_block_height": 434223610,
+          "raw_ref": "sha256:7e5946dba9d940e2441a794440cb5c3d77ddd962f475591c09b2d5de918e82b6"
+        },
+        "fresh_signature_absent": true,
+        "fresh_finalized_block_height": 434227652,
+        "fresh_history_first_available_slot": 456070557
+      },
+      {
+        "id": "9beddc0d-9959-450e-b94d-76f6e5293853",
+        "signature": "3Heb7AAWquBpy4JFx1ZMawFAY26S9e5T5Eo6qXqj4sGnM6nscPGpGuNJkbPr7kNVsfhqEKTHMimyhtRai8hmLSt2",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "9c74a9dd-48de-47b9-a2ae-336a553342bc",
+        "signature": "jPkSeM7uUJsxXA1Rzn13Q6iq5HTsFL6z7tFPXHJEAgtJAXPjXupysLjtWcNap6n7bwZMWjrgb1en6WtG2gzPnMA",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "b852d02f-92fe-4723-943e-724b4c8c46a8",
+        "signature": "56w1zXSSQhiP94kQbwpVgJnpik6cSMZvdznDxKPMW2q3AywxD7XdpkfzthejesXWm4yo2FpHvnsMZ2xmv1FwHDre",
+        "outcome": "EXPIRED",
+        "verified": true,
+        "fee_lamports": 0,
+        "stored_expiry_proof": {
+          "verified": true,
+          "checked_block_height": 434222741,
+          "last_valid_block_height": 434222740,
+          "raw_ref": "sha256:715939557cf4601d078693164688606a7993fb263468f7e15d3e885fe50737de"
+        },
+        "fresh_signature_absent": true,
+        "fresh_finalized_block_height": 434227652,
+        "fresh_history_first_available_slot": 456070557
+      },
+      {
+        "id": "b8f61ebc-c263-41f3-a8ac-0a87e0dbf02a",
+        "signature": "3K3Pf3z3uztkxwGgT2o8bJQA9BdZoz4UxDpSN3mCT6i6pi3BZFtWti5Kdg6AvvNPUxG25h84iofNmH2dieMLaqHL",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "bcf8aca1-a359-4bf4-a758-38a941860174",
+        "signature": "5WmARk4zXk4Lxd2UCWbscrhz6BNEMKJktA18QmiWDDvaGcXGXXDwH946aPFunETYDmafnNj2DCRpvD3goqEMieJx",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "c761bd9b-d61d-432d-acff-a93079a4a559",
+        "signature": "2wqgzWWFRUx1KxEYR2eYTeiZvCeP5ANCGFwVca7ZKL8VxTFohd2oVaKVEf1NcQ1F4mdhMp2oDoBn6DciaTeQy4FT",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "c7887477-060b-40c6-af32-7ebb863f2c76",
+        "signature": "3s2xy7wZfBRfqEuNKCMrgustu8cWWXFk5J3vAvJ2C553ebTZqFD9eGj43KUBo2v2hqr4yprYnCh5XP6oxjEcdyhc",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "d93c94e2-d0dd-40b4-9297-32672bf84bd2",
+        "signature": "36JXRgzid1BxWsGgNLh83qpp4SQMKWBTaWTg2WS2bG6ZZW8aMkodoTSs4cQgdQMduokBS9WyqZ4CGahM7GK2FGMj",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      },
+      {
+        "id": "f216216d-961a-4525-a037-20dcfebf5e1e",
+        "signature": "4mtpEjnmSXUKSi4XmUBCCqKgif3m8GTqDDMRgsiBWPTWi2CbXTY2prmog1DBfhjFgcpm8abBSScAozqHaJCq5Kho",
+        "outcome": "LANDED_OK",
+        "verified": true,
+        "fee_lamports": 5000,
+        "checks": {
+          "exact_payer": true,
+          "exact_small_account_set": true,
+          "exact_signature": true,
+          "exact_compute_and_memo_only": true,
+          "fee_5000_lamports": true,
+          "slot_matches_stored_landing": true,
+          "execution_matches_stored_outcome": true
+        }
+      }
+    ],
+    "actual_fees_lamports": 160000,
+    "baseline_finalized_balance_lamports": 9907061,
+    "finalized_balance_lamports": 9747061,
+    "provider_requests": 37,
+    "completed_at_utc": "2026-10-12T21:14:39.114197+00:00",
+    "status": "PASS"
+  },
+  "final_runtime": {
+    "mode": "observe",
+    "signing_enabled": false,
+    "pending_canaries": 0,
+    "collector_status": "PASS",
+    "as_of_utc": "2026-10-12T21:15:27.445Z",
+    "temporary_live_override_removed": true
+  },
+  "local_setup": {
+    "command": "./scripts/quickstart.sh",
+    "software_license": "MIT",
+    "github_recognized_license": "MIT",
+    "repository_visibility": "PUBLIC",
+    "checks": [
+      "All 16 Rust package licenses inherited MIT; root/web/TypeScript package licenses MIT.",
+      "Real finite launcher session reached populated Sim through API and Workbench; signing disabled.",
+      "Occupied API port refused before launch/build.",
+      "SIGTERM cleaned up owned API and web process groups; both ports released.",
+      "Existing .env bytes unchanged by launcher tests.",
+      "README/docs links and launcher shell/Python syntax checked.",
+      "Independent read-only launcher review found no material issue."
+    ],
+    "validation_scope": "Local existing installation with --skip-build; not a new-device or Docker test."
+  },
+  "ci": {
+    "head_sha": "bf122c9dadbd826acfe1ae1a13fc0c66da692218",
+    "conclusion": "success",
+    "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38305790945"
+  },
+  "limitations": [
+    "This is a captured Live quote with its recorded timestamp and age. Support expires when owned evidence becomes stale/decays; Observe alone does not keep it fresh.",
+    "The requested minimum 25% is not the point forecast; the full quote carries the actual probability and 95% interval. This does not support a 90% target.",
+    "Canary-class RPC Memo evidence from one local vantage point does not establish swap performance, route rankings or broad calibration.",
+    "Observer lag caused governed pauses. The interrupted attempts and existing stability failures are retained; this is not a clean uninterrupted availability or 48-hour pass.",
+    "No fresh Live browser screenshot was captured; the supported quote was checked through the read-only API.",
+    "Fresh owned Webhook delivery was not revalidated by this receipt.",
+    "No new Prove session, mainnet anchor or outbound alert/message was sent. Existing held-out Prove members remain excluded from quote training."
+  ]
+}
