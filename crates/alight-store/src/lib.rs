@@ -77,6 +77,11 @@ pub fn raw_ref(raw: &Value) -> Result<String, StoreError> {
 // every old block, monopolizing the single WAL connection during retention.
 const RETENTION_BLOCKS_SQL: &str = "DELETE FROM blocks WHERE rowid IN (SELECT b.rowid FROM blocks b WHERE b.source='live' AND b.received_utc<? AND NOT EXISTS(SELECT 1 FROM observations o INDEXED BY observations_slot JOIN canaries c ON c.source=o.source AND c.signature=o.signature WHERE o.source=b.source AND o.slot_key=b.slot) LIMIT 5000) RETURNING json_extract(payload_json,'$.data.raw_ref')";
 
+// A large IN list otherwise makes SQLite prefer the low-selectivity transient
+// index and walk all transient evidence. Unary + keeps the integer predicate
+// while excluding that index, so each touched hash is sought by its primary key.
+const RETENTION_RAW_PREFIX: &str = "DELETE FROM raw_evidence WHERE +transient=1 AND ref IN (";
+
 impl Store {
     /// Opens an existing database without migrations, chmod, creation or application writes.
     /// Used for offline receipts and validation; time and amount units follow stored contracts.
@@ -616,9 +621,7 @@ impl Store {
             // Inspect only evidence touched by this batch. Unary + removes the outer
             // TEXT affinity so SQLite seeks the JSON expression indexes instead of
             // scanning each complete metadata table for every evidence reference.
-            let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(
-                "DELETE FROM raw_evidence WHERE transient=1 AND ref IN (",
-            );
+            let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(RETENTION_RAW_PREFIX);
             {
                 let mut ids = query.separated(",");
                 for reference in slots.iter().chain(blocks.iter()) {
@@ -820,6 +823,33 @@ impl Store {
 #[cfg(test)]
 mod retention_plan_tests {
     use super::*;
+    #[tokio::test]
+    async fn large_retention_batch_seeks_only_touched_raw_hashes() {
+        let dir = tempfile::tempdir().expect("directory");
+        let store = Store::open(&dir.path().join("raw-plan.db"), 16 * 1024 * 1024)
+            .await
+            .expect("store");
+        let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(format!(
+            "EXPLAIN QUERY PLAN {RETENTION_RAW_PREFIX}"
+        ));
+        {
+            let mut hashes = query.separated(",");
+            for n in 0..5000 {
+                hashes.push_bind(format!("sha256:{n:064x}"));
+            }
+        }
+        query.push(")");
+        let plan = query.build().fetch_all(&store.pool).await.expect("plan");
+        assert!(plan.iter().any(|row| {
+            let detail: String = row.get("detail");
+            detail.contains("SEARCH raw_evidence") && detail.contains("ref=?")
+        }));
+        assert!(plan.iter().all(|row| {
+            let detail: String = row.get("detail");
+            !detail.contains("transient_raw") && !detail.contains("SCAN raw_evidence")
+        }));
+        store.close().await;
+    }
     #[tokio::test]
     async fn health_counter_migration_backfills_and_rollback_does_not_change_counts() {
         let dir = tempfile::tempdir().expect("directory");
