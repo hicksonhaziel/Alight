@@ -398,6 +398,10 @@ deduplication are preserved. Invalid frames roll back the whole batch. No extra
 batching delay is added. Live signing also checks the gRPC cursor against RPC
 context before reservation: more than 32 slots behind confirmed RPC returns
 `WAITING_OBSERVER` with `reason=grpc_behind_rpc` and sends nothing.
+Read-only balance, blockhash and fee preflight retain confirmed commitment and
+the same minimum context slot. A `-32016` response permits at most three
+one-second waits and retries; other errors return immediately. This helper
+never retries transaction submission. All freshness gates still precede signing.
 
 Balance, observer freshness, pending limits, recent local fees, and the cluster's
 fee-for-message quote precede reservation. The governor reserves the entire

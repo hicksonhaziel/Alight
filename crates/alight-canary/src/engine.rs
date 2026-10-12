@@ -13,7 +13,7 @@ use base64::Engine as _;
 use chrono::Utc;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{collections::BTreeMap, str::FromStr, time::Instant};
+use std::{collections::BTreeMap, future::Future, str::FromStr, time::Duration, time::Instant};
 use thiserror::Error;
 
 // Processed gRPC may lead confirmed RPC. A freshly received backlog must not
@@ -21,6 +21,26 @@ use thiserror::Error;
 fn cursor_lag(grpc_slot: u64, rpc_slot: u64) -> Option<u64> {
     let lag = rpc_slot.saturating_sub(grpc_slot);
     (lag > 32).then_some(lag)
+}
+
+// Retry only read-only preflight when confirmed RPC has not reached the same
+// fixed minContextSlot yet. Never relax commitment, refresh the target to chase
+// processed slots, or retry a broadcast here. At most three one-second waits.
+async fn wait_for_context<T, F, Fut>(mut request: F, delay: Duration) -> Result<T, ProbeError>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T, ProbeError>>,
+{
+    let mut retries = 3;
+    loop {
+        match request().await {
+            Err(ProbeError::Rpc(-32016)) if retries > 0 => {
+                retries -= 1;
+                tokio::time::sleep(delay).await;
+            }
+            result => return result,
+        }
+    }
 }
 
 #[derive(Debug, Error)]
@@ -57,6 +77,18 @@ pub struct Engine {
     max_pending: usize,
 }
 impl Engine {
+    async fn confirmed_rpc(
+        &self,
+        config: &Config,
+        method: &str,
+        params: Value,
+    ) -> Result<Value, ProbeError> {
+        wait_for_context(
+            || self.http.rpc(config, method, params.clone()),
+            Duration::from_secs(1),
+        )
+        .await
+    }
     /// Live mode alone loads a signing identity; observe/replay never construct this engine.
     pub async fn new(config: &Config, store: Store) -> Result<Self, EngineError> {
         let grid_profile = GridProfile::from_config_value(config.get("ALIGHT_GRID_PROFILE"))?;
@@ -219,7 +251,7 @@ impl Engine {
         if pending >= self.max_pending {
             return Ok(json!({"status":"PENDING_LIMIT","pending":pending}));
         }
-        let balance=self.http.rpc(config,"getBalance",json!([self.wallet.public().to_string(),{"commitment":"confirmed","minContextSlot":sent_slot}])).await?;
+        let balance=self.confirmed_rpc(config,"getBalance",json!([self.wallet.public().to_string(),{"commitment":"confirmed","minContextSlot":sent_slot}])).await?;
         let rpc_slot = balance["context"]["slot"]
             .as_u64()
             .ok_or(ProbeError::Format)?;
@@ -266,8 +298,7 @@ impl Engine {
         )
         .map_err(|_| ProbeError::Format)?;
         let block = self
-            .http
-            .rpc(
+            .confirmed_rpc(
                 config,
                 "getLatestBlockhash",
                 json!([{"commitment":"confirmed","minContextSlot":sent_slot}]),
@@ -346,7 +377,7 @@ impl Engine {
         let message = self
             .wallet
             .message(&assignment.config, &id, blockhash, chosen_tip)?;
-        let fee_check=self.http.rpc(config,"getFeeForMessage",json!([base64::engine::general_purpose::STANDARD.encode(bincode::serialize(&message).map_err(|_|BuildError::Invalid)?),{"commitment":"confirmed","minContextSlot":sent_slot}])).await?;
+        let fee_check=self.confirmed_rpc(config,"getFeeForMessage",json!([base64::engine::general_purpose::STANDARD.encode(bincode::serialize(&message).map_err(|_|BuildError::Invalid)?),{"commitment":"confirmed","minContextSlot":sent_slot}])).await?;
         let fee = fee_check["value"].as_u64().ok_or(ProbeError::Format)?;
         let priority = u64::try_from(
             (assignment.config.cu_price_micro_lamports as u128
@@ -528,7 +559,50 @@ impl Engine {
 
 #[cfg(test)]
 mod freshness_tests {
-    use super::cursor_lag;
+    use super::{cursor_lag, wait_for_context};
+    use alight_ingest::ProbeError;
+    use std::{cell::Cell, time::Duration};
+
+    #[tokio::test]
+    async fn confirmed_preflight_wait_is_bounded_and_retries_only_context_lag() {
+        let calls = Cell::new(0);
+        let result = wait_for_context(
+            || {
+                calls.set(calls.get() + 1);
+                std::future::ready(if calls.get() < 3 {
+                    Err(ProbeError::Rpc(-32016))
+                } else {
+                    Ok(42)
+                })
+            },
+            Duration::ZERO,
+        )
+        .await;
+        assert_eq!(result.expect("caught up"), 42);
+        assert_eq!(calls.get(), 3);
+        calls.set(0);
+        let result = wait_for_context(
+            || {
+                calls.set(calls.get() + 1);
+                std::future::ready(Err::<(), _>(ProbeError::Rpc(-32016)))
+            },
+            Duration::ZERO,
+        )
+        .await;
+        assert!(matches!(result, Err(ProbeError::Rpc(-32016))));
+        assert_eq!(calls.get(), 4);
+        calls.set(0);
+        let result = wait_for_context(
+            || {
+                calls.set(calls.get() + 1);
+                std::future::ready(Err::<(), _>(ProbeError::Network))
+            },
+            Duration::ZERO,
+        )
+        .await;
+        assert!(matches!(result, Err(ProbeError::Network)));
+        assert_eq!(calls.get(), 1);
+    }
 
     #[test]
     fn fresh_receive_of_old_slots_is_rejected_but_processed_lead_is_allowed() {
