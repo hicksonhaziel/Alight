@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, LockKeyhole, Settings2 } from "lucide-react";
 import {
   AlightClient,
@@ -58,11 +58,21 @@ export function Quote({
       preview: QuotePreview;
       request: QuoteServiceRequest;
     } | null>(null);
+  const generation = useRef(0);
+  useEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [data.client],
+  );
   const changed = () => {
+    generation.current += 1;
     setResult(null);
     setError("");
   };
   const run = async () => {
+    if (busy) return;
+    const current = ++generation.current;
     setBusy("quote");
     setError("");
     setResult(null);
@@ -82,11 +92,12 @@ export function Quote({
           .map((c) => [cellKey(c.config), c.config]),
       );
       if (!configs.size) {
-        setError(
-          health.source === "sim"
-            ? "No stored candidate configurations match this selection. Try Beam HTTP with a small canary in Sim."
-            : "No owned landing evidence matches this selection yet. Passive market collection does not provide quote training outcomes.",
-        );
+        if (current === generation.current)
+          setError(
+            health.source === "sim"
+              ? "No stored candidate configurations match this selection. Try Beam HTTP with a small canary in Sim."
+              : "No owned landing evidence matches this selection yet. Passive market collection does not provide quote training outcomes.",
+          );
         return;
       }
       const request: QuoteServiceRequest = {
@@ -121,9 +132,9 @@ export function Quote({
         frozen_model_hash: null,
       };
       const preview = await data.client.quote(request);
-      setResult({ preview, request });
+      if (current === generation.current) setResult({ preview, request });
     } catch (e) {
-      setError(errorText(e));
+      if (current === generation.current) setError(errorText(e));
     } finally {
       setBusy("");
     }
@@ -347,7 +358,7 @@ export function Quote({
           {error && <Notice danger>{error}</Notice>}
           {busy === "quote" ? (
             <Panel title="Computing quote">
-            <Loading text="Computing quote…" shape="summary" />
+              <Loading text="Computing quote…" shape="summary" />
             </Panel>
           ) : result ? (
             <>

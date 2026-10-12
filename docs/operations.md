@@ -1,57 +1,23 @@
-# Local operations
+# Operations
 
-Run these commands from the Alight directory. The container reads the ignored
-`.env` as a read-only file; credentials are excluded from the image and build
-context. Its SQLite database stays in the host's `data/` directory. Compose
-starts the governed live engine by default. An unfunded wallet waits without
-signing; observe mode excludes the signing identities entirely.
+Run commands from the repository root. The [README](../README.md) covers the
+short offline quick start; this guide covers configuration and ongoing use.
+Use the pinned Rust toolchain, Python 3 and Node 22.22 or later.
+
+## Offline Workbench
+
+Build the binaries and examples, then install web/client dependencies:
 
 ```sh
-docker compose --env-file .env -f deploy/compose.yaml build --build-arg GIT_REVISION="$(git rev-parse HEAD)" collector
-docker compose --env-file .env -f deploy/compose.yaml up -d --wait
-docker compose --env-file .env -f deploy/compose.yaml ps
-curl -fsS http://127.0.0.1:8080/v1/health
+cargo build -p alight -p alightd -p alight-client --bins --examples --locked
+npm --prefix web ci --ignore-scripts --no-audit --no-fund
+npm --prefix sdk/ts ci --ignore-scripts
+npm --prefix sdk/ts run build
 ```
 
-On this computer, the image was also built using its installed Rust toolchain
-and cached public Cargo registry. This avoids downloading a second compiler;
-the ordinary Compose build above remains the portable path. Named contexts
-contain only the compiler and public dependency cache, never `.env` or local
-briefs. The resulting runtime still uses Debian and the same locked Rust sources.
+Create a private **API operator key**, separate from any wallet/provider key:
 
 ```sh
-docker build --build-arg BUILD_IMAGE=node:22.22.0-bookworm-slim \
-  --build-arg GIT_REVISION="$(git rev-parse HEAD)" --build-arg BUILD_JOBS=4 \
-  --build-context local_toolchain="$HOME/.rustup/toolchains/1.96.1-x86_64-unknown-linux-gnu" \
-  --build-context local_registry="$HOME/.cargo/registry" \
-  --tag alight-collector:phase2 -f deploy/Dockerfile .
-docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
-```
-
-The previous systemd observe collector must be stopped before starting Compose,
-since both use the same database and localhost port. Keep a consistent SQLite
-backup under ignored `.alight/backups/` before switching. Build the current
-host binary too (`cargo build -p alightd --locked`) if it is needed for rollback:
-older binaries cannot write after the retention migration adds table columns.
-
-Caddy exposes the public GET allowlist and authenticated quote/Prove POST routes
-on `127.0.0.1:8080`. Request headers, URI/query strings, and client addresses are
-removed from its access logs. The backend shares a 20-request/s limiter and a
-separate two-writes/s operator limit. An unset `ALIGHT_OPERATOR_KEY` disables writes. This
-local deployment uses HTTP; a public hostname and TLS belong to a later VPS
-configuration. The collector uses a private container network, an unprivileged
-UID, a read-only root filesystem, and no additional Linux capabilities. Caddy
-retains only NET_BIND_SERVICE, required by its official binary's file capability.
-The collector has a bounded 256 MiB temporary workspace for SQLite index creation.
-Full epoch schedule responses have a separate bounded 45-second deadline.
-
-## Offline API
-
-Rebuild collector images from current sources before switching deployments.
-For a provider/key-free Sim server with API operator authentication:
-
-```sh
-python3 -m pip install jsonschema==4.23.0  # contract-test dependency
 python3 - <<'PY'
 from pathlib import Path
 import secrets
@@ -61,361 +27,254 @@ if not p.exists():
     p.write_text(secrets.token_hex(32) + '\n')
     p.chmod(0o600)
 PY
-cargo run -p alightd --locked -- --mode sim --db .alight/sim-api.db \
-  --bind 127.0.0.1:8080 --operator-key-file .alight/operator.key --seed 42
+target/debug/alightd --mode sim --seed 42 --sim-canaries 900 \
+  --sim-regimes true --db .alight/workbench-sim.db --bind 127.0.0.1:8081 \
+  --operator-key-file .alight/operator.key
 ```
 
-Sim reads no `.env` or provider/signing keys, uses synthetic Beam HTTP small
-canaries to seed its model, and shows `source=sim` throughout. The optional key
-file is an API credential, not a wallet key. Without it public reads work and
-operator writes are disabled. Use the same seed/database on restart; experiment
-clock and charged reservations remain durable. A changed seed needs a fresh Sim
-database. `--run-for 30` provides a bounded local session. OpenAPI is available at
-`/v1/openapi.json`; endpoint contracts and error/limit semantics are in
-`docs/contracts.md`. API tests invoke the pinned Python JSON Schema validator;
-its package must be installed before `cargo test` on a clean checkout.
-
-Public quote preview uses a URL-encoded `QuoteServiceRequest` in the `request`
-query parameter. Operator `POST /v1/quote` freezes the same request and returns a
-forecast hash; `POST /v1/prove` uses that hash and an idempotent request ID. Keep
-bearer keys in the `Authorization` header. Only live mode schedules real sends,
-through the existing observer/funding/budget/prepared-send checks. Observe and
-replay reject Prove. Sim can demonstrate N=40 without provider traffic or spend.
-
-An intentionally stopped Compose deployment preserves local data and images.
-To resume it using cached images, then inspect health (Compose defaults to live
-sending unless `ALIGHT_RUNTIME_MODE=observe` is configured):
+In another terminal:
 
 ```sh
-docker compose --env-file .env -f deploy/compose.yaml up -d --no-build --pull never --wait
+ALIGHT_API_ORIGIN=http://127.0.0.1:8081 npm --prefix web run dev
+```
+
+Open `http://127.0.0.1:5173`. Sim loads no `.env`, provider configuration or
+signing keys. Outcomes and regime history are synthetic and visibly labeled.
+Omit `--operator-key-file` for public reads only. Use the same seed/database
+on restart; a changed seed needs a fresh database. `--run-for 30` bounds a
+daemon session to 30 seconds. Keep each daemon's database and bind port unique.
+
+The Workbench includes Cockpit, Quote, Prove, Ledger, Regimes, Health and Tape/
+Receipts. Hash routes restore issued forecasts and Prove runs after reload.
+`Ctrl/Cmd K` opens navigation. Both themes support keyboard focus, table
+alternatives and reduced motion. The optional operator key stays in page memory
+and is cleared on reload/disconnect. Only quote freeze and Prove require it.
+Evidence refreshes every 15 seconds; the stream pauses while the page is hidden.
+
+## Observe and Live
+
+Copy `.env.example` to ignored `.env` and fill in your own provider read access.
+Use a dedicated capped-balance canary wallet for Live. Keep private values out of
+URLs in screenshots, versioned files and exported evidence.
+
+```sh
+test -e .env || cp .env.example .env
+target/debug/alight doctor --mode observe --network
+target/debug/alight run --mode observe
+```
+
+Observe collects Live evidence without loading signing identities or starting
+canary/anchor senders. Streams consume provider bandwidth. RPC/Webhook freshness
+can age when owned transactions stop; probe requests do not refresh it. The
+optional Blur worker runs when its read token is configured. It discovers up to
+three pools, uses one filtered socket, and bounds each price series to 300
+seconds/10,000 trades. Sparse/stale/gapped market evidence leaves quotes
+probability-only. `ALIGHT_BLUR_ENABLED=false` disables that worker.
+
+Live signs and sends through `alight-canary` after funding, observer, pending,
+database and governor checks. Set explicit caps before starting a finite run:
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `ALIGHT_DAILY_BUDGET_SOL` | `0.20` | Combined route reservations per UTC day |
+| `ALIGHT_BURST_BUDGET_SOL` | `0.05` | Reservations per rolling 60 seconds |
+| `ALIGHT_CANARY_INTERVAL_S` | `120` | Exploration send spacing, valid range 30–3,600 seconds |
+| `ALIGHT_CANARY_RESERVE_LAMPORTS` | `1000000` | Minimum wallet balance retained |
+| `ALIGHT_MAX_PENDING_CANARIES` | `8` | Pending cap, valid range 1–32 |
+| `ALIGHT_GRID_PROFILE` | `full` | `full`, `lean` or `rpc-reference` |
+
+For example, configure `0.003` SOL/day, `0.0006` SOL/burst and `lean` in your
+local `.env`, then deliberately start a bounded session:
+
+```sh
+target/debug/alight run --mode live --run-for 1800
+```
+
+Prove schedules held-out attempts separately from ordinary exploration spacing;
+its exact configuration and all governor/reserve/freshness checks still apply.
+After a finite run, start Observe to continue read-only collection. Reservations
+cover worst-case fees plus tips and survive uncertain responses/restarts; they
+are distinct from audited on-chain spend. `WAITING_FUNDS`, `BUDGET_CAPPED`,
+`PENDING_LIMIT` and other gate states are visible in health. ACK counts show
+transport acceptance, not landing. Prepared/unknown attempts are resolved from
+chain evidence and never automatically rebroadcast.
+
+The full grid has 81 cells. Lean has ten Small cells: Beam QUIC/HTTP at X1/X5
+tips and Zero/LocalP90 fees, plus two untipped RPC fee cells. `rpc-reference`
+selects one Small, untipped, zero-priority RPC cell. Policy IDs record the
+profile and assignment propensities. The adaptive uniform arm remains at least
+30% of the selected grid. Narrow profiles cannot establish omitted route,
+workload, fee or tip effects.
+
+Beam HTTP uses `SOLAMI_RPC_URL`/`SOLAMI_RPC_TOKEN` with a published recipient tip;
+plain RPC uses that same endpoint without the tip. QUIC uses the pinned official
+Solami SDK and current published recipient list. Real owned landings have been
+validated on the three routes; the [Live Prove receipt](../data/live-prove-validation.json)
+tests only one RPC configuration. It does not establish cross-route calibration.
+
+## CLI and SDK
+
+The SDK examples construct a request from current health/curve data, freeze a
+forecast, run 40 governed held-out Sim canaries and verify the ledger:
+
+```sh
+target/debug/examples/quote_then_send http://127.0.0.1:8081 .alight/operator.key
+node sdk/ts/examples/quote_then_send.mjs http://127.0.0.1:8081 .alight/operator.key
+```
+
+These are canary examples, not swap builders. `quote_then_send`/`quoteThenSend`
+also expose that flow as SDK helpers. Public reads omit Authorization. SDKs
+require HTTPS except loopback HTTP, reject credentials/query strings in base
+URLs, cap responses at 8 MiB and use a 30-second request timeout. Uncertain
+writes require reconciliation using the printed forecast hash/Prove ID; never
+repeat the whole convenience flow automatically.
+
+```sh
+target/debug/alight doctor --api http://127.0.0.1:8081 --source sim
+target/debug/alight quote --api http://127.0.0.1:8081 --source sim --request quote.json
+target/debug/alight quote --api http://127.0.0.1:8081 --source sim --request quote.json \
+  --freeze --operator-key-file .alight/operator.key
+target/debug/alight prove --api http://127.0.0.1:8081 --source sim \
+  --request prove.json --operator-key-file .alight/operator.key
+target/debug/alight prove --api http://127.0.0.1:8081 --source sim --id PROVE_ID
+target/debug/alight ledger verify --api http://127.0.0.1:8081 --source sim
+```
+
+`quote.json` is the served OpenAPI `QuoteServiceRequest`; `prove.json` is
+`{"request_id":"example","forecast_hash":"sha256:…","n":40,"seed":"42"}`
+in Sim. Live omits `seed`. The returned `lock.id` identifies progress reads.
+Observe/Replay reject new Prove runs. An unsupported quote returns no
+recommendation. [Contracts](contracts.md) documents schemas and endpoint limits.
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | Successful check, supported quote or CONSISTENT Prove |
+| `1` | Failed check or INCONSISTENT Prove |
+| `2` | Configuration, transport or runtime error |
+| `3` | Insufficient quote, degraded doctor or INCONCLUSIVE Prove |
+
+`export --api` produces a bounded forecast-only JSON subset. `export --database`
+produces the full CSV/Parquet dataset; see [datasets](dataset.md). Wallet capture
+and evaluation commands are in [receipts](receipts.md); source-labeled Memo
+commitments and mainnet controls are in [anchoring](anchoring.md).
+
+## Diagnostics, Webhooks and alerts
+
+Offline finite jobs use isolated databases and no provider keys:
+
+```sh
+target/debug/alight regime-sim --database .alight/regime-sim.db --seed 42 \
+  --output .alight/regime-sim.json
+target/debug/alight backfill --database .alight/history.db --input sanitized-history.json \
+  --output .alight/history-report.json
+target/debug/alight diagnostics --api http://127.0.0.1:8081 --source sim
+```
+
+Observe/Live diagnostics run inside the daemon: sealed clock windows, finalized
+block sampling, observer comparison, regime detection and local alert history.
+Optional `ALIGHT_SLOT_COMPUTE_LIMIT` and its `..._PROVENANCE` must be configured
+together from verified evidence; otherwise block fullness stays unavailable.
+Regime changes void crossing forecasts, reset old effective sample support and
+enable uniform exploration for 30 minutes under unchanged spending limits.
+Calendar dates alone never establish an upgrade. See the
+[registered regime method](regime-methodology.md).
+
+An explicitly requested `backfill --network` uses a separate Replay database,
+42–56 requested days and 64–1,024 bounded RPC reads. It preserves retention gaps
+and null timestamps; sparse averages cannot resolve every short event.
+
+`SOLAMI_WEBHOOK_SECRET` enables exact-body HMAC-verified owned transaction ingress
+at `/v1/webhook`. Registration is separate from daemon startup. The optional
+[`alight-webhook.service`](../deploy/alight-webhook.service) runs
+[`webhook_bridge.py`](../scripts/webhook_bridge.py) with installed official
+`cloudflared`. Adjust checkout paths before installing the template. It manages
+one payer-only/all-event-types registration, a random callback path and private
+0600 `.env` values. Restart Observe once after first registration to load its
+secret. The tunnel exposes only the bounded callback, never the operator API.
+The API independently verifies HMAC and ignores unowned signatures. Private
+audit hashes/statuses persist under `.alight/webhook/`; payloads and credentials
+are not logged. [Owned delivery](../data/webhook-owned-validation.json) is
+validated. Temporary tunnel addresses and laptop uptime are not production
+availability guarantees. The bridge receives evidence; it sends no transactions
+or chat messages.
+
+Local alerts are persisted every ten seconds. Set a private
+`ALIGHT_ALERT_WEBHOOK_URL` and `ALIGHT_ALERT_FORMAT=webhook|discord|slack` only
+when outbound delivery is intended. An unset URL records `NO_ENDPOINT`; Sim
+does not load it. Five rules cover route degradation, quote drift, observer
+disagreement, regime changes and budget pressure. Each active condition emits
+once across restarts and rearms after recovery. Delivery makes one bounded
+five-second attempt without redirects or uncertain-response retries; it is
+not guaranteed. Chat formatters disable interpreted mentions.
+
+## Deployment and retention
+
+The local host service template is
+[`alight-observe.service`](../deploy/alight-observe.service). It expects the
+installed daemon at `.alight/bin/alightd`, starts Observe and retries failed
+startup after 30 seconds. API/Workbench availability and provider freshness are
+separate measurements. Collection requires the computer and internet to stay on.
+
+Optional Docker Compose uses a read-only `.env` mount and persistent host
+`data/`. Stop any host daemon using the same database/port before switching,
+and keep a consistent SQLite backup under ignored `.alight/backups/`. Compose
+defaults to Live; the explicit override below starts read-only Observe:
+
+```sh
+docker compose --env-file .env -f deploy/compose.yaml build \
+  --build-arg GIT_REVISION="$(git rev-parse HEAD)"
+ALIGHT_RUNTIME_MODE=observe docker compose --env-file .env -f deploy/compose.yaml up -d --wait
+docker compose --env-file .env -f deploy/compose.yaml ps
 curl -fsS http://127.0.0.1:8080/v1/health
-```
-
-The observer streams consume internet data whenever the collector runs, even
-with an empty wallet or in observe mode. Compilation and cached-image startup
-are local. Public route checks can use the network; they never imply funding.
-
-To restart or stop the deployment:
-
-```sh
-docker compose --env-file .env -f deploy/compose.yaml restart collector
 docker compose --env-file .env -f deploy/compose.yaml stop
 ```
 
-`restart: unless-stopped` recovers a failed process and restarts the deployment
-when Docker starts. Explicitly stopped containers stay stopped. Collection
-requires this computer to be awake and Docker running. Database/WAL files and
-private keys stay local. Container logs rotate at 30 MiB for the collector and
-10 MiB for Caddy. Routine slot/block metadata are pruned after 24 hours in bounded
-batches; observations, canaries, budget reservations, resolution evidence, and
-block candidates referenced by canaries are retained. Legacy raw evidence from
-before the retention migration is conservatively retained. The main database
-cap is 8 GiB in Compose; reaching it stops writes and sends safely. Back up or
-export durable evidence before its long-term growth reaches that cap.
-Raw-evidence cleanup seeks each affected hash through its primary key; it
-avoids scanning the transient-evidence partition while holding the WAL writer.
-Each transaction prunes at most 250 slot records and 250 unowned block records;
-the daemon releases the connection between batches. The per-pass limit remains
-100,000 records per table. Retention never deletes owned observations or canaries.
+Caddy serves `web/dist` and the API allowlist from one loopback origin; public
+hosting needs a configured hostname/TLS. Provider credentials stay in the
+daemon. Logs remove request headers/query strings and rotate. Collector
+containers run unprivileged with read-only root filesystems and bounded scratch
+space. Rebuild both images when backend/web contracts change. A build alone
+does not start collection; `restart: unless-stopped` preserves explicit stops.
 
-Live controls in `.env` are exact daily/burst SOL caps, a 30–3,600 second send
-interval (120 by default), a seeded policy with a uniform fraction, a wallet
-reserve of at least 1,000,000 lamports, and a pending limit of 1–32 (8 by default).
-The default governor caps are 0.20 SOL/day and 0.05 SOL per rolling minute;
-reservations are conservative worst-case fees plus tips, not reported actual
-spend. Funding checks, cap checks, and database persistence precede any send.
-`ALIGHT_GRID_PROFILE` defaults to `full` (81 exploration cells). Set it to `lean`
-for ten Small-only cells: Beam QUIC/HTTP at X1/X5 tips and Zero/LocalP90 fees, plus
-untipped RPC at those two fees. The selected profile is recorded in each new
-canary's policy ID and survives temporary uniform exploration after a regime
-change. Budget caps, wallet reserve and the minimum 30% adaptive uniform arm
-remain in force. This configuration takes effect on the next explicitly
-authorized engine start; changing it does not resume collection.
-`rpc-reference` restricts training to one Small, untipped, zero-priority RPC
-cell. Its assignments have probability 1 and a distinct `:rpc-reference` policy
-ID; it cannot measure Beam, fee sensitivity or a cross-route frontier. It keeps
-the same minimum effective sample count, freshness rules, reserve and governor.
-Prove still uses forty prospective held-out attempts of a supported frozen
-claim; those attempts never train the model. Use a finite run and return to
-Observe when validation finishes.
-`ALIGHT_RUNTIME_MODE=observe` starts Compose without signing access; restart with
-`up -d` after changing mode. `ALIGHT_MODE` remains the host daemon's default.
+Routine slot/block metadata are pruned after 24 hours, at most 250 rows per
+table/transaction and 100,000 per table/pass, yielding the connection between
+batches. Owned observations, canaries, reservations, resolution evidence and
+referenced block candidates remain durable. Legacy raw evidence is retained
+conservatively. Compose caps the main database at 8 GiB; reaching the cap stops
+writes and sends. Export/backup durable evidence before growth reaches it.
 
-Health exposes reader freshness separately as `collector_status`; the
-`canary_engine` field states `WAITING_FUNDS`, `BUDGET_CAPPED`, `PENDING_LIMIT`, or
-an explicit preflight/attempt status. `canaries_sent` counts transport ACKs;
-unknown submission attempts remain separate in `send_attempts`. An ACK alone
-never establishes a landing. Prepared/uncertain sends remain pending across
-restart and are resolved through chain evidence; they are never re-broadcast.
+The read-only [`alight-stability.service`](../deploy/alight-stability.service)
+runs a finite 48-hour sampled check of health, Workbench, known IDs and budgets.
+Progress and failures persist in `.alight/stability/` across monitor restarts.
+Do not reset a running window or hide failures. A pass requires the full measured
+window; it cannot establish availability between samples or validate later
+binary changes. Read-only monitoring never signs or sends.
 
-Beam QUIC uses the pinned official SDK and the live published tip list. The SDK's
-embedded list is older, so its local scan is bypassed after Alight validates the
-recipient itself. Beam HTTP uses the configured Solami RPC URL and RPC
-authentication, per the team's reply relayed by Hickson on 5 October: use the
-RPC endpoint with a tip.
-There is no separate HTTP URL/token setting. Its governed transaction carries a
-published Beam-recipient tip; plain RPC carries none. These arms share an endpoint.
-The earlier hostname failure is historical. Funded tipped submission and landing
-remain unverified; a connection failure is retained as uncertainty. Do not report
-a successful live route until a real canary lands and observers confirm it.
-
-## Developer clients and CLI
-
-Build both binaries and the Rust canary example with `cargo build -p alight -p
-alightd -p alight-client --bins --examples --locked`. The TypeScript client needs
-`npm --prefix sdk/ts ci --ignore-scripts` and `npm --prefix sdk/ts run build`.
-Start the key-free Sim daemon using the offline API instructions above (or
-`alight run --mode sim` with the same daemon flags), then run either:
+## Verification
 
 ```sh
-target/debug/examples/quote_then_send http://127.0.0.1:8080 .alight/operator.key
-node sdk/ts/examples/quote_then_send.mjs http://127.0.0.1:8080 .alight/operator.key
-```
-
-Each example reads a supported synthetic curve, previews and freezes its quote,
-prints the forecast hash/request ID before sending, runs 40 governed held-out
-Sim canaries and verifies the ledger. These are canary bots; they neither build
-swaps nor handle a wallet/provider key. `quote_then_send` / `quoteThenSend` also
-provide that convenience in each SDK. On an uncertain write response, reconcile
-the saved forecast hash and Prove ID; never repeat the entire convenience flow.
-No write retries are automatic. SDK endpoints require HTTPS except loopback HTTP,
-reject URL credentials/query parameters, enforce source labels, cap responses at
-8 MiB and use a 30-second request timeout. Public reads omit the operator key.
-
-CLI API commands take explicit `--api URL --source live|sim|replay`:
-
-```sh
-target/debug/alight doctor --api http://127.0.0.1:8080 --source sim
-target/debug/alight quote --api http://127.0.0.1:8080 --source sim --request quote.json
-target/debug/alight quote --api http://127.0.0.1:8080 --source sim --request quote.json --freeze --operator-key-file .alight/operator.key
-target/debug/alight prove --api http://127.0.0.1:8080 --source sim --request prove.json --operator-key-file .alight/operator.key
-target/debug/alight prove --api http://127.0.0.1:8080 --source sim --id prove-sim-example
-target/debug/alight ledger verify --api http://127.0.0.1:8080 --source sim
-target/debug/alight export --api http://127.0.0.1:8080 --source sim --day 2026-10-05 --output .alight/forecasts.json
-```
-
-`quote.json` is a `QuoteServiceRequest` from the served OpenAPI contract;
-`prove.json` is `{"request_id":"example","forecast_hash":"sha256:…","n":40,
-"seed":"42"}` in Sim. Live omits the seed. Prove IDs are returned in `lock.id`.
-Examples construct a request from actual health/curve data, avoiding stale clocks.
-The existing database-based model commands and seeded `sim`/replay remain available.
-Exit codes are **0** successful/supported/CONSISTENT, **1** failed check or
-INCONSISTENT, **2** configuration/transport/runtime error, **3** insufficient
-quote evidence, degraded doctor health or INCONCLUSIVE. Live POST can return a
-queued/inconclusive report; use `prove --id` to read progress without resubmitting.
-
-Export verifies the source's whole ledger before paging to that verified head,
-then selects forecast issue dates in UTC. It is bounded to 10,000 rows / 64 MiB,
-creates a new output file and refuses overwrite. This API export contains
-forecasts. Database-based `alight export --database DB --source SOURCE --day DAY
---output DIR` exports the full CSV/Parquet dataset; see `docs/dataset.md`.
-A date-filtered subset cannot independently verify the complete chain or models.
-Run `python3 scripts/test_phase3_developer.py` after building: it starts/stops only
-temporary Sim daemons and checks both examples, CLI lifecycle, all four exit codes,
-export/overwrite protection, and `run` without provider credentials.
-
-## Alerts
-
-Observe/live daemons evaluate stored evidence every ten seconds and persist local
-alerts. Outbound delivery is explicitly configured with the private
-`ALIGHT_ALERT_WEBHOOK_URL` and `ALIGHT_ALERT_FORMAT=webhook|discord|slack`; unset URL
-records `NO_ENDPOINT`. Sim does not load these environment values. No real
-endpoint was configured or contacted during acceptance.
-
-Rules use fresh same-cell canary evidence with effective n >= 30: route degradation
-requires non-overlapping 95% intervals; quote drift compares a later same-regime
-estimate with the frozen interval before expiry. Observer disagreement requires
-three distinct recent canaries with explicit latest resolver disagreement evidence
-in a five-minute window. A recorded regime transition fires once; budget alerts
-fire at 90% of the exact configured daily cap. These report estimates/recorded
-transitions and do not claim a new network upgrade or real-swap performance.
-
-Migration 0008 adds source-scoped rule state/events. One atomic transition emits
-one event per active condition; restart preserves suppression and recovery rearms
-it. The event history is capped at 10,000 rows per source. Webhook delivery makes
-one bounded, five-second attempt with redirects disabled. Delivery errors do not
-retry an uncertain response. The dispatcher claims `PENDING` events as `ATTEMPTING` before delivery. A crash
-then leaves an uncertain attempt that is not automatically retried; external
-delivery is not guaranteed. New regime events use the same dispatcher. Discord disables
-mentions; Slack uses plain-text blocks. The induced test delivers all five rules
-to a temporary loopback receiver and checks restart suppression.
-
-## Workbench
-
-Use Node 22.22 or later. Install the pinned web dependencies with
-`npm --prefix web ci --ignore-scripts --no-audit --no-fund`. The workbench imports
-the checked-in TypeScript SDK source; it needs no provider credentials.
-
-Start an isolated offline daemon in one terminal:
-
-```sh
-target/debug/alightd --mode sim --seed 42 --sim-canaries 900 --bind 127.0.0.1:8080 --db .alight/workbench-sim.db --operator-key-file .alight/operator.key
-```
-
-The operator key file must contain an existing local API operator key, be private
-to its owner, and contain no wallet/provider key. Omit the key flag for public
-read-only use. Sim does not load project ENV or use providers/signing access.
-In another terminal, run `npm --prefix web run dev`, then open
-`http://127.0.0.1:5173`. For a different daemon port, set `ALIGHT_API_ORIGIN` on
-the Vite process. Vite binds loopback and allows only `web/` and SDK source files.
-
-Cockpit, Quote, Prove, Ledger, Regimes, Health, and Tape all retain the source
-badge. Hash routes can recover an issued forecast or Prove run on reload.
-Operator access is optional, held only in page memory, and cleared on reload or
-disconnect. Public SDK reads omit its Authorization header. Only quote freeze
-and governed Prove send authenticated POSTs; uncertain responses require history
-reconciliation rather than automatic retries. Sim Prove is synchronous: dots
-represent actual members, without staged synthetic progress animation.
-
-The stream reconnects with bounded backoff and pauses when the document is hidden.
-Evidence refreshes every 15 seconds without overlapping requests. Source or
-schema mismatches clear evidence and disable actions. Both themes, native
-dialogs, command navigation (`Ctrl/Cmd K`), keyboard focus, data-table alternatives,
-and reduced-motion preferences are supported. Fonts and the Aftershock logo are
-served locally. Charts show stored evidence; missing market/history services
-produce explicit unavailable states.
-
-`npm --prefix web run build` produces `web/dist`. Compose's Caddy service now
-builds `deploy/Web.Dockerfile` to serve these assets and the allowed API routes
-from one origin, with CSP and no external font/script dependencies. Build only
-the web image with `docker compose -f deploy/compose.yaml build caddy` when
-needed; this command does not resume collection. Starting the stack or resuming
-the collector remains a separate live operation under the standing pause.
-Rebuild the collector image as well when deploying backend changes; the new web
-contracts require the matching daemon. Building images does not start services.
-
-Verification:
-
-```sh
+python3 -m pip install jsonschema==4.23.0
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
 npm --prefix web run lint
 npm --prefix web test
 npm --prefix web run build
-cd web
-npx playwright install --with-deps chromium
-npm run test:e2e
+ALIGHT_BROWSER_EXECUTABLE=/usr/bin/google-chrome npm --prefix web run test:e2e
 ```
 
-For an already installed Chrome, set `ALIGHT_BROWSER_EXECUTABLE` to its absolute
-path on the E2E command. Browser tests create/stop their own temporary Sim daemon
-on 8082 and Vite on 5180; both ports must be free. No real key, project ENV,
-provider request, wallet funding, or chain send is needed. Reports and screenshots
-are local under `.alight/phase5/`; CI uses bundled Chromium. The test checks
-actual API values, a frozen forecast, 40 held-out members, restart recovery,
-browser SHA-256 verification/tamper rejection, 15 Axe audits (14 screen/theme
-audits and the diagnostics disclosure), mobile
-keyboard navigation, reduced motion, offline/source mismatch, and probability-only
-market fallback. These are offline checks; funded live landing and observer
-agreement remain unverified.
+The Python validator is required by API contract tests. Browser tests start
+temporary Sim/Vite servers on 8082/5180; keep those ports free. Use an installed
+Chrome path, or install Playwright Chromium for your environment. They verify
+quote → freeze → held-out Prove → ledger verification, recovery, tamper rejection,
+accessibility and honest unavailable states. `scripts/test_phase3_developer.py`
+checks the SDK/CLI lifecycle in temporary offline daemons after building examples.
+Use focused local checks while collecting; full Rust builds may compete for
+memory, so full workspace validation can run in CI.
 
-## Diagnostics and finite history jobs
-
-These commands implement offline acceptance without loading signing keys or
-making provider requests:
-
-```sh
-cargo run -p alight -- regime-sim --database .alight/phase5/regime-sim.db --seed 42 --output .alight/phase5/regime-sim.json
-cargo run -p alight -- backfill --database .alight/phase5/history.db --input sanitized-history.json --output .alight/phase5/history-report.json
-```
-
-`regime-sim` stores 240 explicit synthetic signal windows with two injected changes.
-It is separate from default canary training. For the complete offline UI demo use
-an isolated database and `alightd --mode sim --sim-regimes true`: historical
-synthetic changes precede freshly generated, separately identified training
-samples. It creates no provider frames or market tape. Do not reuse the Live DB.
-`alight diagnostics --api http://127.0.0.1:8081 --source sim` reads saved diagnostics;
-the Rust and TypeScript SDKs expose the same read-only operation.
-
-The observe/live daemon runs diagnostics inside its existing supervised
-lifetime: sealed clock bins, current reference-cell landing rates, observer
-comparison, bounded finalized block sampling, checkpointed detection and alerts.
-Starting collection also starts these diagnostics. Optional
-`SOLAMI_WEBHOOK_SECRET` enables authenticated ingress; no webhook is registered
-by this code. Optional `ALIGHT_SLOT_COMPUTE_LIMIT` and
-`ALIGHT_SLOT_COMPUTE_LIMIT_PROVENANCE` must be supplied together with a verified
-capacity and its evidence. With neither set, fullness is unavailable.
-
-For a local callback without exposing the workbench or operator API, the optional
-`deploy/alight-webhook.service` runs `scripts/webhook_bridge.py` and an installed
-official `cloudflared`. Adjust its checkout paths before installing it as a user
-service. It registers/reuses **Alight canary observer**, watches only the configured
-dedicated payer for all provider event types, and writes the provider id, signing
-secret and callback into the ignored `.env` with mode 0600. On first creation,
-restart the Observe daemon once to load `SOLAMI_WEBHOOK_SECRET`; tunnel restarts
-update the existing registration without changing the secret or starting sends.
-
-The random callback path accepts only bounded, exact-body HMAC-authenticated
-POSTs and forwards bytes to loopback `/v1/webhook`; every other path returns 404.
-The API independently verifies HMAC and ignores unowned transactions. Bounded
-private audit hashes/statuses survive restarts under `.alight/webhook/status.json`;
-payloads, headers and credentials are not logged. The public test receipt is
-`data/webhook-runtime-validation.json`. Quick-tunnel hostnames are temporary and
-have no availability guarantee; this machine and its internet must stay on.
-Use a named tunnel or hosted callback for production uptime. This service only
-receives provider observations; it does not send canaries, anchors or alerts.
-
-An explicitly requested future network backfill uses `alight backfill --network`
-with `--database`, `--days 42` through `56`, `--requests 64` through `1024`, and
-optional `--output`. That finite read-only job checks mainnet, retained first
-block and finalized tip, then samples chain block timestamps within its request
-budget. It does not sign, send, register webhooks or leave streams running. Its
-200 ms scheduling assumption selects candidate slots only; timestamp evidence
-determines actual coverage. Null/error responses and candidate conflicts remain
-missing. Sparse averages cannot resolve every short event. Use a separate Replay
-database. No such network backfill has been executed during offline verification.
-
-Regime actions reset old effective sample mass and enable uniform exploration
-for 30 minutes. The daily/burst governor and wallet reserve remain unchanged.
-An empty new regime must collect enough fresh support to quote again. Named
-upgrades require independent technical evidence; epoch dates alone never establish
-Alpenglow or a slot-time step. See `docs/regime-methodology.md` for thresholds.
-
-
-## Observe collection and Blur
-
-Observe excludes signing identities and never starts the canary or anchor sender.
-The host service template in `deploy/alight-observe.service` retries failed
-startup after 30 seconds; its 12-start/300-second limit tolerates a temporary
-RPC/DNS outage without exhausting a rapid restart burst. The workbench and API
-report upstream freshness separately from service availability.
-The optional Blur worker defaults on when a read token is configured;
-`ALIGHT_BLUR_ENABLED=false` disables it. It discovers up to three pools with
-at least $100,000 reported TVL, keeps one pool-filtered socket, and bounds each
-price series to 300 seconds / 10,000 trades. Initial REST history is three trades
-per pool. Current economics also require a fresh observer and measured slot
-clock. Gaps and regime changes prevent bridging old price evidence; stale or
-sparse data preserves probability-only quotes.
-
-HTTP 401/402/403 discovery failures retry after 300 seconds; other discovery
-failures after 60 seconds. These indicate unavailable evidence, not a stopped
-service or healthy collection. Restore the account's read access before
-expecting fresh streams. Restart the observe service after changing local keys.
-No provider token or authenticated URL should be copied into logs or reports.
-
-For a finite, read-only 48-hour local soak, install
-`deploy/alight-stability.service` in the user systemd directory and start
-`alight-stability.service`. Progress and samples stay in `.alight/stability/`.
-The monitor checks the API, served Workbench document and retained canary IDs;
-it cannot sign or send. It records unavailable endpoints, unhealthy collection,
-missing canaries and sampling gaps for review. A passing sampled run is not a
-security certification or proof that no brief interruption occurred between
-samples. Keep the computer awake; restarting the monitor preserves its deadline
-and failures. Archive its local state before explicitly starting a new run.
-Observer freshness is evaluated after reading observer state, so a frame received
-during a health request cannot appear future dated. Genuine future timestamps
-remain stale. Metadata cleanup logs only row counts and elapsed milliseconds for
-batches taking at least 500 ms, to diagnose API delays without logging payloads.
-
-The bounded 12 October Live validation is recorded in
-[`data/live-prove-validation.json`](../data/live-prove-validation.json): a frozen
-60.8% four-slot RPC claim, 30 successes among 40 held-out members, CONSISTENT,
-with finalized fee and wallet reconciliation. It is a functional check of one
-configuration; the receipt retains the warm-up cursor limitation and pending
-48-hour stability review. Unattended collection was restored to Observe.
-
-The 12 October dependency review updated rustls to 0.23.45 for
-[GHSA-2mjx-qc3c-rqvc](https://github.com/rustls/rustls/security/advisories/GHSA-2mjx-qc3c-rqvc).
-The lockfile audit still reports unpatched `rsa` (RUSTSEC-2023-0071), but
-`cargo tree --edges normal,build --target all -i rsa` has no active dependency
-path in this SQLite build. `bincode` 1.3.3 is flagged as unmaintained; it remains
-part of the existing Solana transaction wire format. These findings are retained,
-not suppressed, and dependency auditing must be repeated before public release.
+The [security receipt](../data/hardening-security-validation.json) records the
+12 October rustls fix, retained `rsa`/`bincode` notices and bounded boundary checks.
+It is dated evidence, not certification. Repeat dependency auditing before
+release. The [Live Prove receipt](../data/live-prove-validation.json) retains the
+warm-up cursor qualification and pending 48-hour review; completed functional
+checks do not establish an uninterrupted long run.

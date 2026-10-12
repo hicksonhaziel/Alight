@@ -16,6 +16,7 @@ import {
   percent,
   routeNames,
   regimeName,
+  proveMemberDisplay,
 } from "../format";
 import { loadBundle } from "../ledger";
 import {
@@ -130,7 +131,14 @@ export function Prove({
     }
   };
   const prediction = forecast?.forecast.quote.recommendation;
-  const currentMembers = members && members.runId === reportId ? members.rows : null;
+  const currentMembers =
+    members && members.runId === reportId ? members.rows : null;
+  const displayedMembers =
+    report &&
+    currentMembers?.map((sample) => ({
+      sample,
+      ...proveMemberDisplay(sample, report.lock.target, report.as_of_utc),
+    }));
   return (
     <>
       <Header
@@ -207,7 +215,7 @@ export function Prove({
                   {percent(report.observed_rate)}
                 </div>
                 <p>
-                  {report.successes} successes / {report.resolved} resolved ·{" "}
+                  {report.successes} met target / {report.resolved} resolved ·{" "}
                   {report.unresolved} unresolved
                 </p>
                 {report.wilson_interval_95 ? (
@@ -265,24 +273,28 @@ export function Prove({
                   <Loading shape="summary" text="Loading canary members…" />
                 )
               ) : currentMembers.length ? (
-                currentMembers.map(({ canary: c, finalized }, i) => (
-                  <a
-                    key={c.id}
-                    href={`#health/${encodeURIComponent(c.id)}`}
-                    className={`member ${finalized && c.outcome === "LANDED_OK" ? "landed" : finalized && c.outcome && c.outcome !== "UNRESOLVED" ? "failed" : "pending"}`}
-                    title={`${i + 1} · ${c.id} · ${c.outcome ?? "PENDING"}`}
-                    aria-label={`Member ${i + 1}, ${c.outcome ?? "PENDING"}, inspect evidence`}
-                  >
-                    <span>{i + 1}</span>
-                    <strong>
-                      {c.outcome === "LANDED_OK" && finalized
-                        ? "✓"
-                        : finalized && c.outcome !== "UNRESOLVED"
-                          ? "×"
-                          : "○"}
-                    </strong>
-                  </a>
-                ))
+                displayedMembers?.map(
+                  ({ sample: { canary: c }, state, label }, i) => (
+                    <a
+                      key={c.id}
+                      href={`#health/${encodeURIComponent(c.id)}`}
+                      className={`member ${state === "met" ? "landed" : state === "late" ? "late" : state === "adverse" ? "failed" : "pending"}`}
+                      title={`${i + 1} · ${c.id} · ${label}`}
+                      aria-label={`Member ${i + 1}, ${label}, inspect evidence`}
+                    >
+                      <span>{i + 1}</span>
+                      <strong>
+                        {state === "met"
+                          ? "✓"
+                          : state === "late"
+                            ? "↗"
+                            : state === "adverse"
+                              ? "×"
+                              : "○"}
+                      </strong>
+                    </a>
+                  ),
+                )
               ) : (
                 <Empty
                   title="No members yet"
@@ -290,10 +302,27 @@ export function Prove({
                 />
               )}
             </div>
+            {displayedMembers && displayedMembers.length > 0 && (
+              <p className="panel-note">
+                {displayedMembers.filter((m) => m.state === "met").length} met
+                target ·{" "}
+                {displayedMembers.filter((m) => m.state === "late").length}{" "}
+                landed late ·{" "}
+                {displayedMembers.filter((m) => m.state === "adverse").length}{" "}
+                adverse ·{" "}
+                {displayedMembers.filter((m) => m.state === "pending").length}{" "}
+                pending / unresolved. Timing and execution are separate; inspect
+                a member for its execution outcome.
+              </p>
+            )}
             <div className="dot-legend">
               <span>
                 <i className="landed" />
-                Finalized success
+                Met landing target
+              </span>
+              <span>
+                <i className="late" />
+                Landed after target
               </span>
               <span>
                 <i className="failed" />
@@ -308,7 +337,9 @@ export function Prove({
           <Notice>
             {report.lock.source === "sim"
               ? `SIMULATED · seed ${report.lock.seed}. No chain transactions were sent.`
-              : "Live members are sent only through the durable budget governor."}{" "}
+              : report.lock.source === "replay"
+                ? "REPLAY · recorded evidence. Replay sends no chain transactions."
+                : "Live members are sent only through the durable budget governor."}{" "}
             An inconclusive or unfavorable result remains visible.
           </Notice>
           <a className="button primary" href="#ledger">

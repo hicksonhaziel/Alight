@@ -1,11 +1,22 @@
 # Alight contracts v1
 
-## Phase 3 API and Prove contracts (3.6–3.7)
+Use the served `/v1/openapi.json` or checked-in [SDK OpenAPI](../sdk/ts/openapi.json)
+for complete machine-readable schemas. This reference explains behavior, evidence
+rules and compatible migrations; it does not change registered analysis bytes.
+
+[API](#rest-websocket-and-prove) · [Wire types](#shared-wire-types) ·
+[Persistence](#persistence-and-observer-daemon) · [Sending](#governed-send-pipeline) ·
+[Models](#models-and-simulation) · [Forecasts](#forecasts-grading-and-signal) ·
+[Workbench](#workbench-reads) · [Diagnostics](#diagnostics-and-webhook-ingress) ·
+[Receipts](#wallet-receipts)
+
+## REST, WebSocket and Prove
 
 `alight-api` serves the routes below. `alightd --mode sim` runs them without
 provider configuration or signing keys; operator HTTP writes still require an
-API bearer key. Live Prove queues the existing governed sender. Its funded live
-acceptance remains open. Schema contract tests validate actual REST/WS captures.
+API bearer key. Live Prove queues the governed sender; the bounded
+[12 October validation](../data/live-prove-validation.json) completed N=40 for one
+RPC configuration. Schema contract tests validate actual REST/WS captures.
 
 `GET /v1/quote?request=JSON` previews a `QuoteServiceRequest` without a database
 write; authenticated `POST /v1/quote` freezes it and returns `ForecastEntry`.
@@ -22,7 +33,7 @@ counts, observed rate, Wilson 95% interval and CONSISTENT/INCONSISTENT/INCONCLUS
 Only linked held-out attempts count. They never enter owned training queries;
 the claim never refits. A regime change voids the run; expiry stops new sends
 without converting pending transactions into failures. Unknown prepared sends
-are resolved after restart, never rebroadcast. See `docs/prove-methodology.md`.
+are resolved after restart, never rebroadcast. See [Prove methodology](prove-methodology.md).
 
 Public REST and WebSocket reads are bounded and rate-limited. Writes require
 `Authorization: Bearer <ALIGHT_OPERATOR_KEY>`; secrets never appear in query
@@ -56,8 +67,10 @@ Quote POST requires a current regime and timestamp within 30 seconds; future
 requests and cross-source requests are rejected. Unsupported evidence remains
 an insufficient quote. Sim preserves its experiment clock across restart.
 
-The shared Rust types in `crates/alight-types/src/contracts.rs` freeze the
-Phase 0 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries.
+## Shared wire types
+
+The shared Rust types in `crates/alight-types/src/contracts.rs` define the
+v1 wire shapes. `CONTRACT_VERSION = 1`. The collector persists events and canaries.
 Call `validate()` at API boundaries; serde decoding alone is not validation.
 
 | Enum | JSON values |
@@ -94,7 +107,7 @@ and size class. Example shape, **simulated configuration, not a measured send**:
 uniform-arm flag, regime id, sent slot, clock id, monotonic/UTC send time,
 optional signature, blockhash, last valid block height, next-leader classes,
 optional outcome/landed slot/block identity/index/index scope, observer first-seen map,
-and optional UTC resolution time. Only the future governed canary engine may
+and optional UTC resolution time. Only the governed canary engine may
 produce signed attempts. Expiry requires **block height strictly greater than**
 the last valid block height and signature absence at the required commitment.
 A timeout cannot establish an outcome.
@@ -124,7 +137,8 @@ must be finite and nonnegative. A recommendation records config, region,
 observation window, probability/95% interval, optional p50/p90/p99 latency in ms,
 positive effective sample count, evidence, and nonnegative age in seconds.
 Validation checks interval ordering, finite numbers, route/size agreement and
-quantile ordering. Evidence classification/calibration require later models.
+quantile ordering. Models enforce evidence classification; shape validation alone
+does not establish calibration.
 
 `QuoteResponse` carries version, source, quote id, echoed request, current regime
 (id, measured slot ms, since UTC), evidence, recommendation or samples needed,
@@ -144,7 +158,7 @@ requires positive `samples_needed`, and prohibits economics. Example shape,
 
 Economics records conditional expected USD cost, explicit assumptions, age, and
 staleness. Shape validation does not prove public keys, ledger integrity,
-calibration or honest evidence: later adapters, models and resolver enforce them.
+calibration or honest evidence: adapters, models and the resolver enforce them.
 
 ## Adjustments established by real payloads
 
@@ -161,11 +175,11 @@ calibration or honest evidence: later adapters, models and resolver enforce them
 - Current full-block RPC requests with max transaction version 0 returned
   -32015, requiring version 1. A retry with version 1 decoded a 598-transaction
   block (157 version-1 transactions); another retry failed at the network layer.
-  Future full-block adapters must support version 1 and preserve decode errors.
+  Full-block adapters support version 1 and preserve decode errors.
 - Mirage uses binary Yellowstone `SubscribeUpdate` on a saved subscription
   WebSocket. Byte fields become base64 in protobuf JSON; decode signature bytes
   to base58 when normalizing. Ping/control frames are not transactions.
-  Long-run heartbeat cadence and reconnect gaps remain unmeasured.
+  Reconnect gaps are persisted; a successful capture alone establishes no uptime guarantee.
 - HTTP webhook `X-Webhook-Signature` is lowercase hex HMAC-SHA256 over **exact
   request bytes**, keyed by the literal issued secret. The fixture contains only
   verified deliveries and body hashes. Raw bytes/signatures remain local.
@@ -179,10 +193,10 @@ calibration or honest evidence: later adapters, models and resolver enforce them
   Python integers and WebSocket `raw_json` are authoritative for normalization.
 
 Actual payloads are in `data/fixtures/`, with hashes in the Phase 0 receipt.
-Files marked live are historical captures, not active streams; a future replay
-adapter emits `source=replay` while retaining original provenance.
+Files marked live are historical captures, not active streams; observer replay
+emits `source=replay` while retaining original provenance.
 
-## Phase 3 economics contracts (tasks 3.1–3.3)
+## Market trades and conditional economics
 
 `MarketTrade` normalizes the captured Blur REST trades and authoritative WS
 `raw_json`: pool/base mint, source, slot, Unix-second block time, provider-scoped
@@ -191,8 +205,8 @@ price text and exact token quantities.
 REST mint identity comes from the requested pool metadata; WS supplies it.
 Replay always changes the source to `replay`. Connected/control frames cannot
 refresh pool data. Candle prices remain separate; minute candles never supply
-sub-second delay evidence. No database migration is required for this in-memory
-slice; persisted economics/quote integration follows in task 3.5.
+sub-second delay evidence. These normalized trades feed in-memory series; persisted quote snapshots
+use migration 0006 as described below.
 
 `DelayCostSnapshot` reports the rolling window, measured slot duration in ms,
 trade/slot counts, market age, stale/sparse flags, and points with median/p90
@@ -219,7 +233,7 @@ Example normalized historical trade (abridged quantities):
 {"source":"replay","pool":"EgUV2hrWfsgfFyftxCx4ut82811ygWFbWYNPdv3cRWQA","mint":"CTMV7yXV1mpucM7svPEtmVFBB8g6hqHGVPczmbYrj9Jb","slot":"453068193","block_time_unix_s":1791066584,"tx_index":260,"ix_index":3,"inner_ix_index":3,"price_usd":"0.00013739913814689506","base_amount":"145561320614819","base_reserve":"210847950099700846"}
 ```
 
-## Phase 3 passive tape and persisted quotes (3.4–3.5)
+## Passive tape and persisted economic quotes
 
 `PassiveTransaction` is a bounded normalized Yellowstone transaction subset:
 resolved static+loaded account keys, compiled outer/inner instructions, actual
@@ -248,39 +262,7 @@ source/regime/pool-scoped and checked for freshness. Example tape row:
 {"source":"sim","observer":"grpc","signature":"synthetic-signature","slot":"1000","block_id":null,"index_in_block":"5","index_scope":"provider_reported","recipient":"synthetic-recipient","tip_lamports":"0","requested_tip_lamports":"100000","fee_lamports":"5000","cu_price_micro_lamports":"0","cu_limit":20000,"success":false,"received":{"clock_id":"sim-clock","mono_ns":"1000","wall_utc":"2026-10-05T00:00:00Z"}}
 ```
 
-## Migration from the local brief
-
-No database or public API is deployed, so no data migration exists yet.
-Compared with the starting shapes, `recv_mono_ns` becomes nested `received`,
-`observer_first_seen_ns` becomes `observer_first_seen`, and every clock has an
-identity/UTC reference. Quotes explicitly include size class; 64-bit wire numbers
-become strings. Index scope is mandatory on observations and retained on resolved
-canaries. Phase 1 storage must persist these fields and separate unknown
-block slot events from keyed candidate blocks; the brief's nullable composite
-primary key is not a completed persistence design.
-
-## Phase 1 persistence additions (4 October)
-
-`BlockMetaEvent` retains the candidate block id, parent identity, chain timestamp
-in Unix seconds, optional height/transaction count, receive clock, source and raw
-reference. `IngestEvent` tags slot, observation and block metadata records.
-`RunMode` distinguishes observe/live/sim/replay. `BudgetLimits` and
-`BudgetReservation` use exact lamport/ms strings and record route/source/day.
-These are additive shared contracts; the existing v1 shapes stay compatible.
-
-Migration `crates/alight-store/migrations/0001_observe.sql` adds WAL persistence.
-Known-block and unknown-block keys are explicit non-null strings, so SQLite's
-NULL uniqueness rules cannot collapse or duplicate forks. Slot columns use
-20-digit zero padding internally for lossless numeric ordering; wire JSON still
-uses ordinary decimal strings. First receive times are retained on duplicates.
-Evidence, events and receive cursors commit atomically. Evidence hashes address
-captured provider-field JSON subsets, not original protobuf bytes; wire digests
-can be retained inside that subset. The store rejects mismatched references.
-Restart gaps are recorded from previous observer receive times. A missing or
-ambiguous block identity stays unknown; raw observations are never overwritten
-when a unique same-observer candidate is used during resolution.
-
-## Phase 1 persistence and observer daemon
+## Persistence and observer daemon
 
 Migration `0001_observe.sql` adds SQLite WAL runs, evidence, slot events, candidate
 blocks, observations, observer cursors, gaps, canaries, resolution history, and
@@ -302,11 +284,11 @@ Example normalized event (replay):
 {"kind":"block_meta","data":{"slot":"453062837","block_id":"AtrHDcMBCCaWf91ZzMRg1JPoBzD34nfGx3aKKoA7FLvu","parent_slot":"453062836","parent_block_id":null,"block_time_unix_s":1791065153,"block_height":"431101321","executed_transactions":"1045","received":{"clock_id":"fixture","mono_ns":"252072361","wall_utc":"2026-10-03T22:05:53.951Z"},"source":"replay","raw_ref":"sha256:captured-subset-hash"}}
 ```
 
-The daemon currently accepts `observe` and offline `replay`. Observe never loads
-a signing identity. Its loopback-only `/v1/health` and `/v1/clock` endpoints share
-a 10-request/s limit. Health distinguishes durable data freshness from merely
-having an open connection. Provider slot replay is disabled unless explicitly
-configured; unsupported replay falls back to a durable gap and live subscription.
+The daemon accepts `observe`, `live`, `sim` and `replay`. Observe never loads a
+signing identity. All public endpoints share the limits described above. Health
+distinguishes durable data freshness from merely having an open connection.
+Provider slot replay is disabled unless explicitly configured; unsupported replay
+falls back to a durable gap and live subscription.
 
 ## Budget and resolution evidence
 
@@ -316,7 +298,8 @@ reservation includes UTC epoch milliseconds, UTC day, source, route, and unique
 ID. SQLite checks the day against the timestamp, aggregates every route, rejects
 backward clocks and duplicate IDs, and retains uncertain spend across restarts.
 Example: `{"id":"simulated-reservation","source":"sim","route":"rpc","day":"2026-10-04","created_ms":"1791108000000","lamports":"5000"}`.
-Observe/replay cannot receive a governor permit. No signer or sender exists yet.
+Observe/replay cannot receive a governor permit. Signing and sending remain
+exclusive to `alight-canary`.
 
 `ResolutionEvidence` contains observations, optional `RpcCheck`, canonical block
 membership, and a typed explicit route rejection. RPC proof names the exact
@@ -348,7 +331,7 @@ subsets and outcome changes, and reloads pending records after restart.
 The clock excludes conflicting candidate timestamps and DEAD slots, and reports
 observed candidate-parent skips separately from a finalized network skip rate.
 
-## Phase 1 send pipeline
+## Governed send pipeline
 
 The canary engine builds legacy transactions with integer compute limits, integer
 CU prices, a memo, and an explicit published tip recipient. Small/Medium/Large
@@ -428,7 +411,7 @@ receive times and transient raw evidence for bounded cleanup. It retains all
 transaction observations, permanent proof bundles, and any block candidate
 referenced by an owned canary. Existing raw evidence defaults to permanent.
 
-## Phase 2 model and simulation foundation
+## Models and simulation
 
 Additive v1 types: `TrainingCanary` wraps the unchanged Canary schema plus an
 explicit `finalized` boolean. Only owned source-filtered canaries enter training;
@@ -443,7 +426,7 @@ share, latest eligible data age in seconds and eligible send window. All amount
 fields follow existing decimal-string conventions. `INSUFFICIENT` retains the
 posterior as a diagnostic, includes samples_needed and explicit reasons, and does
 not authorize a recommendation. M0 emits only MEASURED or INSUFFICIENT. Interpolation
-and extrapolation require later pooled estimators. See
+and extrapolation are provided by pooled estimators. See
 [registered methodology](methodology.md) for precise endpoint and eligibility rules.
 
 Example shape (the actual registered hash and numeric output are in
@@ -456,9 +439,9 @@ Example shape (the actual registered hash and numeric output are in
 Migration `0004_curve_snapshots.sql` adds source/regime-filtered history with UTC
 epoch milliseconds, methodology hash, full JSON and SHA-256 content ID. Identical
 inserts are idempotent. Reads verify stored payload bytes against the ID. This is
-curve history; the forecast hash chain is a separate, later Phase 2 component.
-The offline commands use a separate database and do not migrate the paused live
-database. Periodic daemon snapshots remain to be integrated.
+curve history; the forecast hash chain is stored separately as described below.
+Offline commands use an explicitly selected database. Observe/Live periodically
+write source-scoped curve snapshots from retained owned training evidence.
 
 `alight sim` writes a deterministic report with source=sim, explicit environment
 parameters, normal Canary records, artificial ground-truth probabilities, exact
@@ -468,7 +451,7 @@ snapshots and rejects disagreement or methodology-version drift. Replay executio
 preserves the dataset's original sim source rather than relabeling synthetic
 evidence as live. Shared JSON enables exact float round trips for reproducibility.
 
-## Phase 2 forecasting contracts
+## Forecasts, grading and Signal
 
 `TrainingCanary.covariates` is an additive field with unknown defaults. Congestion
 is dimensionless in [0,5], and absent values remain unknown. Simulator parameters
@@ -549,7 +532,7 @@ used by `rpc`; the latter carries no Beam tip. The enum values stay unchanged,
 including historical simulation and forecast records. They identify experimental
 submission treatments, not independent HTTP endpoints. QUIC remains separate.
 
-Phase 3 clients share `alight-types` in Rust and generated OpenAPI-derived types
+Clients share `alight-types` in Rust and generated OpenAPI-derived types
 and runtime schemas in TypeScript. Rebuild contracts with `cargo run -p alight-api
 --example openapi --locked > sdk/ts/openapi.json`, then `npm --prefix sdk/ts run
 generate`; CI compares the Rust export and generated files. TypeScript money and
@@ -561,7 +544,7 @@ No provider/wallet key is an SDK contract.
 UTC `day`, decimal-string `verified_through_sequence` and `entries`. Example:
 `{"schema_version":1,"source":"sim","day":"2026-10-05","kind":
 "forecast_ledger_export","verified_through_sequence":"0","entries":[]}`.
-This is a date-filtered forecast subset, not the full Phase 6 dataset.
+This is a date-filtered forecast subset, not the full daily dataset.
 
 `Alert` v1 carries id/source, `ROUTE_DEGRADATION|OBSERVER_DISAGREEMENT|REGIME_CHANGE|
 QUOTE_DRIFT|BUDGET`, subject, UTC time, fixed summary and rule-specific sanitized
@@ -572,7 +555,7 @@ For example, an induced budget event has source `sim`, rule `BUDGET`, subject
 `daily_budget` and details `{"reserved_lamports":"90","daily_cap_lamports":
 "100","threshold_fraction":0.9}`. Chat formatters do not interpret mentions.
 
-## Phase 4 workbench reads
+## Workbench reads
 
 The generated OpenAPI contract now includes four public, source-scoped reads.
 They use the existing request/concurrency bounds and never call a provider or
@@ -616,7 +599,7 @@ and declared-head mismatches fail verification. This establishes integrity of
 the downloaded chain; an uploaded file's self-declared head is not external
 provenance. Independent publication/anchoring and frozen-model verification
 remain separate checks.
-## Phase 5 diagnostics
+## Diagnostics and Webhook ingress
 
 `GET /v1/diagnostics` returns a bounded `DiagnosticsPage` for the server's source.
 It reads a saved snapshot and never starts a provider stream, signs, sends, or
@@ -651,7 +634,7 @@ Unknown block/index identity remains absent. Valid unowned signatures return
 `IGNORED_UNOWNED`; stored evidence returns `ACCEPTED`. The captured `succeeded`
 status establishes success; uncaptured status values stay unknown. Provider
 webhook registration is an independent operator action, not automatic startup.
-# Wallet receipts (v1)
+## Wallet receipts
 
 `WalletHistoryCapture` is an Alight replay envelope, not a Solami Data API
 payload. It holds at most 1,000 normalized `PassiveTransaction` records for one
@@ -706,6 +689,8 @@ or pagination, and a global 30-second cooldown including failed jobs. Provider
 failure is 503, busy/cooldown is 429, not an empty successful report. Existing
 read-only authentication/rate limits and signing-disabled Observe behavior apply.
 
+## Public datasets and ledger anchors
+
 Static `DatasetCatalog` and `DatasetManifest` schemas describe reviewed public
 `/datasets/index.json` and `/datasets/{id}/manifest.json`. They declare each
 download's source independently of the active API. Daily CSV/Parquet schemas
@@ -732,4 +717,5 @@ Example event: `{"reservation_id":"anchor-...","at_utc":"2026-10-10T00:00:00Z","
 `GET /v1/ledger/anchors` lists at most 100 same-source records. Observe never
 starts this sender. The standalone CLI requires explicit mainnet opt-in and
 uses the configured collector database for shared spend accounting.
-[Anchoring](anchoring.md) documents the governed controls and pending mainnet acceptance.
+[Anchoring](anchoring.md) documents the governed controls and the verified Sim
+mainnet fingerprint; that anchor does not cover the later Live ledger.

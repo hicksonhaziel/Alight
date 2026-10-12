@@ -8,19 +8,28 @@ timestamps are comparable only within the recorded process clock identity.
 
 Beam HTTP and plain RPC use the configured Solami RPC endpoint; tipped versus
 untipped is a workload distinction, not evidence of independent HTTP backends.
-QUIC is separate. Five owned canaries finalized across RPC, Beam QUIC and
-Beam HTTP in the bounded 12 October pilot; this does not calibrate route
-performance. Live N=40 Prove and complete four-observer agreement remain
-unverified. A two-entry Sim ledger fingerprint finalized on mainnet, preserving
-its synthetic source and without establishing an earlier forecast issue time.
+QUIC is separate. The bounded 12 October pilot finalized owned canaries across
+RPC, Beam QUIC and Beam HTTP; this does not calibrate route performance. A later
+[Live N=40 Prove](../data/live-prove-validation.json) tested one Small RPC Memo
+configuration with zero tip/priority fee: the frozen 60.8% four-slot claim was
+CONSISTENT with 30/40 on-time landings (75%, Wilson 95% interval 59.8–85.8%).
+Seven other members landed later and three expired. This is functional validation
+of one configuration, not broad calibration or swap efficacy. The lower minimum
+request was chosen before the forecast/lock, and four early warm-up sends had
+delayed cursors; the receipt retains both qualifications. Complete four-observer
+agreement remains unverified. A two-entry Sim ledger fingerprint finalized on
+mainnet, preserving its synthetic source and without establishing an earlier
+forecast issue time. The later Live head is not covered by that Sim anchor.
 Observe collection reads network and market data without signing or sending.
 Observe-only records are not owned canary outcomes.
 
 Missing observations remain unknown. A timeout is never expiry. Proven expiry
 requires passed last-valid block height and covered commitment-level RPC
 absence; conflicting candidates retain block identity and disagreement evidence.
-The live Webhook callback has verified signed public-control delivery, which
-the API ignored as unowned. Owned-canary push coverage is still unverified.
+The live Webhook callback has [verified owned-canary delivery](../data/webhook-owned-validation.json),
+including HMAC verification and persisted observations. Earlier public-control
+deliveries were correctly ignored as unowned. This proves push ingestion for
+those deliveries, not complete observer coverage.
 Webhook/index coverage may prevent complete observer agreement. Observer lag
 alone cannot establish a network regime change. Historical steps demonstrated
 in simulation do not establish mainnet upgrades or Alpenglow activation.
@@ -30,6 +39,10 @@ and X2/X10 tiers. Lean-only records cannot support the registered four-tier
 Beam Signal analysis. Do not mix profile populations without checking the
 analysis and propensities. Effective n is discounted resolved evidence, not
 raw traffic or prior counts. Small samples and stale data refuse a recommendation.
+Observe reads do not refresh owned canary support: training evidence decays with
+a one-hour half-life, requires effective mass at least 30 and a qualifying send
+within five minutes. A completed frozen Prove remains historical evidence after
+its current training cell becomes insufficient.
 Null/FLAT/INCONCLUSIVE Signal and unfavorable Prove verdicts remain visible.
 Forecasts crossing regime changes are voided through append-only grades.
 

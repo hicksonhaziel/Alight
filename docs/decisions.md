@@ -1,5 +1,10 @@
 # Decisions
 
+This is a chronological record. Statements about funding, paused collection or
+pending implementation describe their dated entry; later entries and the
+[operations guide](operations.md) describe subsequent behavior. Exact registered
+analysis documents and historical receipts remain unchanged.
+
 ## 2026-10-03: Submission cutoff
 
 The official [listing](https://superteam.fun/earn/listing/build-something-live-on-solana-data)
@@ -230,9 +235,9 @@ implemented adapters, persistent storage and a tested restart-safe resolver.
 G0, funded route checks and the 50–100 canary pilot remain unfunded. No deployment
 host was supplied, so task 0.11's deployment RTT/region acceptance is deferred;
 local elapsed times must not be relabeled as deployment measurements. A support
-request is prepared in `docs/support-request.md` but has not been sent: sending
-a message requires explicit owner authorization. No credit, rebate, judge-key
-arrangement, renewal or reply has been assumed.
+request was prepared locally but not sent. The obsolete draft was removed during
+documentation cleanup; no credit, rebate, judge-key arrangement, renewal or reply
+was assumed from it.
 
 ## Phase 1 route and local deployment checks — 4 October 2026
 
@@ -292,3 +297,27 @@ inside alight-canary. There is no anchor broadcast endpoint. Periodic governed
 mainnet sends and explorer verification remain pending; no mainnet anchor is
 claimed. Exported owned datasets use CC BY 4.0 by reference; private wallet
 captures are excluded from publication.
+
+## 12 October 2026 — funded validation and evidence boundaries
+
+The dedicated wallet was funded, and a bounded pilot established owned finalized
+landings through RPC, Beam QUIC and tipped HTTP. A subsequent
+[Live Prove](../data/live-prove-validation.json) froze one Small RPC configuration
+before 40 held-out attempts: a 60.8% four-slot claim, 30 on-time landings and a
+59.8–85.8% Wilson interval, yielding CONSISTENT. Seven additional members landed
+later and three expired. Held-out members remain excluded from training. The
+receipt discloses the prospectively lowered minimum request and early warm-up
+cursor limitation; this is functional validation, not broad route calibration.
+
+[Owned Webhook delivery](../data/webhook-owned-validation.json) now verifies
+provider push → exact-body HMAC → persisted owned observation. It does not
+establish complete four-observer block agreement. A
+[two-entry Sim fingerprint](../data/anchors/sim-ledger-mainnet.json) finalized on
+mainnet for 5,000 lamports; it remains synthetic and does not anchor the later
+Live ledger. The bounded Data API/RPC receipt adapter is implemented with
+coverage limits described in [wallet receipts](receipts.md).
+
+The completed validation restored Observe. Long-run stability remains a separate
+measured acceptance, and public claims must follow the actual recorded window.
+During final documentation review, obsolete support and demo-script drafts were
+removed; registered analysis documents and historical receipts were preserved.

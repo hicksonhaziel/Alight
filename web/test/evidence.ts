@@ -1,8 +1,82 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { sol, nominal, sendToSeenMs } from "../src/format.ts";
+import {
+  sol,
+  nominal,
+  sendToSeenMs,
+  proveMemberDisplay,
+} from "../src/format.ts";
 import { verifyBundle } from "../src/verification.ts";
-import type { CanaryConfig, DecimalU64 } from "../../sdk/ts/src/types.ts";
+import type {
+  CanaryConfig,
+  DecimalU64,
+  TrainingCanary,
+} from "../../sdk/ts/src/types.ts";
+
+test("Prove member timing distinguishes on-target, late, adverse and unresolved outcomes", () => {
+  const sample = {
+    finalized: true,
+    canary: {
+      outcome: "LANDED_OK",
+      sent_slot: "9007199254740993000",
+      landed_slot: "9007199254740993004",
+      resolved_at_utc: "2026-10-12T15:17:00Z",
+      clock_id: "send",
+      send_mono_ns: "9007199254740993000",
+      observer_first_seen: {},
+    },
+  } as TrainingCanary;
+  const target = {
+    kind: "probability",
+    target_p: 0.6,
+    horizon_slots: 4,
+  } as const;
+  const asOf = "2026-10-12T15:18:00Z";
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "met");
+  sample.canary.landed_slot = "9007199254740993005" as DecimalU64;
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "late");
+  sample.canary.outcome = "LANDED_FAILED";
+  assert.match(proveMemberDisplay(sample, target, asOf).label, /LANDED_FAILED/);
+  sample.canary.landed_slot = "9007199254740993004" as DecimalU64;
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "met");
+  sample.canary.outcome = "EXPIRED";
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "adverse");
+  sample.finalized = false;
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "pending");
+  sample.finalized = true;
+  assert.equal(
+    proveMemberDisplay(sample, target, "2026-10-12T15:16:00Z").state,
+    "pending",
+  );
+  sample.canary.outcome = "UNRESOLVED";
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "pending");
+});
+
+test("Prove millisecond targets require comparable clocks and retain boundary precision", () => {
+  const sample = {
+    finalized: true,
+    canary: {
+      outcome: "LANDED_OK",
+      sent_slot: "10",
+      landed_slot: "11",
+      resolved_at_utc: "2026-10-12T15:17:00Z",
+      clock_id: "send",
+      send_mono_ns: "1000000",
+      observer_first_seen: { grpc: { clock_id: "other", mono_ns: "2000000" } },
+    },
+  } as TrainingCanary;
+  const target = {
+    kind: "latency_quantile",
+    quantile: 0.9,
+    max_ms: 1,
+  } as const;
+  const asOf = "2026-10-12T15:18:00Z";
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "pending");
+  sample.canary.observer_first_seen.grpc!.clock_id = "send";
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "met");
+  sample.canary.observer_first_seen.grpc!.mono_ns = "2000001" as DecimalU64;
+  assert.equal(proveMemberDisplay(sample, target, asOf).state, "late");
+});
 
 test("chain amounts retain full u64 precision and priority fees round upward", () => {
   assert.equal(sol("18446744073709551615", 9), "18446744073.709551615");

@@ -59,4 +59,5 @@ against the retained two-entry ledger and finalized transaction bytes. This
 commits synthetic evidence at anchoring time; it does not turn Sim into Live
 data or prove that the forecasts preceded their simulated outcomes. The Ledger
 downloads show the source-labeled sample link separately from the current Live
-head. Periodic anchoring remains off; the collector remains in Observe.
+head. This validation did not enable periodic anchoring; afterward, the collector
+returned to Observe. Later Live sessions require their own bounded controls.

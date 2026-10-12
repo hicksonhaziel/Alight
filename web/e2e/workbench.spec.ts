@@ -142,6 +142,18 @@ test("real Sim quote → frozen claim → forty held-out members → browser led
   expect(report.attempts).toBe(40);
   expect(report.resolved).toBe(40);
   await expect(page.locator(".prove-members .member")).toHaveCount(40);
+  await expect(page.locator(".prove-members .member.landed")).toHaveCount(
+    report.successes,
+  );
+  await expect(page.locator(".prove-members .member.pending")).toHaveCount(
+    report.unresolved,
+  );
+  await expect(
+    page.locator(".prove-members .member.late, .prove-members .member.failed"),
+  ).toHaveCount(report.resolved - report.successes);
+  await expect(page.locator(".result-body")).toContainText(
+    `${report.successes} met target / ${report.resolved} resolved`,
+  );
   await expect(page.locator(".verdict-row")).toContainText(report.verdict);
   await page.screenshot({
     path: "../.alight/phase5/prove-dark.png",

@@ -1,190 +1,136 @@
 # Alight
 
-Alight measures Solana canary landing, issues evidence-aware quotes, freezes
-claims for held-out Prove runs, and keeps an immutable forecast ledger. It uses
-Solami data and compares outcomes across observers. The workbench shows
-uncertainty, source, sample size, age and unfavorable verdicts.
+**Measure Solana transaction landing. Freeze a forecast. Check the proof.**
 
-Sim/Replay are verified offline. Observe collects data without sending
-transactions; fresh gRPC/Mirage observations and Blur market snapshots were
-verified on 10 October 2026. A bounded 12 October pilot finalized five owned
-canaries across RPC, Beam QUIC and Beam HTTP, spending 0.000325 SOL with exact
-wallet reconciliation. This is submission evidence, not calibrated performance;
-complete four-observer agreement remains unverified. The published Sim ledger
-fingerprint was finalized on mainnet on 12 October, with a 5,000-lamport fee.
-The downloadable sample is **Sim**, not mainnet performance.
+[![CI](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml/badge.svg)](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml)
 
-## Quick start: no keys or wallet
+Alight turns Solami streams and budgeted mainnet canaries into landing quotes
+with uncertainty, held-out tests, and a verifiable forecast ledger. Every view
+distinguishes Live, Sim, and Replay evidence.
 
-Use the pinned Rust 1.96.1 toolchain, Node 22.22 or later, and Python 3.
+[Documentation](docs/README.md) · [Architecture](docs/architecture.md) ·
+[Public datasets](https://hicksonhaziel.github.io/Alight/) ·
+[Limitations](docs/limitations.md)
+
+![Alight Workbench showing real mainnet observations](docs/images/workbench-live.png)
+
+## What it does
+
+- **Observe:** measure the slot clock, compare gRPC/Mirage/RPC/Webhook evidence,
+  and inspect market tips and Blur data.
+- **Quote:** show landing probability, a 95% interval, effective sample count,
+  evidence age, and optional conditional delay costs. Refuse unsupported advice.
+- **Prove:** freeze a claim before sending held-out canaries; show on-time and
+  late outcomes and an honest verdict.
+- **Verify:** inspect the hash-chained forecast ledger, wallet receipts,
+  downloadable datasets, and mainnet memo commitments.
+
+## Run locally, without keys
+
+Requires the pinned **Rust 1.96.1**, **Node 22.22+**, and **Python 3**.
+Run these commands from the repository root:
 
 ```sh
 cargo build --locked -p alight -p alightd
-mkdir -p .alight/judge
-target/debug/alight doctor --mode sim
-target/debug/alight sim --phase2 --canaries 243 --seed 61 \
-  --database .alight/judge/sim.db --output .alight/judge/sim.json
-target/debug/alight ledger verify --database .alight/judge/sim.db --source sim
-target/debug/alight replay-model --input .alight/judge/sim.json \
-  --database .alight/judge/replayed.db --output .alight/judge/replayed.json
-```
-
-This small deterministic run demonstrates the schema/ledger and honestly
-reports insufficient cells. Use `--canaries 8100` for the larger model lifecycle
-example. Sim/model replay make zero provider requests or transaction sends.
-The owner completed this quick start in a separate clean checkout on 12 October:
-243 synthetic canaries, two verified forecasts and byte-identical model replay.
-See the [human setup check](data/human-quickstart-validation.json).
-
-Run the workbench in two terminals:
-
-```sh
-# Terminal 1: isolated synthetic evidence and API; no ENV or signing keys.
-target/debug/alight run --mode sim --seed 42 --sim-canaries 900 \
-  --sim-regimes true --db .alight/judge/workbench.db --bind 127.0.0.1:8080
-
-# Terminal 2
 npm --prefix web ci --ignore-scripts --no-audit --no-fund
+mkdir -p .alight/local
+
+# Terminal 1: synthetic evidence and the API; no network or transaction sends.
+target/debug/alight run --mode sim --seed 42 --sim-canaries 900 \
+  --sim-regimes true --db .alight/local/workbench.db --bind 127.0.0.1:8080
+
+# Terminal 2: the Workbench.
 npm --prefix web run dev
 ```
 
-Open `http://127.0.0.1:5173`; the source badge reads **SIMULATED**. For Sim
-quote/lock/Prove writes, create a local API operator-key file (at least 16
-characters), pass `--operator-key-file FILE` to the daemon, and enter the same
-API key in the workbench. This is an API control key, not a wallet key.
-The offline developer regression is `python3 scripts/test_phase3_developer.py`.
+Open [localhost:5173](http://localhost:5173). The badge reads **SIMULATED**.
+To lock forecasts and run synthetic Prove tests, configure a local API operator
+key as described in [operations](docs/operations.md). It is separate from a
+wallet key. [CLI and offline verification examples](docs/operations.md) cover
+deterministic model runs, Replay, and ledger checks.
 
-## Judge path: read access, no funded wallet
+## Connect your own Solami key
 
-Observe needs your own read key and dashboard RPC/gRPC endpoints, without a
-canary or SWQoS signing identity. Copy `.env.example` to `.env` only if no file
-exists. Set `SOLAMI_RPC_URL`, `SOLAMI_RPC_TOKEN` when required,
-`SOLAMI_GRPC_URL`, `SOLAMI_GRPC_TOKEN` (or `SOLAMI_API_KEY`), and
-`SOLAMI_DATA_API_URL` for the public tip-address metadata endpoint. Optional
-Mirage/Blur/Webhook permissions are separate; missing coverage stays visible.
+Copy [`.env.example`](.env.example) to `.env` if you do not already have one.
+Set your dashboard RPC/gRPC endpoints and read credentials. Start in Observe:
 
 ```sh
 target/debug/alight doctor --mode observe
-# Optional single bounded read-only RPC genesis check, no stream or sends:
-target/debug/alight doctor --mode observe --network
-# Start only when you intend to collect provider data:
-target/debug/alight run --mode observe --db .alight/judge/observe.db --run-for 30
-
-# Captured observer replay needs no key, wallet or network:
-target/debug/alight doctor --mode replay
-target/debug/alight run --mode replay \
-  --replay data/fixtures/mirage_transactions_sample.jsonl \
-  --db .alight/judge/observer-replay.db
+target/debug/alight run --mode observe --db .alight/local/observe.db
 ```
 
-Mode doctor reports prerequisites and never starts collection. Local presence
-does not establish stream access; observe `--network` checks one RPC method
-and leaves streams unchecked. General `doctor --network` is a larger read-only
-integration probe. Exit codes: 0 success, 1 failed check/verdict, 2 configuration/
-runtime error, 3 missing or inconclusive evidence where supported.
+Observe needs no funded wallet and sends no transactions. Mirage, Blur,
+Webhooks, and Data API permissions are configured separately; missing coverage
+stays visible. See [setup, environment variables, and live controls](docs/operations.md).
 
-## Live setup and costs
+| Mode | Evidence | Sends / cost |
+| --- | --- | --- |
+| `sim` | Seeded synthetic outcomes | No network, no SOL |
+| `replay` | Captured events or model runs | No sends, no SOL |
+| `observe` | Mainnet streams and read APIs | Provider usage; no sends |
+| `live` | Mainnet observations and owned canaries | Governed sends; spends SOL |
 
-Live mode can spend SOL. Configure a dedicated canary payer, authenticated
-routes and provider read access; keep secrets in the ignored `.env`. Never use
-a personal trading wallet. The sender requires reserve/balance gates, durable
-daily/burst reservations and available observer evidence. Only `alight-canary`
-signs/sends. To intentionally enable collection and governed sending later:
-`alight run --mode live --db data/alight.db`. No live start is part of the
-offline quick start.
+Live mode uses a dedicated payer, balance reserve, and durable daily/burst caps.
+A landed, untipped zero-priority RPC canary in the measured run paid **5,000
+lamports**; Beam canaries also paid the selected tip. Defaults and experiment
+mix can cost substantially more. [Understand the controls before enabling Live](docs/operations.md).
 
-Defaults: 0.20 SOL daily cap, 0.05 SOL burst cap, 120-second interval, 30%
-minimum uniform exploration, 81-cell `full` profile. Optional
-`ALIGHT_GRID_PROFILE=lean` explores 10 Small cells (X1/X5 Beam tips, Zero/
-LocalP90 fees); RPC stays untipped. Lean omits Medium/Large and X2/X10 and
-cannot support the registered four-tier Signal analysis alone.
+## How it fits together
 
-The [bounded pilot receipt](data/funded-pilot-validation.json) records two
-untipped RPC canaries and three 100,000-lamport Beam-tip canaries: 25,000
-lamports in finalized network fees plus 300,000 in executed tips. It returned
-to Observe with signing disabled; this five-canary sample cannot establish a
-landing probability or route-speed comparison.
+```mermaid
+flowchart LR
+    S["Solami streams + RPC"] --> O["Observe + resolve"]
+    C["Governed canaries"] -->|"Beam / RPC"| N["Solana mainnet"]
+    N --> S
+    O --> D[("SQLite WAL")]
+    D --> M["Models + regimes"]
+    B["Blur market data"] --> Q["Quote + frozen forecast"]
+    M --> Q
+    Q --> P["Held-out Prove + ledger"]
+    P --> D
+    D --> A["REST / WebSocket API"]
+    A --> W["Workbench + Rust / TS SDKs"]
+```
 
-A landed canary pays the executed tip plus the network fee; priority fee is in
-micro-lamports per CU. Assuming a 5,000-lamport base fee and zero priority fee,
-uniform mean nominal costs are 405,000 (`full`) / 245,000 (`lean`) lamports.
-At 720 sends/day that is 0.2916 / 0.1764 SOL **before priority fees**, assuming
-every send lands. These are planning arithmetic, not observed spend; adaptive
-mix and caps change rate. Failed execution pays fees while transfers roll back.
-Reservations are worst-case exposure, not balance reconciliation.
+Rust/Tokio runs the collector, models, and API; React/Vite serves the Workbench.
+Solami supplies gRPC, Mirage, RPC, Blur, Webhooks, Data API, and Beam's QUIC/HTTP
+submission routes. [Architecture and integration boundaries](docs/architecture.md)
+explain what each product does and what its evidence can establish.
 
-## Solami's work in Alight
+## Evidence you can inspect
 
-| Product | Implemented use and evidence limit |
+On **12 October 2026**, a frozen Live RPC forecast was tested against **40
+held-out Memo canaries**: **30/40** met its four-slot target. The observed rate
+was **75%**, with a Wilson 95% interval of **59.8–85.8%**; the verdict was
+**CONSISTENT** with the frozen 60.8% prediction.
+[The full receipt](data/live-prove-validation.json) retains the configuration,
+forecast hash, timing, finalized audit, and limitations.
+
+![Completed Live Prove showing the frozen prediction and held-out outcomes](docs/images/prove-live.png)
+
+Also inspect the [owned Webhook delivery](data/webhook-owned-validation.json),
+[human offline setup check](data/human-quickstart-validation.json), and
+[mainnet-anchored Sim ledger](data/anchors/sim-ledger-mainnet.json).
+The anchor and public sample dataset are **Sim**, not Live performance.
+
+These results validate a working measurement loop for the tested configuration.
+They do not establish swap performance, broad calibration, route rankings, or
+complete four-observer agreement. Live evidence decays; Observe alone does not
+keep a quote supported. The 48-hour check is still pending; its current window
+retains failures and requires review.
+
+## Go deeper
+
+| Need | Read |
 | --- | --- |
-| Beam (QUIC and HTTP) | Governed tipped submission; one QUIC and two HTTP canaries finalized in the bounded pilot. HTTP uses the Solami RPC endpoint, not an independent HTTP backend |
-| Yellowstone gRPC | Filtered primary observation, clock/block identity and tip tape |
-| Mirage | Secondary transport via captured Yellowstone-compatible frames |
-| RPC | Leaders, commitment/absence checks, block sampling, bounded read-only wallet history and untipped submission |
-| Blur | Observe/live worker discovers up to three liquid pools, subscribes with pool filters and stores bounded delay-cost snapshots; stale/sparse fallback |
-| Webhooks | Live wallet-only callback registered; signed public-control delivery verified and ignored as unowned. Owned-canary push coverage remains unverified |
-| Data API | Bounded wallet-trade index verified against finalized RPC fees; Live/Observe receipts are cached, and CLI captures remain Replay with partial coverage |
+| Setup, commands, budgets, troubleshooting | [Operations](docs/operations.md) |
+| API payloads, units, SDKs | [Contracts](docs/contracts.md) |
+| Estimators, outcomes, registered analysis | [Methodology](docs/methodology.md) |
+| Frozen tests and regime changes | [Prove](docs/prove-methodology.md) · [Regimes](docs/regime-methodology.md) |
+| Exports, receipts, commitments | [Datasets](docs/dataset.md) · [Receipts](docs/receipts.md) · [Anchoring](docs/anchoring.md) |
+| Scope, caveats, historical decisions | [Limitations](docs/limitations.md) · [Decisions](docs/decisions.md) |
 
-Quotes refuse unsupported recommendations and carry intervals, effective n,
-age, workload/route/region/window and evidence class. Dollar estimates assume
-the workload behaves like the measured canary class. Prove freezes the exact
-configuration and grades later linked outcomes; all verdicts stay visible.
-Regime changes append VOIDED grades without altering forecasts. A timeout is
-never a final outcome.
-
-## SDK, receipts, datasets and commitments
-
-Rust: `crates/alight-client`; TypeScript: `sdk/ts`. Build TS with
-`npm --prefix sdk/ts ci && npm --prefix sdk/ts run build`. Examples in
-`sdk/ts/examples/quote_then_send.mjs` and `crates/alight-client/examples/`
-use governed held-out canaries. Public endpoints are read-only and rate-limited;
-operator quote/Prove writes require an API bearer key and are not retried.
-
-```sh
-python3 -m pip install -r scripts/dataset-requirements.txt
-target/debug/alight export --database .alight/judge/sim.db --source sim \
-  --day 2026-10-05 --output .alight/judge/dataset
-python3 scripts/verify_dataset.py .alight/judge/dataset
-target/debug/alight anchor prepare --database .alight/judge/sim.db --source sim \
-  --output .alight/judge/anchor.json
-target/debug/alight anchor verify --database .alight/judge/sim.db \
-  --input .alight/judge/anchor.json
-```
-
-Datasets include CSV/Parquet, schema, checksums and the original full forecast
-chain witness. `--format csv` needs no PyArrow. `export --api` keeps the earlier
-forecast-only JSON behavior. Ledger's collapsed downloads section serves reviewed bundles with
-their own source labels. Data uses CC BY 4.0; private wallet captures are
-excluded. [Public downloads](https://hicksonhaziel.github.io/Alight/) are built
-from the same reviewed catalog and published through GitHub Pages after CI.
-Unsigned memo preparation and `anchor preflight`
-send nothing. The periodic sender requires separate explicit mainnet opt-in;
-the [verified Sim anchor](data/anchors/sim-ledger-mainnet.json) commits the
-published two-entry sample, without claiming Live forecast performance or an
-earlier issue time. See [anchor controls](docs/anchoring.md).
-
-Receipts deduplicate fees, preserve unknown payments, and compare supported
-historical Beam frontiers. Missing route/time/frontier evidence stays descriptive.
-Spend above a threshold is conditional arithmetic, not proven waste.
-See [receipts](docs/receipts.md), [datasets](docs/dataset.md),
-[anchoring](docs/anchoring.md), [methodology](docs/methodology.md),
-[limitations](docs/limitations.md), [operations](docs/operations.md),
-[contracts](docs/contracts.md) and the [160-second demo script](docs/demo.md).
-
-## Verify
-
-```sh
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --features alight-ingest/beam --locked -- -D warnings
-cargo test --workspace --features alight-ingest/beam --locked
-npm --prefix sdk/ts run lint && npm --prefix sdk/ts test
-npm --prefix web run lint && npm --prefix web test
-npm --prefix web run test:e2e
-python3 scripts/test_dataset.py
-python3 scripts/check_repository.py
-```
-
-Rust/Tokio + SQLite WAL form the source-scoped core; axum serves the API,
-React/Vite the workbench, and Docker Compose/Caddy the deployment. Keep private
-ENV, handoff and planning briefs local. Repository licensing is separate from
-the exported-data license; no repository-wide software license is declared here.
+CI checks Rust formatting, Clippy/tests, SDK and web checks, browser flows,
+dataset integrity, and publishable files. See [verification commands](docs/operations.md).
+Exported datasets use **CC BY 4.0**; no repository-wide software license has
+been declared.

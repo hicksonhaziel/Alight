@@ -36,8 +36,9 @@ Publish only intentionally reviewed exports. The example downloadable bundle
 is Sim, not a mainnet performance dataset. Static downloads use the existing
 workbench/Caddy and a standalone GitHub Pages download site. The Pages workflow
 publishes only after CI succeeds; `scripts/build_dataset_site.py` independently
-verifies every catalog bundle before copying it. Replace the catalog with retained reviewed bundles when actual
-Live evidence is available. Private wallet captures are not automatically
+verifies every catalog bundle before copying it. Add a Live bundle only after
+reviewing its retained evidence and stated scope; a Live validation receipt does
+not automatically publish a dataset. Private wallet captures are not automatically
 included or licensed. Data is licensed CC BY 4.0; preserve source, date, vantage
 and methodology attribution. This license does not license provider software.
 

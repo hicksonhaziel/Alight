@@ -2,6 +2,8 @@ import type {
   CanaryConfig,
   CurveSnapshot,
   DecimalU64,
+  PredictionTarget,
+  TrainingCanary,
 } from "../../sdk/ts/src/index";
 export const routeNames = {
   beam_http: "Beam HTTP",
@@ -84,4 +86,53 @@ export function sendToSeenMs(
   if (send.clock_id !== received.clock_id) return null;
   const delta = BigInt(received.mono_ns) - BigInt(send.send_mono_ns);
   return delta < 0n ? null : Number(delta / 1000n) / 1000;
+}
+
+/** Display target timing separately from execution; the API report remains the verdict. */
+export function proveMemberDisplay(
+  { canary: c, finalized }: TrainingCanary,
+  target: PredictionTarget,
+  asOfUtc: string,
+): { state: "met" | "late" | "adverse" | "pending"; label: string } {
+  if (
+    !finalized ||
+    !c.resolved_at_utc ||
+    Date.parse(c.resolved_at_utc) > Date.parse(asOfUtc)
+  )
+    return { state: "pending", label: "Pending / unresolved" };
+  if (["EXPIRED", "REJECTED", "LANDED_THEN_DROPPED"].includes(c.outcome ?? ""))
+    return { state: "adverse", label: `Did not meet target · ${c.outcome}` };
+  if (!["LANDED_OK", "LANDED_FAILED"].includes(c.outcome ?? ""))
+    return { state: "pending", label: "Pending / unresolved" };
+  if (c.landed_slot == null || BigInt(c.landed_slot) < BigInt(c.sent_slot))
+    return { state: "pending", label: "Target timing unavailable" };
+  const slots = BigInt(c.landed_slot) - BigInt(c.sent_slot);
+  let met: boolean;
+  let timing: string;
+  if (target.kind === "probability" || target.max_slots != null) {
+    const bound =
+      target.kind === "probability" ? target.horizon_slots : target.max_slots!;
+    met = Number(slots) <= bound;
+    timing = `${slots} slots`;
+  } else if (target.max_ms != null) {
+    const times = Object.values(c.observer_first_seen)
+      .filter(
+        (received) =>
+          received.clock_id === c.clock_id &&
+          BigInt(received.mono_ns) >= BigInt(c.send_mono_ns),
+      )
+      .map(
+        (received) =>
+          Number(BigInt(received.mono_ns) - BigInt(c.send_mono_ns)) / 1e6,
+      );
+    if (!times.length)
+      return { state: "pending", label: "Target timing unavailable" };
+    const ms = Math.min(...times);
+    met = ms <= target.max_ms;
+    timing = `${ms.toFixed(3)} ms`;
+  } else return { state: "pending", label: "Target timing unavailable" };
+  return {
+    state: met ? "met" : "late",
+    label: `${met ? "Met landing target" : "Landed after target"} · ${c.outcome} · ${timing}`,
+  };
 }

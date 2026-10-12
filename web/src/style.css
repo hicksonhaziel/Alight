@@ -855,6 +855,15 @@ main {
   background: var(--warning-soft);
   border-color: var(--warning-line);
 }
+.late {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: var(--warning-line);
+}
+.dot-legend i.late {
+  background: var(--warning);
+  border-radius: 1px;
+}
 .canary-dot.landed,
 .dot-legend i.landed {
   background: var(--pass);
