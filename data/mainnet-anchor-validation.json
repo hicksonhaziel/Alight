@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "validated_at_utc": "2026-10-12T13:17:04.404253+00:00",
+  "status": "PASS",
+  "network": "mainnet-beta",
+  "source": "sim",
+  "ledger_sequence": "2",
+  "ledger_head_hash": "sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+  "signature": "2zeyqK1qNhu7yXTtPsoTEdGgg14mzYN9Wu3hHfMuLUf3GGgq5geLXDF5aorpPNezK9UZSnkKVVigZNwMvHivzNjr",
+  "explorer_url": "https://explorer.solana.com/tx/2zeyqK1qNhu7yXTtPsoTEdGgg14mzYN9Wu3hHfMuLUf3GGgq5geLXDF5aorpPNezK9UZSnkKVVigZNwMvHivzNjr",
+  "finalized_slot": "456058007",
+  "actual_fee_lamports": "5000",
+  "priority_fee_lamports": "0",
+  "tip_lamports": "0",
+  "transactions_sent_this_check": 1,
+  "network_verification": "PASS_EXACT_FINALIZED_WIRE_SIGNATURE_PAYER_MEMO_FEE",
+  "verification_command": "alight anchor verify-network --database .alight/phase6/sim.db --source sim --input data/anchors/sim-ledger-mainnet.json",
+  "balance_reconciliation": {
+    "before_lamports": "10527061",
+    "after_lamports": "10522061",
+    "difference_lamports": "5000",
+    "commitment": "finalized"
+  },
+  "collector": {
+    "source": "live",
+    "mode": "observe",
+    "status": "PASS",
+    "signing_enabled": false,
+    "canaries_sent": "5"
+  },
+  "periodic_anchor_sender_enabled": false,
+  "live_forecast_entries": "0",
+  "public_record_matches_reviewed_file": true,
+  "limits": [
+    "The commitment identifies the published synthetic Sim sample, not Live forecasts or mainnet performance.",
+    "Finalization establishes the memo at anchoring time, not an earlier forecast issue time.",
+    "The independent human clean-checkout Sim run is pending its reported result."
+  ],
+  "database_integrity": {
+    "quick_check": "ok",
+    "foreign_key_errors": 0,
+    "canary_rows": 5,
+    "anchor_attempts": 1,
+    "append_only_anchor_events": 3
+  }
+}

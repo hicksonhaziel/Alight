@@ -10,7 +10,8 @@ transactions; fresh gRPC/Mirage observations and Blur market snapshots were
 verified on 10 October 2026. A bounded 12 October pilot finalized five owned
 canaries across RPC, Beam QUIC and Beam HTTP, spending 0.000325 SOL with exact
 wallet reconciliation. This is submission evidence, not calibrated performance;
-complete four-observer agreement and mainnet anchoring remain unverified.
+complete four-observer agreement remains unverified. The published Sim ledger
+fingerprint was finalized on mainnet on 12 October, with a 5,000-lamport fee.
 The downloadable sample is **Sim**, not mainnet performance.
 
 ## Quick start: no keys or wallet
@@ -118,7 +119,7 @@ Reservations are worst-case exposure, not balance reconciliation.
 | Mirage | Secondary transport via captured Yellowstone-compatible frames |
 | RPC | Leaders, commitment/absence checks, block sampling, bounded read-only wallet history and untipped submission |
 | Blur | Observe/live worker discovers up to three liquid pools, subscribes with pool filters and stores bounded delay-cost snapshots; stale/sparse fallback |
-| Webhooks | Exact-body HMAC observation; complete live registration/coverage unverified |
+| Webhooks | Live wallet-only callback registered; signed public-control delivery verified and ignored as unowned. Owned-canary push coverage remains unverified |
 | Data API | Bounded wallet-trade index verified against finalized RPC fees; Live/Observe receipts are cached, and CLI captures remain Replay with partial coverage |
 
 Quotes refuse unsupported recommendations and carry intervals, effective n,
@@ -155,7 +156,9 @@ excluded. [Public downloads](https://hicksonhaziel.github.io/Alight/) are built
 from the same reviewed catalog and published through GitHub Pages after CI.
 Unsigned memo preparation and `anchor preflight`
 send nothing. The periodic sender requires separate explicit mainnet opt-in;
-mainnet acceptance is pending. See [anchor controls](docs/anchoring.md).
+the [verified Sim anchor](data/anchors/sim-ledger-mainnet.json) commits the
+published two-entry sample, without claiming Live forecast performance or an
+earlier issue time. See [anchor controls](docs/anchoring.md).
 
 Receipts deduplicate fees, preserve unknown payments, and compare supported
 historical Beam frontiers. Missing route/time/frontier evidence stays descriptive.

@@ -19,8 +19,8 @@ sequence, memo or hash fails. The workbench's read-only ledger-head endpoint
 returns the same unsigned draft; no request reserves spend, signs or broadcasts.
 
 Status is `PREPARED_UNSIGNED`, signing is false, and signature/explorer fields
-are null. The committed example under `data/anchors/` is Sim and demonstrates
-offline integrity only. It is not a mainnet anchor, chain timestamp or proof
+are null. The `data/anchors/sim-ledger-head.json` draft is Sim and demonstrates
+offline integrity only. That draft is not a mainnet anchor, chain timestamp or proof
 that the forecast was issued before an outcome.
 
 `anchor preflight --database LEDGER_DB --source live|sim|replay` performs four
@@ -52,6 +52,11 @@ independently checks a public record against retained ledger bytes and finalized
 mainnet RPC transaction bytes. It opens the ledger read-only, loads no signer,
 reserves no budget and returns success only for a successful finalized memo.
 
-The sender is implemented but has not been enabled or exercised on mainnet.
-No mainnet anchor, explorer receipt or provider integration is claimed. The
-owner has resumed observe-only collection; transaction sending remains disabled.
+On 12 October 2026, one explicitly authorized Sim sample anchor finalized at
+slot 456058007, costing 5,000 lamports with no tip or priority fee. The
+[public record](../data/anchors/sim-ledger-mainnet.json) passed `verify-network`
+against the retained two-entry ledger and finalized transaction bytes. This
+commits synthetic evidence at anchoring time; it does not turn Sim into Live
+data or prove that the forecasts preceded their simulated outcomes. The Ledger
+downloads show the source-labeled sample link separately from the current Live
+head. Periodic anchoring remains off; the collector remains in Observe.

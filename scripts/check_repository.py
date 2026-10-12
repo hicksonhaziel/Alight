@@ -24,7 +24,9 @@ if env.exists():
         except ValueError:
             continue
         value = values[0] if values else ""
-        if len(value) >= 12 and re.search(r"TOKEN|KEY|SECRET", key):
+        # The dedicated payer's public address belongs in verifiable on-chain
+        # receipts. Exempt only this exact field, never private signing keys.
+        if key != "ALIGHT_CANARY_PUBKEY" and len(value) >= 12 and re.search(r"TOKEN|KEY|SECRET", key):
             secrets.append(value)
         for match in re.finditer(r"[?&](?:api_key|token)=([^&\s]+)", value):
             if len(match[1]) >= 12:

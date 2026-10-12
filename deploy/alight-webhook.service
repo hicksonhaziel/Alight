@@ -1,0 +1,18 @@
+[Unit]
+Description=Alight HMAC-only Webhook tunnel
+After=network-online.target alight-observe.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust these two paths for another checkout; keep .env private.
+WorkingDirectory=/home/hickson/Alight
+ExecStart=/usr/bin/python3 /home/hickson/Alight/scripts/webhook_bridge.py
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=15
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

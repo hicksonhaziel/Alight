@@ -6,6 +6,7 @@ import type {
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
 import { Empty, Loading, Notice } from "../ui";
+import sampleAnchor from "../../public/anchors/sim-ledger-mainnet.json";
 
 export function DatasetDownloads({ data }: { data: DashboardData }) {
   const [catalog, setCatalog] = useState<DatasetCatalog | null>(null);
@@ -65,6 +66,24 @@ export function DatasetDownloads({ data }: { data: DashboardData }) {
                 {m.source.toUpperCase()} · {m.day} UTC
               </h3>
               <p className="panel-note">{m.coverage}</p>
+              {sampleAnchor.source === m.source &&
+                sampleAnchor.attempt.commitment.head_hash === m.ledger.head &&
+                sampleAnchor.event.status === "FINALIZED" && (
+                  <p className="panel-note">
+                    SIM sample fingerprint finalized on mainnet ·{" "}
+                    <a
+                      href={`https://explorer.solana.com/tx/${sampleAnchor.attempt.signature}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Explorer
+                    </a>
+                    {" · "}
+                    <a href="/anchors/sim-ledger-mainnet.json" download>
+                      Verification record
+                    </a>
+                  </p>
+                )}
               <div className="table-wrap">
                 <table>
                   <thead>

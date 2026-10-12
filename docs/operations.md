@@ -322,6 +322,25 @@ by this code. Optional `ALIGHT_SLOT_COMPUTE_LIMIT` and
 `ALIGHT_SLOT_COMPUTE_LIMIT_PROVENANCE` must be supplied together with a verified
 capacity and its evidence. With neither set, fullness is unavailable.
 
+For a local callback without exposing the workbench or operator API, the optional
+`deploy/alight-webhook.service` runs `scripts/webhook_bridge.py` and an installed
+official `cloudflared`. Adjust its checkout paths before installing it as a user
+service. It registers/reuses **Alight canary observer**, watches only the configured
+dedicated payer for memo/transfer events, and writes the provider id, signing
+secret and callback into the ignored `.env` with mode 0600. On first creation,
+restart the Observe daemon once to load `SOLAMI_WEBHOOK_SECRET`; tunnel restarts
+update the existing registration without changing the secret or starting sends.
+
+The random callback path accepts only bounded, exact-body HMAC-authenticated
+POSTs and forwards bytes to loopback `/v1/webhook`; every other path returns 404.
+The API independently verifies HMAC and ignores unowned transactions. Bounded
+private audit hashes/statuses survive restarts under `.alight/webhook/status.json`;
+payloads, headers and credentials are not logged. The public test receipt is
+`data/webhook-runtime-validation.json`. Quick-tunnel hostnames are temporary and
+have no availability guarantee; this machine and its internet must stay on.
+Use a named tunnel or hosted callback for production uptime. This service only
+receives provider observations; it does not send canaries, anchors or alerts.
+
 An explicitly requested future network backfill uses `alight backfill --network`
 with `--database`, `--days 42` through `56`, `--requests 64` through `1024`, and
 optional `--output`. That finite read-only job checks mainnet, retained first

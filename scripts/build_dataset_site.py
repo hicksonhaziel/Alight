@@ -14,6 +14,16 @@ output.mkdir(parents=True, exist_ok=False)
 catalog = json.loads((root / "web/public/datasets/index.json").read_text())
 assert catalog["schema_version"] == 1 and len(catalog["datasets"]) <= 31
 sections = []
+# This reviewed record was independently verified by anchor verify-network.
+# Publication checks dataset scope and exact mirrored bytes, without RPC access.
+anchor_path = root / "web/public/anchors/sim-ledger-mainnet.json"
+anchor = json.loads(anchor_path.read_text())
+assert anchor_path.read_bytes() == (root / "data/anchors/sim-ledger-mainnet.json").read_bytes()
+assert anchor["source"] == anchor["attempt"]["commitment"]["source"] == "sim"
+assert anchor["event"]["status"] == "FINALIZED"
+assert anchor["event"]["reservation_id"] == anchor["attempt"]["reservation_id"]
+assert re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{64,88}", anchor["attempt"]["signature"])
+assert 0 < int(anchor["event"]["actual_fee_lamports"]) <= int(anchor["attempt"]["quoted_fee_lamports"])
 for item in catalog["datasets"]:
     identity = item["id"]
     assert re.fullmatch(r"[a-z0-9-]{1,64}", identity)
@@ -30,7 +40,15 @@ for item in catalog["datasets"]:
         downloads = [link(f"{table}.{ext}") for ext in ("csv", "parquet") if f"{table}.{ext}" in manifest["files"]]
         rows.append(f'<tr><th scope="row">{html.escape(table)}</th><td>{details["rows"]}</td><td>{" · ".join(downloads)}</td></tr>')
     evidence = " · ".join(link(name) for name in ("schema.json", "manifest.json", "SHA256SUMS", "ledger-witness.json", "LICENSE.txt"))
-    sections.append(f'<section><h2>{html.escape(item["source"].upper())} · {html.escape(item["day"])} UTC</h2><p>{html.escape(item["label"])}</p><p>{html.escape(manifest["coverage"])}</p><table><thead><tr><th>Table</th><th>Rows</th><th>Download</th></tr></thead><tbody>{"".join(rows)}</tbody></table><p>{evidence}</p></section>')
+    commitment = ""
+    draft = anchor["attempt"]["commitment"]
+    if anchor["source"] == item["source"] and draft["head_hash"] == manifest["ledger"]["head"]:
+        assert draft["sequence"] == manifest["ledger"]["sequence"]
+        (output / "anchors").mkdir(exist_ok=True)
+        shutil.copyfile(anchor_path, output / "anchors/sim-ledger-mainnet.json")
+        signature = anchor["attempt"]["signature"]
+        commitment = f'<p>SIM sample fingerprint finalized on mainnet · <a href="https://explorer.solana.com/tx/{signature}">Explorer</a> · <a href="anchors/sim-ledger-mainnet.json" download>Verification record</a></p>'
+    sections.append(f'<section><h2>{html.escape(item["source"].upper())} · {html.escape(item["day"])} UTC</h2><p>{html.escape(item["label"])}</p><p>{html.escape(manifest["coverage"])}</p>{commitment}<table><thead><tr><th>Table</th><th>Rows</th><th>Download</th></tr></thead><tbody>{"".join(rows)}</tbody></table><p>{evidence}</p></section>')
 (output / "datasets/index.json").write_text(json.dumps(catalog, indent=2) + "\n")
 (output / "methodology").mkdir()
 for name in ("methodology", "receipts", "dataset", "limitations"):

@@ -1,0 +1,31 @@
+{
+  "source": "sim",
+  "attempt": {
+    "commitment": {
+      "explorer_url": null,
+      "head_hash": "sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+      "memo": "alight.ledger.v1|sim|2|sha256:7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+      "schema_version": 1,
+      "sequence": "2",
+      "signature": null,
+      "signing_enabled": false,
+      "source": "sim",
+      "status": "PREPARED_UNSIGNED"
+    },
+    "last_valid_block_height": "434095140",
+    "payer": "BR28XLDiosxXbTaNFoTvb2UigfKQjxEBqTaPEkjaEoD2",
+    "prepared_at_utc": "2026-10-12T13:09:09.742Z",
+    "quoted_fee_lamports": "5000",
+    "reservation_id": "anchor-sim-7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+    "schema_version": 1,
+    "signature": "2zeyqK1qNhu7yXTtPsoTEdGgg14mzYN9Wu3hHfMuLUf3GGgq5geLXDF5aorpPNezK9UZSnkKVVigZNwMvHivzNjr",
+    "wire_sha256": "sha256:54353b1f6e7b1b9999fea7c64b9753c28821a48632f66c021c4f779ba5ae3b8b"
+  },
+  "event": {
+    "actual_fee_lamports": "5000",
+    "at_utc": "2026-10-12T13:09:35.715Z",
+    "confirmed_slot": "456058007",
+    "reservation_id": "anchor-sim-7871ae7b2c570e2180d9259fd1801ad13b659f5984489ada4cdd2e4cfa676f50",
+    "status": "FINALIZED"
+  }
+}

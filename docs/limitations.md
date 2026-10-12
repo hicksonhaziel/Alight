@@ -8,14 +8,19 @@ timestamps are comparable only within the recorded process clock identity.
 
 Beam HTTP and plain RPC use the configured Solami RPC endpoint; tipped versus
 untipped is a workload distinction, not evidence of independent HTTP backends.
-QUIC is separate. No funded owned route landing, live N=40 Prove, mainnet memo
-anchor or complete four-observer agreement has been verified in this work.
+QUIC is separate. Five owned canaries finalized across RPC, Beam QUIC and
+Beam HTTP in the bounded 12 October pilot; this does not calibrate route
+performance. Live N=40 Prove and complete four-observer agreement remain
+unverified. A two-entry Sim ledger fingerprint finalized on mainnet, preserving
+its synthetic source and without establishing an earlier forecast issue time.
 Observe collection reads network and market data without signing or sending.
 Observe-only records are not owned canary outcomes.
 
 Missing observations remain unknown. A timeout is never expiry. Proven expiry
 requires passed last-valid block height and covered commitment-level RPC
 absence; conflicting candidates retain block identity and disagreement evidence.
+The live Webhook callback has verified signed public-control delivery, which
+the API ignored as unowned. Owned-canary push coverage is still unverified.
 Webhook/index coverage may prevent complete observer agreement. Observer lag
 alone cannot establish a network regime change. Historical steps demonstrated
 in simulation do not establish mainnet upgrades or Alpenglow activation.

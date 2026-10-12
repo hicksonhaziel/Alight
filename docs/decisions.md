@@ -175,6 +175,15 @@ stream URL/token and callback URL were cleared from `.env`. Shared credentials,
 Beam identity and sanitized verified fixtures remain. No paid settings changed.
 See `data/webhook-validation.json` for delivery counts and cleanup flags.
 
+On 12 October the owner authorized live setup again. A managed ingress-only
+tunnel now reuses one wallet-filtered registration and updates its callback on
+restart. A temporary public-control filter produced an exact-body HMAC-verified
+HTTP 200 delivery; the API returned `IGNORED_UNOWNED`. The wallet-only memo/
+transfer filter was restored immediately. No owned-canary push coverage or
+four-observer block agreement is inferred from this control. The historical
+cleanup receipt above remains unchanged; current evidence is in
+`data/webhook-runtime-validation.json`.
+
 ## 2026-10-04: Transaction indexes and modern full-block payloads
 
 The public-control gRPC capture contains 13 transactions, 12 slot events and

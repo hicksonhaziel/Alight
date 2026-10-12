@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "validated_at_utc": "2026-10-12T13:17:04.410098+00:00",
+  "status": "PASS_REGISTERED_CONTROL_DELIVERY_RESTART",
+  "source": "live",
+  "provider_registration_enabled": true,
+  "dedicated_payer_only": true,
+  "event_types": [
+    "memo",
+    "transfer"
+  ],
+  "payload_kind": "enriched",
+  "hmac": "SHA256_LOWERCASE_HEX_OVER_EXACT_BODY_LITERAL_PROVIDER_SECRET",
+  "verified_delivery_receipts": [
+    {
+      "at_utc": "2026-10-12T13:11:22.885076+00:00",
+      "hmac_verified": true,
+      "http_status": 200,
+      "backend_status": "IGNORED_UNOWNED",
+      "slot": 456058608,
+      "signature_sha256": "0f28b33f60b64ed094c7f2afdb4a06d1aa0adc8a757fa901afe78bd49f4c6af4",
+      "body_sha256": "20d4633e29e63a7acc1adbef897c1608217a2fda830241af7b7dd9d8593a9fee",
+      "body_bytes": 1251
+    },
+    {
+      "at_utc": "2026-10-12T13:11:22.931500+00:00",
+      "hmac_verified": true,
+      "http_status": 200,
+      "backend_status": "IGNORED_UNOWNED",
+      "slot": 456058609,
+      "signature_sha256": "00434a423eb4e16f217ac268f8e790f14fafeec8060a6d145f53777baf063849",
+      "body_sha256": "990944b1dfdf9ea7efe99f7188bbeddb95cd154958411347a1caaee0eb6ef712",
+      "body_bytes": 762
+    },
+    {
+      "at_utc": "2026-10-12T13:13:55.047386+00:00",
+      "hmac_verified": true,
+      "http_status": 200,
+      "backend_status": "IGNORED_UNOWNED",
+      "slot": 456059296,
+      "signature_sha256": "3528aed5f378a5f7c97dabad941c1fb13c32a0035606ee4ea0e55a3e0ddd58cf",
+      "body_sha256": "677b9e552fa80fa675a5388d3dbd9abaf49ff95af60885a0d59c0123ed61b8b1",
+      "body_bytes": 828
+    }
+  ],
+  "provider_delivery_evidence": {
+    "verified_pre_restart_deliveries": 1,
+    "verified_post_restart_deliveries": 1,
+    "provider_deliveries_confirmed_http_200_before_restart": 2
+  },
+  "restart_check": {
+    "registration_reused": true,
+    "callback_rotated": true,
+    "secret_unchanged": true,
+    "provider_callback_matches": true,
+    "provider_enabled": true,
+    "dedicated_payer_only": true,
+    "control_deliveries_retained": 2,
+    "unsigned_callback": 401,
+    "api_hidden": 404,
+    "operator_hidden": 404
+  },
+  "public_probe_before_restart": {
+    "callback_get": 404,
+    "callback_unsigned": 401,
+    "api_hidden": 404,
+    "operator_hidden": 404
+  },
+  "control_filter_restored": true,
+  "owned_canaries_sent_by_test": 0,
+  "transactions_sent_by_test": 0,
+  "test_control_outcomes_written_to_canary_store": 0,
+  "outbound_alerts_sent": 0,
+  "limits": [
+    "Signed public-control traffic was ignored as unowned; this does not establish owned-canary notification lag or four-observer agreement.",
+    "The wallet-only memo/transfer registration remains enabled for future demo canaries.",
+    "The managed quick-tunnel hostname rotates on restart; it has no production uptime guarantee and requires this computer and internet to remain on.",
+    "No callback URL, provider id, signing secret, raw payload or authenticated URL is published."
+  ]
+}
