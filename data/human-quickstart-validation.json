@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "validated_at_utc": "2026-10-12T13:24:38.061383+00:00",
+  "status": "PASS",
+  "acceptance_task": "6.5",
+  "scope": "Human-run clean-checkout Sim quick start and deterministic replay, corroborated by read-only artifact inspection.",
+  "tester": "Project owner; separate from the implementation agent",
+  "human_reported_completion": "HUMAN SIM CHECK PASSED",
+  "checkout_revision": "26e3fb77a06271dd6dd3d46da58eab48d7e674cd",
+  "checkout_origin": "https://github.com/hicksonhaziel/Alight.git",
+  "tracked_worktree_clean": true,
+  "env_file_present": false,
+  "new_machine": false,
+  "same_host_separate_clean_checkout": true,
+  "build_command": "cargo build --locked -p alight -p alightd",
+  "sim_seed": "61",
+  "doctor_status": "READY_OFFLINE",
+  "sim_source": "sim",
+  "replay_execution_mode": "replay",
+  "replay_evidence_source": "sim",
+  "replay_verified": true,
+  "sim_and_replay_json_byte_identical": true,
+  "provider_requests_during_sim_replay": 0,
+  "transactions_sent": 0,
+  "signing_enabled": false,
+  "reported_small_sample": {
+    "insufficient": 243,
+    "measured": 0,
+    "interpretation": "Expected evidence refusal in the small deterministic run; not a setup failure or a count of failed transactions."
+  },
+  "methodology_hash": "sha256:0da0241b9ce652df77f7b9ee40a713f7bfa93e3c62207c28e290da3d1c9a3f86",
+  "artifacts": {
+    "sim": {
+      "json_sha256": "sha256:e16f5b9ddcf88a495a6283e77fc8832a7bf4f151df510bcfcb067ac3ba04ac87",
+      "canaries": 243,
+      "snapshots": 243,
+      "verified_forecasts": 2,
+      "database_quick_check": "ok"
+    },
+    "replayed": {
+      "json_sha256": "sha256:e16f5b9ddcf88a495a6283e77fc8832a7bf4f151df510bcfcb067ac3ba04ac87",
+      "canaries": 243,
+      "snapshots": 243,
+      "verified_forecasts": 2,
+      "database_quick_check": "ok"
+    }
+  },
+  "requested_closeout_items": {
+    "mainnet_anchor": "PASS; see data/mainnet-anchor-validation.json",
+    "independent_human_quickstart": "PASS; this receipt",
+    "live_webhook_setup": "PASS; see data/webhook-runtime-validation.json"
+  },
+  "limits": [
+    "This test used the same machine in a separate clean clone, not a new machine.",
+    "Git/cargo may download source and build dependencies; zero provider requests refers to Sim/Replay execution.",
+    "Synthetic results do not calibrate mainnet performance or establish owned-canary Webhook agreement.",
+    "This result closes the human check that was still pending in the earlier anchor receipt. Historical receipts remain unchanged."
+  ]
+}

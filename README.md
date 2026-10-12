@@ -32,6 +32,9 @@ target/debug/alight replay-model --input .alight/judge/sim.json \
 This small deterministic run demonstrates the schema/ledger and honestly
 reports insufficient cells. Use `--canaries 8100` for the larger model lifecycle
 example. Sim/model replay make zero provider requests or transaction sends.
+The owner completed this quick start in a separate clean checkout on 12 October:
+243 synthetic canaries, two verified forecasts and byte-identical model replay.
+See the [human setup check](data/human-quickstart-validation.json).
 
 Run the workbench in two terminals:
 
