@@ -1,12 +1,25 @@
 # Alight
 
-**Measure Solana transaction landing. Freeze a forecast. Check the proof.**
+**Measure landing odds. Freeze the claim. Let the next transactions test it.**
 
 [![CI](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml/badge.svg)](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml)
 
-Alight turns Solami streams and budgeted mainnet canaries into landing quotes
-with uncertainty, held-out tests, and a verifiable forecast ledger. Every view
-distinguishes Live, Sim, and Replay evidence.
+An RPC can accept a Solana transaction that later misses an application's
+deadline. Developers still have to choose a route, priority fee and tip, but
+a submission acknowledgment cannot show whether that choice will work under
+current conditions.
+
+Alight is a self-hosted landing observatory that makes those choices measurable.
+It combines **Solami's live data** with small, budgeted test
+transactions called **canaries**, then estimates their chance of landing within
+a chosen number of slots. Each estimate carries uncertainty, sample count and
+freshness; sparse or stale evidence produces no recommendation.
+
+Its defining loop is **measure → forecast → freeze → test → verify**. Freeze
+a forecast, then let Prove test it on a separate batch of canaries. Those test
+outcomes stay out of training, and a hash-chained ledger keeps the claim
+inspectable afterward. Developers can follow the same loop in the Workbench,
+CLI, or Rust and TypeScript clients.
 
 [Documentation](docs/README.md) · [Architecture](docs/architecture.md) ·
 [Public datasets](https://hicksonhaziel.github.io/Alight/) ·
@@ -27,7 +40,7 @@ for prerequisites, operator access and your own Solami key.
 
 ![Alight Workbench showing real mainnet observations](docs/images/workbench-live.png)
 
-## What it does
+## From a send to a testable claim
 
 - **Observe:** measure the slot clock, compare gRPC/Mirage/RPC/Webhook evidence,
   and inspect market tips and Blur data.
@@ -104,7 +117,8 @@ retains failures and requires review.
 | --- | --- |
 | First run and your own Solami key | [Quick start](docs/quickstart.md) |
 | Commands, budgets, troubleshooting | [Operations](docs/operations.md) |
-| API payloads, units, SDKs | [Contracts](docs/contracts.md) |
+| Rust / TypeScript clients and local integration | [SDK guide](docs/sdk.md) |
+| API payloads, authentication, units | [Contracts](docs/contracts.md) |
 | Estimators, outcomes, registered analysis | [Methodology](docs/methodology.md) |
 | Frozen tests and regime changes | [Prove](docs/prove-methodology.md) · [Regimes](docs/regime-methodology.md) |
 | Exports, receipts, commitments | [Datasets](docs/dataset.md) · [Receipts](docs/receipts.md) · [Anchoring](docs/anchoring.md) |

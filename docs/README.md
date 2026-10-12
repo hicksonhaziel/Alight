@@ -1,12 +1,17 @@
 # Documentation
 
-Start with the [project README](../README.md) for an overview and the
-[quick start](quickstart.md) for your first run. Use these guides for the details:
+Alight helps Solana developers evaluate route, tip and priority-fee settings
+against a landing deadline. It measures canary outcomes, quotes from recent
+evidence and tests frozen forecasts on later held-out attempts.
+
+Start with the [project README](../README.md) for the product overview or the
+[quick start](quickstart.md) to explore the full loop locally with synthetic data.
 
 | Guide | What it covers |
 | --- | --- |
 | [Quick start](quickstart.md) | Prerequisites, offline Workbench, synthetic Prove and own-key Observe |
 | [Architecture](architecture.md) | Data flow, Solami integrations, crate boundaries and operating modes |
+| [Developer SDKs](sdk.md) | Repository-local Rust/TypeScript clients and the quote → Prove workflow |
 | [Operations](operations.md) | Local setup, safe live controls, SDK/CLI examples, deployment and troubleshooting |
 | [API and data contracts](contracts.md) | Endpoints, authentication, JSON types, storage and migration rules |
 | [Limitations](limitations.md) | What the measurements support and where conclusions stop |

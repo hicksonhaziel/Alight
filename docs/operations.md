@@ -1,7 +1,8 @@
 # Operations
 
-Run commands from the repository root. The [README](../README.md) covers the
-short offline quick start; this guide covers configuration and ongoing use.
+Use this guide to configure the collector, control probe spending and inspect
+quotes and their evidence. For a first local run, use the [quick start](quickstart.md).
+Run all commands below from the repository root.
 Use the pinned Rust toolchain, Python 3 and Node 22.22 or later. Native Linux
 builds also require `cmake`, `make`, `g++`, `pkg-config` and CA certificates
 (the Debian package is `ca-certificates`).
@@ -136,6 +137,10 @@ validated on the three routes; the [Live Prove receipt](../data/live-prove-valid
 tests only one RPC configuration. It does not establish cross-route calibration.
 
 ## CLI and SDK
+
+The [SDK guide](sdk.md) explains the repository-local Rust and TypeScript clients
+and their API boundary. Build them with the commands above before running the
+examples below.
 
 The SDK examples construct a request from current health/curve data, freeze a
 forecast, run 40 governed held-out Sim canaries and verify the ledger:

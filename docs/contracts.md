@@ -1,5 +1,9 @@
 # Alight contracts v1
 
+Use these contracts to preview a landing quote, freeze its forecast and inspect
+the later Prove result through the API. They also define the source and evidence
+fields needed to interpret each response.
+
 Use the served `/v1/openapi.json` or checked-in [SDK OpenAPI](../sdk/ts/openapi.json)
 for complete machine-readable schemas. This reference explains behavior, evidence
 rules and compatible migrations; it does not change registered analysis bytes.

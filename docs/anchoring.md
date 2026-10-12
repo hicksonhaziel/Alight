@@ -1,5 +1,9 @@
 # Ledger-head anchoring
 
+A mainnet Memo gives reviewers an external fingerprint of retained forecast
+ledger bytes. It commits the ledger head at anchoring time; it does not prove
+that a prediction was correct or issued before its outcome.
+
 Alight prepares a source-scoped commitment to a verified retained forecast
 chain. The Memo instruction is built inside `alight-canary`; its exact text is
 `alight.ledger.v1|SOURCE|SEQUENCE|sha256:HASH`. Sequence is lossless decimal and

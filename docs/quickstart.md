@@ -1,8 +1,10 @@
 # Quick start
 
-Run Alight locally with synthetic evidence, then optionally connect your own
-Solami read key. Sim needs no provider account, wallet or SOL. Dependency
-installation downloads packages; the Sim runtime makes no network requests.
+Explore how Alight turns landing measurements into a quote, freezes the claim
+and tests it on held-out canaries. Start with synthetic evidence, then optionally
+connect your own Solami read key. Sim needs no provider account, wallet or SOL.
+Dependency installation downloads packages; the Sim runtime makes no network
+requests.
 
 ## 1. Prepare
 

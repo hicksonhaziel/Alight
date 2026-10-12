@@ -1,5 +1,9 @@
 # Public dataset
 
+Exports let reviewers examine the measurements behind a quote and verify
+retained forecast bytes outside the Workbench. Each bundle states its source
+and coverage so synthetic examples and measured Live evidence stay distinct.
+
 Daily exports contain source-scoped canaries, curve snapshots, detected regime
 events, immutable forecasts and appended grades. Selection uses UTC half-open
 days: send, curve as-of, detection, forecast issue and grading times respectively.

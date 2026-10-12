@@ -1,5 +1,10 @@
 # Wallet receipts
 
+Receipts explain execution fees and known tip payments in a bounded wallet
+sample. When historical evidence matches the transaction's configuration, they
+can compare its paid tip with a supported threshold; missing context stays
+unknown.
+
 Receipts evaluate bounded Alight captures of normalized transactions. They
 cover one fee payer, at most 1,000 records, and at most 24 hours. Captures are
 imported into an isolated Sim/Replay database and content-addressed. Sim/Replay

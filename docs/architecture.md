@@ -1,9 +1,13 @@
 # Architecture
 
-Alight is a Rust daemon with a SQLite WAL store, an axum REST/WebSocket API,
-a React Workbench, and Rust/TypeScript developer clients. The daemon owns
-collection, resolution, modeling and background diagnostics. The UI displays
-the same source-scoped evidence exposed to clients.
+A sender must choose a route, tip and priority fee before knowing whether its
+transaction will meet a deadline. Alight turns budgeted canary sends into
+landing estimates, then freezes and tests its forecasts on held-out attempts.
+The ledger retains the claim and result so a reviewer can inspect both.
+
+A Rust daemon owns collection, outcome resolution, modeling and diagnostics.
+It persists evidence in SQLite WAL and exposes it through an axum REST/WebSocket
+API to the React Workbench, CLI and repository-local Rust/TypeScript clients.
 
 ```mermaid
 flowchart LR
@@ -46,6 +50,11 @@ gRPC and Mirage are separate transports from the same provider; agreement
 does not establish independent infrastructure or trust.
 
 ## Forecast and Prove flow
+
+Preview answers what the current evidence supports. Freezing records that claim
+before Prove collects new outcomes for the exact configuration. A supported
+canary estimate remains scoped to its workload, region and observation window;
+it does not establish how an arbitrary swap will perform.
 
 ```mermaid
 sequenceDiagram
