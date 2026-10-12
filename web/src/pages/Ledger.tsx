@@ -21,7 +21,21 @@ import {
   Panel,
   Status,
 } from "../ui";
-export function Ledger({ data }: { data: DashboardData }) {
+export function Ledger({
+  data,
+  datasetsOpen = false,
+}: {
+  data: DashboardData;
+  datasetsOpen?: boolean;
+}) {
+  const downloads = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!datasetsOpen) return;
+    const frame = requestAnimationFrame(() =>
+      downloads.current?.scrollIntoView({ block: "start" }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [datasetsOpen]);
   const [anchors, setAnchors] = useState<AnchorRecord[]>([]);
   useEffect(() => {
     let active = true;
@@ -148,6 +162,10 @@ export function Ledger({ data }: { data: DashboardData }) {
         title="Forecast ledger"
         description="Immutable claims. Later outcomes. A chain you can verify yourself."
       >
+        <a className="button" href="#datasets">
+          <Download size={16} />
+          Download data
+        </a>
         <button
           className="primary"
           onClick={() => void verify()}
@@ -471,7 +489,12 @@ export function Ledger({ data }: { data: DashboardData }) {
           />
         )}
       </Panel>
-      <details className="panel">
+      <details
+        ref={downloads}
+        className="panel"
+        open={datasetsOpen}
+        style={{ scrollMarginTop: 80 }}
+      >
         <summary>Download datasets</summary>
         <DatasetDownloads data={data} />
       </details>

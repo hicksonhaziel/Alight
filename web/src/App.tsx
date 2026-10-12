@@ -428,7 +428,10 @@ export function App() {
                   </div>
                 </div>
               ) : (
-                <PageLoading overview={screen === "cockpit"} title={selected?.name ?? "Workbench"} />
+                <PageLoading
+                  overview={screen === "cockpit"}
+                  title={selected?.name ?? "Workbench"}
+                />
               )
             ) : !selected ? (
               <Empty
@@ -476,7 +479,10 @@ export function App() {
                 )}
               </>
             ) : page === "ledger" ? (
-              <Ledger data={data} />
+              <Ledger
+                data={data}
+                datasetsOpen={route.split("/")[0] === "datasets"}
+              />
             ) : page === "health" ? (
               <Health
                 data={data}

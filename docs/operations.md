@@ -2,7 +2,9 @@
 
 Run commands from the repository root. The [README](../README.md) covers the
 short offline quick start; this guide covers configuration and ongoing use.
-Use the pinned Rust toolchain, Python 3 and Node 22.22 or later.
+Use the pinned Rust toolchain, Python 3 and Node 22.22 or later. Native Linux
+builds also require `cmake`, `make`, `g++`, `pkg-config` and CA certificates
+(the Debian package is `ca-certificates`).
 
 ## Offline Workbench
 
@@ -45,11 +47,29 @@ on restart; a changed seed needs a fresh database. `--run-for 30` bounds a
 daemon session to 30 seconds. Keep each daemon's database and bind port unique.
 
 The Workbench includes Cockpit, Quote, Prove, Ledger, Regimes, Health and Tape/
-Receipts. Hash routes restore issued forecasts and Prove runs after reload.
+Receipts. Hash routes restore issued forecasts and Prove runs after reload;
+`#datasets` opens the dataset downloads directly from Forecast ledger.
 `Ctrl/Cmd K` opens navigation. Both themes support keyboard focus, table
 alternatives and reduced motion. The optional operator key stays in page memory
 and is cleared on reload/disconnect. Only quote freeze and Prove require it.
 Evidence refreshes every 15 seconds; the stream pauses while the page is hidden.
+
+## Deterministic model replay
+
+Generate a synthetic report and rebuild its curves from the saved inputs:
+
+```sh
+mkdir -p .alight/local
+target/debug/alight sim --seed 42 --canaries 900 \
+  --output .alight/local/model.json --database .alight/local/model.db
+target/debug/alight replay-model --input .alight/local/model.json \
+  --output .alight/local/model-replayed.json --database .alight/local/model-replayed.db
+cmp .alight/local/model.json .alight/local/model-replayed.json
+```
+
+Both commands use no network or keys. Replay verifies the saved methodology and
+curves; the underlying evidence remains Sim. Choose new output/database paths
+when changing the seed or options.
 
 ## Observe and Live
 
