@@ -86,7 +86,7 @@ def configure(root, callback):
     if len(owned) > 1:
         raise ValueError("ambiguous observer registration")
     fields = {"label": LABEL, "url": callback, "addresses": [payer],
-              "event_types": ["memo", "transfer"], "payload_kind": "enriched"}
+              "event_types": [], "payload_kind": "enriched"}
     if owned:
         record = provider(values, "update", {"id": owned[0]["id"], **fields, "enabled": True})
     else:
@@ -94,6 +94,7 @@ def configure(root, callback):
         # existing records first and recovers the matching registration.
         record = provider(values, "create", {**fields, "region": "fra", "stream": False})
     if (not record.get("enabled") or record.get("addresses") != [payer]
+            or record.get("event_types") != []
             or record.get("url") != callback or record.get("payload_kind") != "enriched"):
         raise ValueError("provider registration did not match")
     secret = record.get("secret") or values.get("SOLAMI_WEBHOOK_SECRET")

@@ -126,6 +126,13 @@ canary's policy ID and survives temporary uniform exploration after a regime
 change. Budget caps, wallet reserve and the minimum 30% adaptive uniform arm
 remain in force. This configuration takes effect on the next explicitly
 authorized engine start; changing it does not resume collection.
+`rpc-reference` restricts training to one Small, untipped, zero-priority RPC
+cell. Its assignments have probability 1 and a distinct `:rpc-reference` policy
+ID; it cannot measure Beam, fee sensitivity or a cross-route frontier. It keeps
+the same minimum effective sample count, freshness rules, reserve and governor.
+Prove still uses forty prospective held-out attempts of a supported frozen
+claim; those attempts never train the model. Use a finite run and return to
+Observe when validation finishes.
 `ALIGHT_RUNTIME_MODE=observe` starts Compose without signing access; restart with
 `up -d` after changing mode. `ALIGHT_MODE` remains the host daemon's default.
 
@@ -326,7 +333,7 @@ For a local callback without exposing the workbench or operator API, the optiona
 `deploy/alight-webhook.service` runs `scripts/webhook_bridge.py` and an installed
 official `cloudflared`. Adjust its checkout paths before installing it as a user
 service. It registers/reuses **Alight canary observer**, watches only the configured
-dedicated payer for memo/transfer events, and writes the provider id, signing
+dedicated payer for all provider event types, and writes the provider id, signing
 secret and callback into the ignored `.env` with mode 0600. On first creation,
 restart the Observe daemon once to load `SOLAMI_WEBHOOK_SECRET`; tunnel restarts
 update the existing registration without changing the secret or starting sends.
@@ -378,3 +385,21 @@ failures after 60 seconds. These indicate unavailable evidence, not a stopped
 service or healthy collection. Restore the account's read access before
 expecting fresh streams. Restart the observe service after changing local keys.
 No provider token or authenticated URL should be copied into logs or reports.
+
+For a finite, read-only 48-hour local soak, install
+`deploy/alight-stability.service` in the user systemd directory and start
+`alight-stability.service`. Progress and samples stay in `.alight/stability/`.
+The monitor checks the API, served Workbench document and retained canary IDs;
+it cannot sign or send. It records unavailable endpoints, unhealthy collection,
+missing canaries and sampling gaps for review. A passing sampled run is not a
+security certification or proof that no brief interruption occurred between
+samples. Keep the computer awake; restarting the monitor preserves its deadline
+and failures. Archive its local state before explicitly starting a new run.
+
+The 12 October dependency review updated rustls to 0.23.45 for
+[GHSA-2mjx-qc3c-rqvc](https://github.com/rustls/rustls/security/advisories/GHSA-2mjx-qc3c-rqvc).
+The lockfile audit still reports unpatched `rsa` (RUSTSEC-2023-0071), but
+`cargo tree --edges normal,build --target all -i rsa` has no active dependency
+path in this SQLite build. `bincode` 1.3.3 is flagged as unmaintained; it remains
+part of the existing Solana transaction wire format. These findings are retained,
+not suppressed, and dependency auditing must be repeated before public release.

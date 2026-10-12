@@ -45,8 +45,10 @@ export function Tape({ data }: { data: DashboardData }) {
         title="Observed paid tips"
         caption="One-hour window · at most 1,000 returned transfers · successful evidenced payments"
       >
-        {!tape ? (
-          <Loading />
+        {!tape && !error ? (
+          <Loading shape="chart" />
+        ) : error && !tape ? (
+          <p className="panel-note">Tip evidence unavailable.</p>
         ) : paid.length ? (
           <>
             <div
@@ -88,7 +90,11 @@ export function Tape({ data }: { data: DashboardData }) {
             : "Loading window"
         }
       >
-        {tape?.rows.length ? (
+        {!tape && !error ? (
+          <Loading />
+        ) : error && !tape ? (
+          <p className="panel-note">Transfer evidence unavailable.</p>
+        ) : tape?.rows.length ? (
           <div className="table-wrap">
             <table>
               <thead>

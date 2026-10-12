@@ -184,6 +184,13 @@ four-observer block agreement is inferred from this control. The historical
 cleanup receipt above remains unchanged; current evidence is in
 `data/webhook-runtime-validation.json`.
 
+The later owned-canary check received a real wallet-only provider delivery for
+an untipped RPC memo, verified its HMAC, and persisted an owned Webhook
+observation. The registration now accepts all event types for that one payer:
+the earlier memo/transfer selection did not deliver the memo anchor. No event
+classification or four-observer agreement is inferred from the owned delivery.
+See `data/webhook-owned-validation.json` for the finalized signature and receipt.
+
 ## 2026-10-04: Transaction indexes and modern full-block payloads
 
 The public-control gRPC capture contains 13 transactions, 12 slot events and

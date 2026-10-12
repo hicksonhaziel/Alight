@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { AlightClient, type ForecastEntry } from "../../sdk/ts/src/index";
 import { useDashboard } from "./data";
-import { Dialog, Empty, Loading, Notice } from "./ui";
+import { Dialog, Empty, PageLoading, Notice } from "./ui";
 import { Cockpit } from "./pages/Cockpit";
 import { Quote } from "./pages/Quote";
 import { Prove } from "./pages/Prove";
@@ -428,7 +428,7 @@ export function App() {
                   </div>
                 </div>
               ) : (
-                <Loading text="Connecting to the observatory…" />
+                <PageLoading overview={screen === "cockpit"} title={selected?.name ?? "Workbench"} />
               )
             ) : !selected ? (
               <Empty

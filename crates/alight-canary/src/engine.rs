@@ -16,6 +16,13 @@ use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, str::FromStr, time::Instant};
 use thiserror::Error;
 
+// Processed gRPC may lead confirmed RPC. A freshly received backlog must not
+// pass preflight merely because its local receive timestamp is recent.
+fn cursor_lag(grpc_slot: u64, rpc_slot: u64) -> Option<u64> {
+    let lag = rpc_slot.saturating_sub(grpc_slot);
+    (lag > 32).then_some(lag)
+}
+
 #[derive(Debug, Error)]
 pub enum EngineError {
     #[error("invalid live canary configuration")]
@@ -213,6 +220,14 @@ impl Engine {
             return Ok(json!({"status":"PENDING_LIMIT","pending":pending}));
         }
         let balance=self.http.rpc(config,"getBalance",json!([self.wallet.public().to_string(),{"commitment":"confirmed","minContextSlot":sent_slot}])).await?;
+        let rpc_slot = balance["context"]["slot"]
+            .as_u64()
+            .ok_or(ProbeError::Format)?;
+        if let Some(lag) = cursor_lag(sent_slot, rpc_slot) {
+            return Ok(
+                json!({"status":"WAITING_OBSERVER","reason":"grpc_behind_rpc","slot_lag":lag.to_string()}),
+            );
+        }
         let balance = balance["value"].as_u64().ok_or(ProbeError::Format)?;
         let balance = balance.saturating_sub(self.store.pending_reserved_lamports().await?);
         if balance <= self.reserve_balance {
@@ -356,6 +371,14 @@ impl Engine {
             .cursor(ObserverKind::Grpc, Source::Live)
             .await?
             .ok_or(EngineError::Configuration)?;
+        let rpc_slot = fee_check["context"]["slot"]
+            .as_u64()
+            .ok_or(ProbeError::Format)?;
+        if let Some(lag) = cursor_lag(sent_slot, rpc_slot) {
+            return Ok(
+                json!({"status":"WAITING_OBSERVER","reason":"grpc_behind_rpc","slot_lag":lag.to_string()}),
+            );
+        }
         if !leaders.covers(sent_slot) {
             return Ok(json!({"status":"WAITING_EPOCH"}));
         }
@@ -500,5 +523,20 @@ impl Engine {
         Ok(
             json!({"status":status,"canary_id":id,"route":assignment.config.route,"reserved_lamports":worst_cost.to_string()}),
         )
+    }
+}
+
+#[cfg(test)]
+mod freshness_tests {
+    use super::cursor_lag;
+
+    #[test]
+    fn fresh_receive_of_old_slots_is_rejected_but_processed_lead_is_allowed() {
+        assert_eq!(cursor_lag(100, 1614), Some(1514));
+        assert_eq!(cursor_lag(100, 132), None);
+        assert_eq!(cursor_lag(100, 133), Some(33));
+        assert_eq!(cursor_lag(140, 100), None);
+        assert_eq!(cursor_lag(u64::MAX, u64::MAX - 31), None);
+        assert_eq!(cursor_lag(0, u64::MAX), Some(u64::MAX));
     }
 }

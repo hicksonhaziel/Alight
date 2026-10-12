@@ -22,6 +22,73 @@ fn observation(raw: &serde_json::Value, utc: &str) -> IngestEvent {
 }
 
 #[tokio::test]
+async fn received_batch_is_atomic_deduplicated_and_preserves_first_receive() {
+    let dir = tempfile::tempdir().expect("directory");
+    let store = Store::open(&dir.path().join("batch.db"), 16 * 1024 * 1024)
+        .await
+        .expect("store");
+    let raw = json!({"simulation":true});
+    let first = observation(&raw, "2026-10-04T00:00:01Z");
+    let duplicate = observation(&raw, "2026-10-04T00:00:02Z");
+    let bad_raw = json!({"simulation":false});
+    assert!(
+        store
+            .record_batch(&[
+                (ObserverKind::Grpc, &first, &raw),
+                (ObserverKind::Grpc, &duplicate, &bad_raw)
+            ])
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        store
+            .health_counts(Source::Sim)
+            .await
+            .expect("rollback")
+            .observations,
+        0
+    );
+    assert_eq!(
+        store
+            .cursor(ObserverKind::Grpc, Source::Sim)
+            .await
+            .expect("rollback cursor"),
+        None
+    );
+    store
+        .record_batch(&[
+            (ObserverKind::Grpc, &first, &raw),
+            (ObserverKind::Grpc, &duplicate, &raw),
+        ])
+        .await
+        .expect("batch");
+    assert_eq!(
+        store
+            .health_counts(Source::Sim)
+            .await
+            .expect("deduplicated")
+            .observations,
+        1
+    );
+    assert_eq!(
+        store
+            .observations(Source::Sim, "simulation-signature")
+            .await
+            .expect("observations")[0]
+            .received
+            .wall_utc,
+        "2026-10-04T00:00:01Z"
+    );
+    assert!(store.record_batch(&[]).await.is_err());
+    assert!(
+        store
+            .record_batch(&vec![(ObserverKind::Grpc, &first, &raw); 33])
+            .await
+            .is_err()
+    );
+}
+
+#[tokio::test]
 async fn reopen_preserves_cursor_and_first_receive_and_deduplicates() {
     let dir = tempfile::tempdir().expect("directory");
     let path = dir.path().join("state.db");
@@ -70,6 +137,22 @@ async fn reopen_preserves_cursor_and_first_receive_and_deduplicates() {
         .await
         .expect("read");
     assert_eq!(rows[0].received.wall_utc, "2026-10-04T00:00:01Z");
+    assert_eq!(
+        store
+            .health_counts(Source::Sim)
+            .await
+            .expect("fast counts")
+            .observations,
+        1
+    );
+    assert_eq!(
+        store
+            .health_counts(Source::Live)
+            .await
+            .expect("empty source")
+            .observations,
+        0
+    );
     assert_eq!(
         store
             .recent_observation(ObserverKind::Grpc, Source::Sim)
@@ -253,6 +336,12 @@ async fn routine_retention_preserves_observations_and_persistent_proof() {
     let counts = store.counts(Source::Live).await.expect("counts");
     assert_eq!(counts.slot_events, 0);
     assert_eq!(counts.observations, 1);
+    let fast = store
+        .health_counts(Source::Live)
+        .await
+        .expect("retained counters");
+    assert_eq!(fast.slot_events, counts.slot_events);
+    assert_eq!(fast.observations, counts.observations);
     assert_eq!(
         store
             .observations(Source::Live, "simulation-signature")

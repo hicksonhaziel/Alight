@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "status": "OWNED_LIVE_DELIVERY_VERIFIED",
+  "source": "live",
+  "wallet": "BR28XLDiosxXbTaNFoTvb2UigfKQjxEBqTaPEkjaEoD2",
+  "filter": {
+    "addresses": "dedicated_payer_only",
+    "event_types": "all"
+  },
+  "owned_deliveries": [
+    {
+      "canary_id": "e505feab-659e-4175-a11b-1e496328b266",
+      "signature": "5AMeAKdNv7q6jPU92u5naGf6YyqR2hbi68Chkm5iGik865F5EW4eNmh2dY5hpN8FrWFjjjSzABT7W5328VSj7hD5",
+      "route": "rpc",
+      "finalized_slot": 456076127,
+      "outcome": "LANDED_OK",
+      "network_fee_lamports": 5000,
+      "tip_lamports": 0,
+      "provider_delivery": {
+        "slot": 456076127,
+        "status": "delivered",
+        "http_status": 200,
+        "attempts": 1,
+        "duration_ms": 722,
+        "delivered_at": null
+      },
+      "ingress": {
+        "at_utc": "2026-10-12T14:15:07.327995+00:00",
+        "hmac_verified": true,
+        "http_status": 200,
+        "backend_status": "ACCEPTED",
+        "slot": 456076127,
+        "signature_sha256": "03405cbf6ab6f7874b6f3e755f7426e91d08d56cedb935965c53fe8d7affb1b3",
+        "body_sha256": "3df89590fda7bf48d8e7b781a30d143405a18c3334f5922da437fa12c908ed54",
+        "body_bytes": 419
+      },
+      "persisted_owned_webhook_observations": 1
+    },
+    {
+      "canary_id": "122edb49-d27d-4944-bbad-039bd12ca37b",
+      "signature": "2qkKtXVhLXXRp7vRLnTGWBiFTcF1CHHBH26CtRgfCNKLcFEQmAgPdMC1mswumDrVP9duWkJ3noqtfbi2GcVdF2S7",
+      "route": "rpc",
+      "finalized_slot": 456076770,
+      "outcome": "LANDED_OK",
+      "network_fee_lamports": 5000,
+      "tip_lamports": 0,
+      "provider_delivery": {
+        "slot": 456076770,
+        "status": "delivered",
+        "http_status": 200,
+        "attempts": 1,
+        "duration_ms": 1849,
+        "delivered_at": null
+      },
+      "ingress": {
+        "at_utc": "2026-10-12T14:17:28.407429+00:00",
+        "hmac_verified": true,
+        "http_status": 200,
+        "backend_status": "ACCEPTED",
+        "slot": 456076770,
+        "signature_sha256": "03a55a5ae8cad10b7df011e56413af4091fe03070a4e1cff5606f771d898b46c",
+        "body_sha256": "ac9352d65344fa28d8d42bfe25f065ecbe1aa29321605ed88e65ea0418a74929",
+        "body_bytes": 419
+      },
+      "persisted_owned_webhook_observations": 1
+    }
+  ],
+  "limits": [
+    "Owned delivery proves push ingestion, HMAC verification and identity matching, not four-observer block agreement.",
+    "These early canaries used delayed gRPC cursor context; no fast-landing claim is inferred. Historical rows remain unchanged."
+  ],
+  "credentials_published": false
+}

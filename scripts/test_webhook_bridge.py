@@ -90,7 +90,11 @@ class Ingress(unittest.TestCase):
 
             def provider(values, operation, body):
                 operations.append(operation)
-                return [record] if operation == "list" else {**record, "url": body["url"]}
+                if operation == "list":
+                    return [record]
+                self.assertEqual(body["event_types"], [])
+                self.assertEqual(body["addresses"], ["public-test-address"])
+                return {**record, "url": body["url"], "event_types": body["event_types"]}
 
             with patch.object(bridge, "provider", provider):
                 bridge.configure(root, "https://example.test/hook/test")

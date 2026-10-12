@@ -704,7 +704,7 @@ async fn health_view(s: &ApiState) -> Result<ApiHealth, ApiError> {
     let now = s.now().await;
     let counts = s
         .store
-        .counts(s.source)
+        .health_counts(s.source)
         .await
         .map_err(|_| s.unavailable())?;
     let n = |v| u64::try_from(v).map_err(|_| s.unavailable());

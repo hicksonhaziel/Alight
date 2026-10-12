@@ -1288,13 +1288,64 @@ details[open] > summary:after {
   margin-bottom: 6px;
 }
 .loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 48px 20px;
-  color: var(--muted);
-  font-size: 0.857143rem;
+  padding: 24px;
+  width: 100%;
+}
+.skeleton {
+  display: block;
+  height: 12px;
+  min-width: 0;
+  border-radius: 4px;
+  background: var(--muted);
+  opacity: 0.12;
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+}
+.skeleton-content {
+  display: grid;
+  gap: 20px;
+}
+.skeleton-label {
+  width: 28%;
+  max-width: 160px;
+}
+.skeleton-heading {
+  width: 65%;
+  height: 28px;
+}
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 24px;
+  padding: 10px 0;
+}
+.skeleton-summary .skeleton-row {
+  grid-template-columns: 2fr 1fr;
+}
+.skeleton-plot {
+  height: 200px;
+}
+.skeleton-page-title {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 540px);
+}
+.skeleton-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.skeleton-metrics > div {
+  display: grid;
+  gap: 20px;
+  padding: 24px 0;
+}
+@keyframes skeleton-pulse {
+  50% { opacity: 0.23; }
+}
+@media (max-width: 760px) {
+  .skeleton-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .skeleton-row { gap: 12px; }
 }
 .spinner {
   animation: spin 1s linear infinite;

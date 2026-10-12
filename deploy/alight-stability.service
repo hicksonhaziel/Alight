@@ -1,0 +1,13 @@
+[Unit]
+Description=Alight finite 48-hour read-only stability check
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Alight
+ExecStart=/usr/bin/python3 %h/Alight/scripts/stability_check.py --hours 48
+Restart=on-failure
+RestartSec=15
+UMask=0077
+NoNewPrivileges=true
+StandardOutput=null
+StandardError=null

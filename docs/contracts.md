@@ -380,6 +380,25 @@ resample that configuration from the exploration grid. Offline simulator default
 remain full. Existing records retain their original IDs. No schema migration is
 needed because the existing `policy_id` string carries the profile.
 
+`rpc-reference` is an additional opt-in single-cell calibration profile: RPC,
+Small (25,000 CU), no tip and zero priority price. Policy IDs end in
+`:rpc-reference`, assignment probability is 1, and durable draw sequences remain
+separate. Full and lean support are unchanged. A supported claim from this
+profile applies only to its exact RPC configuration; all normal Prove and budget
+rules still apply.
+
+Migration 0013 adds exact source-scoped retained-event counters for health and
+stream responses. It backfills existing rows once, then updates counts in the
+same transaction as inserts and retention deletes; duplicate ignored events
+do not increment them. It changes no HTTP/SDK fields or historical evidence.
+Offline read-only tools retain direct counting for older unmigrated databases.
+The live writer may commit up to 32 already-received frames together. Evidence,
+cursors and counters remain atomic; original receive timestamps and first-event
+deduplication are preserved. Invalid frames roll back the whole batch. No extra
+batching delay is added. Live signing also checks the gRPC cursor against RPC
+context before reservation: more than 32 slots behind confirmed RPC returns
+`WAITING_OBSERVER` with `reason=grpc_behind_rpc` and sends nothing.
+
 Balance, observer freshness, pending limits, recent local fees, and the cluster's
 fee-for-message quote precede reservation. The governor reserves the entire
 quoted fee plus tip before signing. The signed identity and assignment commit

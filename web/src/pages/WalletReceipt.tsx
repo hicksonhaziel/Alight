@@ -3,7 +3,7 @@ import type { WalletReceipt } from "../../../sdk/ts/src/index";
 import type { DashboardData } from "../data";
 import { errorText } from "../data";
 import { integer, percent } from "../format";
-import { Notice } from "../ui";
+import { Loading, Notice } from "../ui";
 
 export function WalletReceiptPanel({ data }: { data: DashboardData }) {
   const [wallet, setWallet] = useState("");
@@ -88,6 +88,7 @@ export function WalletReceiptPanel({ data }: { data: DashboardData }) {
         </button>
       </form>
       {error && <Notice danger>{error}</Notice>}
+      {busy && <Loading text="Evaluating wallet history…" shape="summary" />}
       {report && (
         <>
           <div className="receipt-limits">

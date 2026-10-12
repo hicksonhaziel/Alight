@@ -243,6 +243,35 @@ impl Store {
         event: &IngestEvent,
         raw: &Value,
     ) -> Result<bool, StoreError> {
+        let mut tx = self.pool.begin().await?;
+        let inserted = Self::record_transaction(&mut tx, observer, event, raw).await?;
+        tx.commit().await?;
+        Ok(inserted)
+    }
+
+    /// Commits up to 32 already-received frames atomically, without changing their timestamps.
+    /// Any invalid frame rolls back the entire batch, including cursors and counters.
+    pub async fn record_batch(
+        &self,
+        frames: &[(ObserverKind, &IngestEvent, &Value)],
+    ) -> Result<(), StoreError> {
+        if frames.is_empty() || frames.len() > 32 {
+            return Err(StoreError::Invalid);
+        }
+        let mut tx = self.pool.begin().await?;
+        for (observer, event, raw) in frames {
+            Self::record_transaction(&mut tx, *observer, event, raw).await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    async fn record_transaction(
+        tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        observer: ObserverKind,
+        event: &IngestEvent,
+        raw: &Value,
+    ) -> Result<bool, StoreError> {
         let payload = serde_json::to_string(event)?;
         let (source, slot, receive, reference) = match event {
             IngestEvent::Slot(e) => (e.source, Some(e.slot), &e.received, &e.raw_ref),
@@ -263,7 +292,6 @@ impl Store {
         }
         let source = label(source)?;
         let observer = label(observer)?;
-        let mut tx = self.pool.begin().await?;
         let affected = match event {
             IngestEvent::Slot(e) => {
                 sqlx::query("INSERT OR IGNORE INTO slot_events(source,observer,slot,block_key,status,payload_json,received_utc) VALUES(?,?,?,?,?,?,?)")
@@ -274,7 +302,7 @@ impl Store {
                     .bind(label(e.status)?)
                     .bind(&payload)
                     .bind(&receive.wall_utc)
-                    .execute(&mut *tx)
+                    .execute(&mut **tx)
                     .await?
                     .rows_affected()
             }
@@ -286,7 +314,7 @@ impl Store {
                     .bind(&e.block_id)
                     .bind(&payload)
                     .bind(&receive.wall_utc)
-                    .execute(&mut *tx)
+                    .execute(&mut **tx)
                     .await?
                     .rows_affected()
             }
@@ -301,7 +329,7 @@ impl Store {
                     .bind(e.index_in_block.map(|n| n.to_string()).unwrap_or_default())
                     .bind(e.success.map(|b| b.to_string()).unwrap_or_default())
                     .bind(&payload)
-                    .execute(&mut *tx)
+                    .execute(&mut **tx)
                     .await?
                     .rows_affected()
             }
@@ -312,11 +340,11 @@ impl Store {
                 .bind(&raw_json)
                 .bind(raw_json.len() as i64)
                 .bind(i64::from(!matches!(event,IngestEvent::Observation(_))))
-                .execute(&mut *tx)
+                .execute(&mut **tx)
                 .await?;
         }
         sqlx::query("INSERT INTO observer_state VALUES(?,?,?,?) ON CONFLICT(source,observer) DO UPDATE SET cursor_slot=CASE WHEN excluded.cursor_slot IS NULL THEN observer_state.cursor_slot WHEN observer_state.cursor_slot IS NULL THEN excluded.cursor_slot ELSE MAX(observer_state.cursor_slot,excluded.cursor_slot) END,last_receive_utc=excluded.last_receive_utc")
-            .bind(&source).bind(&observer).bind(slot.map(slot_key)).bind(&receive.wall_utc).execute(&mut *tx).await?;
+            .bind(&source).bind(&observer).bind(slot.map(slot_key)).bind(&receive.wall_utc).execute(&mut **tx).await?;
         // A gap closes only once a normalized frame and cursor are durably saved.
         sqlx::query(
             "UPDATE gaps SET ended_utc=? WHERE source=? AND observer=? AND ended_utc IS NULL AND started_utc<=?",
@@ -325,15 +353,31 @@ impl Store {
         .bind(&source)
         .bind(&observer)
         .bind(&receive.wall_utc)
-        .execute(&mut *tx)
+        .execute(&mut **tx)
         .await?;
-        tx.commit().await?;
         Ok(affected > 0)
     }
 
     pub async fn counts(&self, source: Source) -> Result<Counts, StoreError> {
+        self.read_counts(source, false).await
+    }
+
+    /// Exact counters for migrated databases; avoids scanning retained events per stream tick.
+    pub async fn health_counts(&self, source: Source) -> Result<Counts, StoreError> {
+        self.read_counts(source, true).await
+    }
+
+    async fn read_counts(&self, source: Source, fast: bool) -> Result<Counts, StoreError> {
         let s = label(source)?;
-        let count = |table: &str| format!("SELECT COUNT(*) FROM {table} WHERE source=?");
+        let count = |table: &str| {
+            if fast && matches!(table, "slot_events" | "blocks" | "observations") {
+                format!(
+                    "SELECT COALESCE((SELECT {table} FROM source_event_counts WHERE source=?),0)"
+                )
+            } else {
+                format!("SELECT COUNT(*) FROM {table} WHERE source=?")
+            }
+        };
         Ok(Counts {
             slot_events: sqlx::query_scalar(&count("slot_events"))
                 .bind(&s)
@@ -776,6 +820,75 @@ impl Store {
 #[cfg(test)]
 mod retention_plan_tests {
     use super::*;
+    #[tokio::test]
+    async fn health_counter_migration_backfills_and_rollback_does_not_change_counts() {
+        let dir = tempfile::tempdir().expect("directory");
+        let path = dir.path().join("counts.db");
+        let store = Store::open(&path, 16 * 1024 * 1024).await.expect("store");
+        // Recreate a version-12 database with pre-existing source-scoped rows.
+        for trigger in [
+            "health_slot_insert",
+            "health_slot_delete",
+            "health_block_insert",
+            "health_block_delete",
+            "health_observation_insert",
+            "health_observation_delete",
+        ] {
+            sqlx::query(&format!("DROP TRIGGER {trigger}"))
+                .execute(&store.pool)
+                .await
+                .expect("drop trigger");
+        }
+        sqlx::query("DROP TABLE source_event_counts")
+            .execute(&store.pool)
+            .await
+            .expect("drop counter");
+        sqlx::query("DELETE FROM _sqlx_migrations WHERE version=13")
+            .execute(&store.pool)
+            .await
+            .expect("old schema");
+        for source in ["live", "sim"] {
+            sqlx::query("INSERT INTO slot_events(source,observer,slot,block_key,status,payload_json) VALUES(?,'grpc','1','','processed','{}')").bind(source).execute(&store.pool).await.expect("legacy slot");
+            sqlx::query("INSERT INTO blocks(source,observer,slot,block_id,payload_json) VALUES(?,'grpc','1','block','{}')").bind(source).execute(&store.pool).await.expect("legacy block");
+        }
+        store.close().await;
+        let store = Store::open(&path, 16 * 1024 * 1024)
+            .await
+            .expect("migration");
+        for source in [Source::Live, Source::Sim, Source::Replay] {
+            let expected = store.counts(source).await.expect("actual");
+            let fast = store.health_counts(source).await.expect("fast");
+            assert_eq!(fast.slot_events, expected.slot_events);
+            assert_eq!(fast.blocks, expected.blocks);
+            assert_eq!(fast.observations, expected.observations);
+        }
+        let mut tx = store.pool.begin().await.expect("transaction");
+        sqlx::query("DELETE FROM slot_events WHERE source='live'")
+            .execute(&mut *tx)
+            .await
+            .expect("delete");
+        tx.rollback().await.expect("rollback");
+        assert_eq!(
+            store
+                .health_counts(Source::Live)
+                .await
+                .expect("rollback counts")
+                .slot_events,
+            1
+        );
+        sqlx::query("DELETE FROM blocks WHERE source='live'")
+            .execute(&store.pool)
+            .await
+            .expect("retention");
+        assert_eq!(
+            store
+                .health_counts(Source::Live)
+                .await
+                .expect("delete counts")
+                .blocks,
+            0
+        );
+    }
     #[tokio::test]
     async fn retention_seeks_exact_observation_slots_and_preserves_all_owned_fork_candidates() {
         let dir = tempfile::tempdir().expect("directory");

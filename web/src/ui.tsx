@@ -5,7 +5,6 @@ import {
   CircleAlert,
   Copy,
   Inbox,
-  LoaderCircle,
   X,
   TriangleAlert,
   type LucideIcon,
@@ -112,11 +111,57 @@ export function Empty({
     </div>
   );
 }
-export function Loading({ text = "Loading evidence…" }: { text?: string }) {
+export function Loading({
+  text = "Loading evidence…",
+  shape = "table",
+}: {
+  text?: string;
+  shape?: "table" | "chart" | "summary";
+}) {
   return (
-    <div className="loading" role="status">
-      <LoaderCircle size={18} className="spinner" aria-hidden="true" />
-      {text}
+    <div className={`loading skeleton-${shape}`} role="status" aria-label={text}>
+      <span className="sr-only">{text}</span>
+      <div className="skeleton-content" aria-hidden="true">
+        <i className="skeleton skeleton-label" />
+        {shape === "chart" ? (
+          <div className="skeleton skeleton-plot" />
+        ) : (
+          Array.from({ length: shape === "table" ? 5 : 3 }, (_, row) => (
+            <div className="skeleton-row" key={row}>
+              <i className="skeleton" />
+              <i className="skeleton" />
+              {shape === "table" && <i className="skeleton" />}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+export function PageLoading({ overview, title }: { overview: boolean; title: string }) {
+  return (
+    <div className="page-skeleton" aria-busy="true">
+      <h1 className="sr-only">{title}</h1>
+      <div className="page-head" aria-hidden="true">
+        <div className="skeleton-page-title">
+          <i className="skeleton skeleton-label" />
+          <i className="skeleton skeleton-heading" />
+          <i className="skeleton" />
+        </div>
+      </div>
+      {overview && (
+        <div className="skeleton-metrics" aria-hidden="true">
+          {[0, 1, 2, 3].map((key) => (
+            <div key={key}>
+              <i className="skeleton skeleton-label" />
+              <i className="skeleton skeleton-heading" />
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="panel">
+        <Loading text="Connecting to the observatory…" shape={overview ? "chart" : "table"} />
+      </div>
     </div>
   );
 }

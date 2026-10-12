@@ -266,23 +266,32 @@ async fn write_frames(
     mut frames: mpsc::Receiver<Frame>,
 ) -> Result<(), StoreError> {
     while let Some(frame) = frames.recv().await {
-        store
-            .record(frame.observer, &frame.event, &frame.raw)
-            .await?;
-        match frame.passive_tips {
-            Ok(tips) if !tips.is_empty() => {
-                store
-                    .save_passive_tips(&tips, &TapeLimits::default(), &stream::utc_now())
-                    .await?;
-            }
-            Err(reason) => eprintln!("passive tape record skipped: {reason}"),
-            _ => {}
+        let mut batch = vec![frame];
+        while batch.len() < 32 {
+            let Ok(frame) = frames.try_recv() else { break };
+            batch.push(frame);
         }
-        if frame.observer == ObserverKind::Grpc {
-            match frame.event {
-                IngestEvent::BlockMeta(e) => clock.write().await.push(&e),
-                IngestEvent::Slot(e) => clock.write().await.push_status(&e),
+        let records: Vec<_> = batch
+            .iter()
+            .map(|frame| (frame.observer, &frame.event, &frame.raw))
+            .collect();
+        store.record_batch(&records).await?;
+        for frame in batch {
+            match frame.passive_tips {
+                Ok(tips) if !tips.is_empty() => {
+                    store
+                        .save_passive_tips(&tips, &TapeLimits::default(), &stream::utc_now())
+                        .await?;
+                }
+                Err(reason) => eprintln!("passive tape record skipped: {reason}"),
                 _ => {}
+            }
+            if frame.observer == ObserverKind::Grpc {
+                match frame.event {
+                    IngestEvent::BlockMeta(e) => clock.write().await.push(&e),
+                    IngestEvent::Slot(e) => clock.write().await.push_status(&e),
+                    _ => {}
+                }
             }
         }
     }

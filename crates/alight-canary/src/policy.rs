@@ -10,12 +10,14 @@ pub const ADAPTIVE_POLICY_ID: &str = "thompson-cost-v1-splitmix64:full";
 #[error("invalid assignment policy configuration")]
 pub struct PolicyError;
 
-/// Assignment support: full has 81 cells; lean has ten Small cells, with no RPC tip.
+/// Assignment support: full has 81 cells; lean has ten; rpc-reference has one untipped cell.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum GridProfile {
     #[default]
     Full,
     Lean,
+    /// Focused calibration of Small, untipped, zero-priority RPC only.
+    RpcReference,
 }
 impl GridProfile {
     /// Parses ALIGHT_GRID_PROFILE. Missing configuration keeps full; unknown values fail closed.
@@ -23,6 +25,7 @@ impl GridProfile {
         match value.unwrap_or("full") {
             "full" => Ok(Self::Full),
             "lean" => Ok(Self::Lean),
+            "rpc-reference" => Ok(Self::RpcReference),
             _ => Err(PolicyError),
         }
     }
@@ -30,18 +33,21 @@ impl GridProfile {
         match self {
             Self::Full => POLICY_ID,
             Self::Lean => "stratified-v0-splitmix64:lean",
+            Self::RpcReference => "stratified-v0-splitmix64:rpc-reference",
         }
     }
     pub fn adaptive_policy_id(self) -> &'static str {
         match self {
             Self::Full => ADAPTIVE_POLICY_ID,
             Self::Lean => "thompson-cost-v1-splitmix64:lean",
+            Self::RpcReference => "thompson-cost-v1-splitmix64:rpc-reference",
         }
     }
     pub fn held_out_policy_id(self) -> &'static str {
         match self {
             Self::Full => "prove-held-out-v1:full",
             Self::Lean => "prove-held-out-v1:lean",
+            Self::RpcReference => "prove-held-out-v1:rpc-reference",
         }
     }
 }
@@ -89,6 +95,9 @@ impl Policy {
         }
         let mut cells = Vec::new();
         for route in [Route::BeamQuic, Route::BeamHttp, Route::Rpc] {
+            if profile == GridProfile::RpcReference && route != Route::Rpc {
+                continue;
+            }
             let tips: &[(TipTier, u64)] = if route == Route::Rpc {
                 &[(TipTier::None, 0)]
             } else if profile == GridProfile::Lean {
@@ -107,10 +116,12 @@ impl Policy {
                         &[FeeBucket::Zero, FeeBucket::LocalMedian, FeeBucket::LocalP90]
                     }
                     GridProfile::Lean => &[FeeBucket::Zero, FeeBucket::LocalP90],
+                    GridProfile::RpcReference => &[FeeBucket::Zero],
                 };
                 let sizes: &[SizeClass] = match profile {
                     GridProfile::Full => &[SizeClass::Small, SizeClass::Medium, SizeClass::Large],
                     GridProfile::Lean => &[SizeClass::Small],
+                    GridProfile::RpcReference => &[SizeClass::Small],
                 };
                 for &fee_bucket in fees {
                     for &size_class in sizes {
@@ -411,6 +422,37 @@ mod tests {
         assert_eq!(
             policy.assign(100, 900).policy_id,
             "stratified-v0-splitmix64:lean"
+        );
+    }
+    #[test]
+    fn rpc_reference_is_untipped_zero_fee_and_has_honest_propensity() {
+        assert_eq!(
+            GridProfile::from_config_value(Some("rpc-reference")).expect("profile"),
+            GridProfile::RpcReference
+        );
+        let mut policy = AdaptivePolicy::with_profile(42, 1.0, GridProfile::RpcReference)
+            .expect("reference policy");
+        assert_eq!(policy.cells().len(), 1);
+        for _ in 0..4 {
+            let a = policy.assign(100, 900, &[(1.0, 1.0)]).expect("assignment");
+            assert_eq!(a.config.route, Route::Rpc);
+            assert_eq!(a.config.tip_tier, TipTier::None);
+            assert_eq!(a.config.tip_lamports, 0);
+            assert_eq!(a.config.fee_bucket, FeeBucket::Zero);
+            assert_eq!(a.config.cu_price_micro_lamports, 0);
+            assert_eq!(a.config.size_class, SizeClass::Small);
+            assert_eq!(a.assignment_prob, 1.0);
+            assert!(a.uniform_arm);
+            assert_eq!(a.policy_id, "thompson-cost-v1-splitmix64:rpc-reference");
+        }
+        let mut resumed =
+            AdaptivePolicy::with_profile(42, 1.0, GridProfile::RpcReference).expect("resumed");
+        resumed.resume(4).expect("resume");
+        assert_eq!(
+            serde_json::to_value(policy.assign(100, 900, &[(1.0, 1.0)]).expect("next"))
+                .expect("encode"),
+            serde_json::to_value(resumed.assign(100, 900, &[(1.0, 1.0)]).expect("next"))
+                .expect("encode")
         );
     }
     #[test]

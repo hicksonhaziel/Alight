@@ -347,7 +347,7 @@ export function Quote({
           {error && <Notice danger>{error}</Notice>}
           {busy === "quote" ? (
             <Panel title="Computing quote">
-              <Loading />
+            <Loading text="Computing quote…" shape="summary" />
             </Panel>
           ) : result ? (
             <>
