@@ -27,6 +27,8 @@ and operations guide.
 
 ## Inspect the evidence
 
+- [Final review](../data/final-review-validation.json): bounded Live runtime,
+  finalized spending audit, retained failures and remaining coverage gaps.
 - [Live Prove](../data/live-prove-validation.json): one RPC configuration,
   40 held-out attempts, finalized outcomes and wallet reconciliation.
 - [Owned Webhook delivery](../data/webhook-owned-validation.json): exact-body

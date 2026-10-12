@@ -321,3 +321,51 @@ The completed validation restored Observe. Long-run stability remains a separate
 measured acceptance, and public claims must follow the actual recorded window.
 During final documentation review, obsolete support and demo-script drafts were
 removed; registered analysis documents and historical receipts were preserved.
+
+## 12 October 2026 — final review and retained interrupted run
+
+The Workbench now invalidates an in-flight quote when its settings change.
+Prove distinguishes meeting the landing target from landing later, while keeping
+execution outcomes visible. The completed Live test therefore shows 30 on-time,
+seven late and three expired members. Real Live screenshots accompany the README.
+
+An authorized bounded live check was interrupted by API/database pool timeouts
+during host resource pressure, followed by stale gRPC and Blur connection errors.
+The watchdog restored non-signing Observe. One additional RPC canary finalized;
+the original IDs, reservations, failure samples and interrupted-run receipt remain
+intact. This window does not establish clean 30-minute or 48-hour stability.
+
+Review also found a separate gRPC liveness defect: Ping/Pong traffic could keep
+the per-message timeout from firing despite no useful observations, and a full
+ping-response channel could block indefinitely. The observer now uses a separate
+30-second useful-data deadline and a five-second ping bound, with offline
+regressions. The logs do not conclusively attribute the transport outage to this
+defect. Earlier stability coverage applies to the earlier installed binary;
+checks of the updated binary are recorded separately without resetting history.
+
+The subsequent bounded Live retry ran from 17:23 to 17:53 UTC. It finalized
+45 RPC canaries: 42 landed successfully and three expired with height/history
+proofs. Its 30 sampled health checks had no failures. A separate local API
+sampler recorded 220 successful GETs over the last approximately 20 minutes;
+neither sample set establishes continuous availability. Read-only quote previews
+supported a 25% four-slot target and refused 90%, without changing the ledger.
+
+The Webhook registration was still enabled, but its temporary callback had
+become unreachable; recent provider attempts reported no HTTP response. Restarting
+the managed tunnel restored callback reachability and preserved its receipts.
+A separate two-minute check, capped at one 5,000-lamport RPC canary, finalized
+successfully after preflight waits. Fresh owned Webhook delivery remained
+unverified, so callback reachability is not reported as delivery success.
+
+Across all three attempts, 47 new canaries finalized: 44 successful landings and
+three proven expiries. Finalized fees reconciled to 220,000 lamports, leaving
+9,907,061 lamports for recording. Original IDs/reservations remain intact, no
+canaries are pending, and Observe was restored with signing disabled. An earlier
+audit's provider read failures were retained before bounded read retries and
+finalized-history verification completed the audit.
+
+The dataset hash route now opens and scrolls to the existing download section.
+Its isolated Sim browser regression and source CI passed. A later Live browser
+recheck was blocked by browser permissions; earlier permitted screenshots remain.
+The [final review receipt](../data/final-review-validation.json) records these
+results and the still-pending 48-hour check. No demo script was created.

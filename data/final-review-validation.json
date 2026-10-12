@@ -1,0 +1,726 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-12T18:03:24.333363+00:00",
+  "status": "REVIEW_COMPLETED_WITH_LIMITATIONS",
+  "source": "live",
+  "network": "solana-mainnet-beta",
+  "reviewed_source_commit": "21f0f92843965cf64c031ccb506933e845ce4172",
+  "installed_daemon_source_commit": "15f9afc2f3461f3fd9819f456644be7d552b4f21",
+  "installed_daemon_sha256": "5032ddb51955ddb02769a99cf3b31113e0ac8d2dd5fedae4e82e427bd70d8298",
+  "hackathon_listing": "https://superteam.fun/earn/listing/build-something-live-on-solana-data",
+  "changes": [
+    "Concise README, linked docs index, architecture diagrams and real Live screenshots; obsolete demo/support drafts removed.",
+    "In-flight quote previews invalidated when settings change.",
+    "Prove separates meeting the landing target from late landings and execution outcomes.",
+    "Dataset deep links open the existing downloads section.",
+    "gRPC useful-data deadline and bounded ping replies, preserving writer backpressure."
+  ],
+  "attempts": [
+    {
+      "id": "interrupted-resource-review",
+      "requested_duration_seconds": 1800,
+      "started_at_utc": "2026-10-12T16:16:31.135925+00:00",
+      "returned_to_observe_at_utc": "2026-10-12T16:18:08.731392+00:00",
+      "status": "OBSERVE_RESTORED",
+      "stop_reason": "monitor_unavailable",
+      "installed_binary_sha256": "105896978b186aed7e78abae24e13f1959488cbda12447500e4cec90eb2b8578",
+      "new_canaries": 1,
+      "finalized_outcomes": {
+        "LANDED_OK": 1
+      },
+      "new_reserved_lamports": 5000,
+      "actual_network_fees_lamports": 5000,
+      "result": "INTERRUPTED",
+      "limitations": [
+        "API/database pool timeouts during host resource pressure; later transport outages. Original evidence and failures retained."
+      ]
+    },
+    {
+      "id": "bounded-30-minute-retry",
+      "requested_duration_seconds": 1800,
+      "started_at_utc": "2026-10-12T17:23:35.657071+00:00",
+      "returned_to_observe_at_utc": "2026-10-12T17:53:42.339152+00:00",
+      "status": "OBSERVE_RESTORED",
+      "stop_reason": "independent_timer",
+      "installed_binary_sha256": "5032ddb51955ddb02769a99cf3b31113e0ac8d2dd5fedae4e82e427bd70d8298",
+      "new_canaries": 45,
+      "finalized_outcomes": {
+        "LANDED_OK": 42,
+        "EXPIRED": 3
+      },
+      "new_reserved_lamports": 225000,
+      "actual_network_fees_lamports": 210000,
+      "result": "SAMPLED_RUNTIME_PASS",
+      "health_sampling": {
+        "health_samples": 30,
+        "failed_health_samples": 0,
+        "first": "2026-10-12T17:23:58.435857+00:00",
+        "last": "2026-10-12T17:53:09.547560+00:00"
+      },
+      "unplanned_service_restarts": 0
+    },
+    {
+      "id": "one-canary-webhook-recheck",
+      "requested_duration_seconds": 120,
+      "started_at_utc": "2026-10-12T17:55:15.119635+00:00",
+      "returned_to_observe_at_utc": "2026-10-12T17:57:16.550388+00:00",
+      "status": "OBSERVE_RESTORED",
+      "stop_reason": "independent_timer",
+      "installed_binary_sha256": "5032ddb51955ddb02769a99cf3b31113e0ac8d2dd5fedae4e82e427bd70d8298",
+      "new_canaries": 1,
+      "finalized_outcomes": {
+        "LANDED_OK": 1
+      },
+      "new_reserved_lamports": 5000,
+      "actual_network_fees_lamports": 5000,
+      "result": "CANARY_PASS_WEBHOOK_DELIVERY_UNVERIFIED",
+      "maximum_additional_reserved_lamports": 5000,
+      "observed_preflight_wait": "One sampled preflight was unavailable; a later governed attempt succeeded."
+    }
+  ],
+  "financial_audit": {
+    "status": "PASS",
+    "commitment": "finalized",
+    "payer": "BR28XLDiosxXbTaNFoTvb2UigfKQjxEBqTaPEkjaEoD2",
+    "balance_before_review_lamports": 10127061,
+    "balance_after_review_lamports": 9907061,
+    "actual_network_fees_lamports": 220000,
+    "tips_lamports": 0,
+    "additional_reserved_lamports": 235000,
+    "minimum_recording_reserve_lamports": 9000000,
+    "balance_reconciles": true,
+    "known_canaries_and_reservations_preserved": true,
+    "pending_canaries": 0,
+    "final_mode": "observe",
+    "signing_enabled": false,
+    "provider_requests_in_successful_audit": 48,
+    "prior_audit_note": "An earlier read-only audit had transient provider read failures. Its private receipt was archived; the successful audit used bounded read retries and finalized history/height proofs for expired canaries.",
+    "checks": [
+      {
+        "name": "observe_with_signing_disabled",
+        "passed": true
+      },
+      {
+        "name": "original_canaries_preserved",
+        "passed": true,
+        "missing_ids": []
+      },
+      {
+        "name": "original_reservations_preserved",
+        "passed": true,
+        "changed_ids": []
+      },
+      {
+        "name": "retry_canaries_preserved",
+        "passed": true
+      },
+      {
+        "name": "retry_reservations_preserved",
+        "passed": true
+      },
+      {
+        "name": "no_pending_canaries",
+        "passed": true,
+        "pending_ids": []
+      },
+      {
+        "name": "new_reservations_match_canaries",
+        "passed": true
+      },
+      {
+        "name": "all_new_canaries_verified",
+        "passed": true
+      },
+      {
+        "name": "original_balance_reconciles",
+        "passed": true
+      },
+      {
+        "name": "retry_balance_reconciles",
+        "passed": true
+      },
+      {
+        "name": "recording_reserve_preserved",
+        "passed": true,
+        "reserve_lamports": 9000000
+      },
+      {
+        "name": "audit_snapshot_stable",
+        "passed": true
+      },
+      {
+        "name": "observe_still_signing_disabled",
+        "passed": true
+      }
+    ],
+    "transactions": [
+      {
+        "id": "0d74de5d-189a-413b-93ac-6b382e365ad0",
+        "signature": "sNpjRK58a9bpsNJ3pZZJFsPqSKiykh4PmR8yu8b28n8LrFbRbJKQLPzq5ZZn8VzDtSS1S8y9bPRCYtkF5mmSHRv",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "1067e498-ed6e-40a4-ad25-a5f66c3a60e3",
+        "signature": "38BuArXrTX3k9mKTxBU4HVh5Unh1RM1T7e7MMG6w7hfJoNekPf8A97YrEuAjmoruKrEybFuDQWanig7VUz781aZv",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "115c1d25-80a6-461b-9ee2-93287df7bac0",
+        "signature": "4N858t5eZvVCB61mSmCwbVopskfyEa5AJ6JTAgSzHagAUDn3vcygPifW8oshRZLNYo7gz5JKPpPoBoJLpLHS5sjE",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "1aa844cb-f953-48d7-b4ce-5db0841ab472",
+        "signature": "23RRR3g8uw6tDsUMqdN8H3s5iVyfBy8Gn7yR68nPJChXT6CkYGQKz2b1HvX417kwgUkZmN33qdZ8ZDiQyJ1f3Soh",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "1fdd15ae-4c6a-49b8-9e6c-bc563e95b3c4",
+        "signature": "3jdhy37ZM91faEq19dZXuo9zKBcMLyWUL4LAb5J2oWYBjBiwLCcCQgZxTm1iMRaWNvdRYWRNFYYG3JizTV1AoCpF",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "20f1efa3-4f99-4743-b299-fab6643cb720",
+        "signature": "ADF8gmsZs82jTmCPoRyzYm1xhsJXpBA2TS6yQxDBS4YNMvzXp4dTqRrKVY5eZNNQ4XRn29YZExeiM1yDG1i7wPr",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "23d2b22d-4601-45d2-95c3-0607a43414b5",
+        "signature": "uPpDc3WB7DDnzVsEuXYjLtNDbss58mKDLXasbbvvnBXvhbS7oGzy5cDn79gfpW2dTsxMD39UkuvShtPg9xnEq3b",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "28906b48-8526-4749-a1b0-0fb136078826",
+        "signature": "577BLZp3CYwX4E1MFregzr4oUVD3Cuk2GfqUdA8VLnB5U7ZNF1jgnQvHmi4zeuNDPyUZtF9g2Bf8wpH5H6yRW6A2",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "29069057-8302-4cd2-8138-279ad4560c11",
+        "signature": "aSinRpSALfa6VDJiiLdJj9bKwfeaxYfjfuWgCxZBEunaXfR5NuguL9XQ6i36Qs2HXQyYog6n2AqHjGHUEMbqpoS",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "2c8dfee9-962c-4d77-90d9-f826a45786d2",
+        "signature": "4J5XGv3rAsTn2VXRwFnvvmn1xDkPcFMpuwykCVgseHaM66VJb5wyrRbJRBn67LC55nZxr3DztnuPV6jiJVvEkFJB",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "3726437a-6d37-4e07-b5e7-8f06a1b63bbf",
+        "signature": "4pGbLSEg98GRg71RV4TPpj5MEnnRPfrojtHs5R1ZaUi2ZvmvmkcoJrZdxcnhgZvccaimG6BQKFNBYWC5dWTFTcje",
+        "outcome": "EXPIRED",
+        "stored_finalized": true,
+        "chain_state": "VERIFYING_EXPIRED_HISTORY",
+        "verified": true,
+        "stored_expiry_proof": {
+          "verified": true,
+          "checked_block_height": 434169424,
+          "last_valid_block_height": 434169397,
+          "raw_ref": "sha256:ffc0c4cce4574ad03f91dcbbf90e71092ec79e4b890ed20828e9d5674c3779a7"
+        },
+        "fresh_finalized_block_height": 434174760,
+        "fresh_signature_absent": true
+      },
+      {
+        "id": "459b3dd6-e929-41e9-ae25-5ab0a2d42ef3",
+        "signature": "44hvxQK4FLZW7D4ZoFkmTEdHhP4SwBpojXqsqHkUva2iMxheGeHSyCqAXYp8kiSmDchXuCkFEQuTKVPzn9UuGo84",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "45c6850f-f85b-47f0-bb1d-29e33be53cb5",
+        "signature": "26jYXiepLyKp1mkDj8N26BrjeLUvM3kdcuiHCssRsFquLDGWograh7q2YTzvQgAHWocb9xMjcoo5n2M4qm5cFLsc",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "4ca91e88-122a-4145-b79d-8d860c72d3d0",
+        "signature": "3vLgNvUAVVnGDyGGZgxhacD3y9VZmfagoAAMhG4zZZq68uCkJSun2Q6fXqU7HQ29eXUJqf6Qd2Tfm3oHPfnfZXNJ",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "5378e2f7-592f-4451-b9ac-c62a3d503b24",
+        "signature": "5nEyJwGFFsdKMdiJtRL1pGGHZyfM8WeKoe6dYjzxKiSQQWCsxWLcK4g5bR2FzGXu5mBLcDvRZjqQStKvhtTdFqkW",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "5462339a-0482-4199-b55b-ca3260f5a661",
+        "signature": "27Gm8i3E9biMb7nRjsw4w1rHmFQn4wL8JQPBcC4Y1vQeeEWnU9Zh4XvXfMZyZsqhWLiWBQMok8ezEzaQ4rqE1GZX",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "5edf0119-9912-4efb-88a8-a22fc9db94f2",
+        "signature": "3Ketya9RiJAHztb8JQx34TeXzLs6MBYWPLFKqXJQnwE9DSERekfPkxd6aFYaCUFevkrzmwyqd6XXaekaiepjMgCt",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "61efebc8-9031-4ddd-b2e6-5b3a4b7e0894",
+        "signature": "LP3NEQEdt7ehq1jYEjQsbRAPpuUTaTDmfR4HzYEz16WwUoA5ZZXecowgHp3zriRbherk1uAb1m29szg5zbjFyDb",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "644b7749-121d-4fe3-9234-29ea5a3bd6e6",
+        "signature": "3edSsFP9yN6Nwcmxn36wkeP2FwLihMAxG4Mp8B7stg3NXjUg7C9a5xxKifaoCeLfdiW3QmSuLiHnu7ADi1PSEuNQ",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "6b4b4e2e-e05b-4afb-b728-b175e64c3b64",
+        "signature": "5iQu4YQQKRXkEUB44yYccNNhGVk1Yc1QySnT15Uw9JjfSpfXotEY1xmECSbokt8fJmznV9pCddnKCfKHw5UEHvZV",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "727583bc-faa0-4435-8ecc-f168cca8910d",
+        "signature": "5rg56kpTwwcqoLXE9cifKrDNKQWBEvZyBuLSoV58mc9fLexWhiVdh6EUVbYAPaqvQurL5WjfgVpJhGg8Dey3QeJA",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "8110ca48-7a9c-4266-93af-e4acaf0f3023",
+        "signature": "3d6pSzGsuxZiN8qe7NEvWUwdVAoYxrW6LUjE7zdkbDdFPrXPGyzuGiQ4wC5qtKfey1BMq7py8WeZVH9KaN7iZ5Bc",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "8a358786-0422-4bb1-bf1e-4e60a9da7b2f",
+        "signature": "4mxqEnsdtVn239ahNFksFrRXnr6sifvxhUuhvJdN4jyMs9DEk6iTe8MbfJcjwGHZAiyCe21C8ai59tUKWnWksJKw",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "8b3050e3-9da1-42a3-ae86-c5fb38245d12",
+        "signature": "2XHrQ7WhEVG7o6KAZRhvAfEegSvS1fPyxR1XnJ4bX7EVAyXQSFUgjfxed4jGbVHGkK7qw48TJJoDvMNojFUDF7Sw",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "92ce1dbb-ff92-4692-998d-8fd3f9a43368",
+        "signature": "23V68ihaACmrGEPPMbjvXCUsBUcFKczyFj8vri34YhKnNgHSWfUPEY79mDqQAgxx8j4xRwDNpzj33A3AupBeQ861",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "967be6ef-ab7f-4efc-9244-f05a64b116fa",
+        "signature": "3VXYrjvZrwCes6ZWSnssec5M7HdFc64eBXcCM48JvqvSnDuEAss7a45BHtKY9qxDKV9wLZhCf233JyCwgxLCfFFe",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "973fb6c2-7358-4a39-9b39-4148c6d377c3",
+        "signature": "4eQ2uNaRM95sxP17FJQRG4NGWd4YfUdaRtfgrCMaNZ6TrBiV2SJqeUy58rz2r5Uuw1syDhymcCSjGCF2MH5MJVMa",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "9b785427-7522-4775-90dd-2a3f60d8e094",
+        "signature": "4Tr1XKYkEWvMeQhecNAzuGDXZmiC6eA9dJPWmvibh512t9rx9UjGJQogVDpXYHitNxdrvw5oQpsjoFc1wMzFJPyP",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "9df5c2b2-c0a5-47b1-a953-174648ae99c9",
+        "signature": "48AgV43FzSLEsWXsAnC87fyR8UTJM6CWBFMQLgZGXHZHwtc4YXCBPzkBpNxcM2FqvMEhN9HqDZdL1io2NVb39oLb",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "9e2c1fe1-944d-4bb7-9605-0f3e37589855",
+        "signature": "5cVQ6JvgshmkpwRW7Nn9HYkzMmmnqUMxybpmad8waDwJZPSZQzhRumNkF1aN1rRKbWj2HMA5rMeerigrpE9t6SyP",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "9e31c678-d694-444c-8848-3e52561ed9a9",
+        "signature": "4sq1DKUJm5rSC7wGwwYJ9aJZjbVKupiHfMMhKAKi7WprGPK8LBwHhBthNqUWGU6dy2zh6WjSamfn88JpqZcBFTaz",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "a180c976-b1c0-44fd-8326-bd099afb49b2",
+        "signature": "4wAnEYqXrrt41CGt1ygVenQwgC5tK2Yj7cyFgriJjkYNmEmU9psFuYzCCUNU9vcwCtFxWTyYMR7dExe4qcMJLH3C",
+        "outcome": "EXPIRED",
+        "stored_finalized": true,
+        "chain_state": "VERIFYING_EXPIRED_HISTORY",
+        "verified": true,
+        "stored_expiry_proof": {
+          "verified": true,
+          "checked_block_height": 434169868,
+          "last_valid_block_height": 434169845,
+          "raw_ref": "sha256:096b96ce5cf441c47c654a68e69c12c67fbdd7292a7e913e7b4e086abe3a405d"
+        },
+        "fresh_finalized_block_height": 434174760,
+        "fresh_signature_absent": true
+      },
+      {
+        "id": "a52a128f-5e84-40cb-a4df-f63ade7fdac5",
+        "signature": "5kEp8o1L9zez4MoDmHVvDU6NKEJhnF6SoLrdtqds9FkcB8LnzRkyMCJ7JSvjaoWeGgbgohXvLWjxPhsY83CGbNue",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "a716bcac-00ba-4864-9a25-5a030f50bb7b",
+        "signature": "56TPAMSzMGayTxjs2oVRtV66QSqoWCzkXp9CS2MbuUiK8dXWfzVNdosKwBMYVkAeGxAmH25yube3wGS8V8wy9P8a",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "be4b4a34-3295-4dfd-b5a8-e023b57716e0",
+        "signature": "vGXVr2qQF7iHRP11BTbEZvxA28uVe7nVkN3pcStgx8d8ywCQnWR3pjc4dnz9q2HVJTsNNZJt4aDWKbZzU8QkkPs",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "bef29c4f-d0ba-429c-bafd-fff888d1c884",
+        "signature": "5CyJ22ZPvXQjavUrYYcipQ8LL3kemknH83YQrwqmgPsBNHxjRvDYuGjvpxiKg2k37hKeUi4shTNCVeieDhoyNhDm",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "bf414152-3407-40c3-a9f4-8acc02564d93",
+        "signature": "3qaRZ7z1HGtCtQVr3fGUQvhRu9CH3RpadQ78dYKAu9S1c7rjAjgseCBwfb3i47oehMEdkro6TauQyFYs6NkBYcgr",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "c0d1d987-8e21-4f23-b0fa-77b9ce4176c2",
+        "signature": "3BsqiqrXk6GowPaXq3QMAjU2hMLEm2YQ3j8SSByWjFYaov4Gke29bmvU1bcxrAGaNVjEfbjAYv9dyQ3iXfGd8yqE",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "c1365349-1a34-4061-b140-e45d2c34984a",
+        "signature": "Sf3uhr845qhtcebKme4BUU1nfdTPMRGKdzDtK9KwDfpvLYk1Vb3kJYCTzmBKg7mf35VwxBMiVLFfcejLfU5zzXi",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "c24aae50-2e86-4e88-9de8-cb6230b7bdd1",
+        "signature": "3tGt4zL6BeLtVaM8AY4nV1kTTfkDGEp1ZChf1A2nQf5mTbEMA28KGExYDdeFbMhRUnxgHGtUq7WXFv6UAVpBC79b",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "c5ff2386-b1ff-4103-91e4-2caa964dba06",
+        "signature": "hz9nC761nzzMzMdzaPMWiXVVjkch84PqK7qSZHbgNTS8ZXQ3HUuVymu9SP8exT5CvuRGhVti6YXAs3sFaoJAjWR",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "c6d6e5cc-c77a-4347-923f-1799aa58ce3b",
+        "signature": "4FaTn615qAXrgT2FxYyV7h9BwSWPsH7Row9csofPBbe6p9kKgj5fGCAnipeYhCXLB5MjTQ6LwusrEWagypCvfkqy",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "d09e5ac8-2a1f-4b70-86fd-e58efd009eaf",
+        "signature": "2eDSkeWpZmFR64GjR57GwANtQSXzT1haXCurbnRZ2AFUnZKKoRX4egvz8nPsJTdMeEStF9AC5id4e35hZdAnyEmD",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "d1e6589c-cc8c-42ad-bb41-69dacb3c169e",
+        "signature": "4E3H1LUhXbvQWAT3FQMRHisuqXNdKj1yuNM1Zb3kki97aY6X9AJFfaudj89UAppeABfobDE5f8YChvRMbtKpYnkq",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "e23e47a2-55ec-4d62-9e78-adf23149af5a",
+        "signature": "5eJ9J36QXyHtzJWaUA56pjnjkHUihSgsckffCk1vRTBqmNYqHPQgZsaq27AB1VjwhRvcffLphPAsMbefJA29nkTw",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      },
+      {
+        "id": "eae31b5d-9e4f-47c4-8411-34af8753e823",
+        "signature": "2T8kNtzs2VLEycGu2Z9XGyC9qFuYrYRzfnkkqc13UGFdnwPLuF3GWf1WWAujFRugFZKQLQvwfDTNn2KhqZUURXR9",
+        "outcome": "EXPIRED",
+        "stored_finalized": true,
+        "chain_state": "VERIFYING_EXPIRED_HISTORY",
+        "verified": true,
+        "stored_expiry_proof": {
+          "verified": true,
+          "checked_block_height": 434168693,
+          "last_valid_block_height": 434168658,
+          "raw_ref": "sha256:811850ae71f9ba9bdf67e3cd74110c6f71227db9982a34789a63b9e727df076a"
+        },
+        "fresh_finalized_block_height": 434174760,
+        "fresh_signature_absent": true
+      },
+      {
+        "id": "eb8e953c-aae5-4491-9a36-b6cd9ac1a0a9",
+        "signature": "4XGwNLN1D916UxevrRC2Nfu5gRhSKy3DuoDdeiqPBxaF8xBwmHdMturLwfgoyCu8VJgV2CYvhQbMKkkKSUGWYm3b",
+        "outcome": "LANDED_OK",
+        "stored_finalized": true,
+        "chain_state": "FINALIZED_LANDING",
+        "fee_lamports": 5000,
+        "verified": true
+      }
+    ]
+  },
+  "api_read_sampling": {
+    "started_at_utc": "2026-10-12T17:33:53.903288+00:00",
+    "last_sample_at_utc": "2026-10-12T17:53:10.421106+00:00",
+    "requests": 220,
+    "failures": 0,
+    "paths": [
+      "/v1/clock",
+      "/v1/curve",
+      "/v1/diagnostics",
+      "/v1/health",
+      "/v1/leaders",
+      "/v1/ledger/verify",
+      "/v1/observers",
+      "/v1/prove/prove-live-live-rpc-validation-20261012",
+      "/v1/proves",
+      "/v1/tape",
+      "/v1/workbench"
+    ],
+    "p95_elapsed_ms": 173.6,
+    "max_elapsed_ms": 2851.1,
+    "scope": "Serial local GETs during the last approximately 20 minutes of the retry; this is sampled API availability, not uninterrupted end-to-end availability."
+  },
+  "read_only_quote_check": {
+    "at_utc": "2026-10-12T17:46:37.118Z",
+    "ledger_unchanged": true,
+    "cases": [
+      {
+        "target_p": 0.25,
+        "evidence": "MEASURED",
+        "recommendation": {
+          "config": {
+            "route": "rpc",
+            "tip_lamports": "0",
+            "cu_price_micro_lamports": "0",
+            "cu_limit": 25000,
+            "fee_bucket": "zero",
+            "tip_tier": "none",
+            "size_class": "small"
+          },
+          "p_hat": 0.47742646840630915,
+          "p_interval_95": [
+            0.3187893283944452,
+            0.6384378174683953
+          ],
+          "evidence": "MEASURED",
+          "n_effective": 34.055438815727754,
+          "data_age_s": 42.471,
+          "observation_window": [
+            "2026-10-12T11:29:37.007+00:00",
+            "2026-10-12T17:45:54.537+00:00"
+          ],
+          "unresolved_share": 0.012658227848101266,
+          "samples_needed": null,
+          "m1_weight": 0.0
+        },
+        "reason": null
+      },
+      {
+        "target_p": 0.9,
+        "evidence": "INSUFFICIENT",
+        "recommendation": null,
+        "reason": "insufficient_evidence_or_target_not_supported"
+      }
+    ]
+  },
+  "webhook_recovery": {
+    "prior_owned_delivery_receipt": "data/webhook-owned-validation.json",
+    "registration_enabled_and_matched": true,
+    "prior_callback_reachable": false,
+    "provider_recent_failure_evidence": "Five recent delivery records reported HTTP status 0 after three attempts.",
+    "new_callback_reachability": "Expected bridge HEAD response 501 observed.",
+    "fresh_owned_delivery_after_recovery": "UNVERIFIED",
+    "limitations": "The post-recovery canary finalized, but no new accepted HMAC-owned delivery was present when reviewed. Callback reachability does not prove provider event delivery.",
+    "new_callback_configured_at_utc": "2026-10-12T17:53:58.007109+00:00"
+  },
+  "checks": {
+    "grpc_regressions": "4 passed, including writer backpressure",
+    "grpc_clippy": "Passed with warnings denied",
+    "rust_format": "Passed",
+    "daemon_build": "Passed; single compiler job",
+    "web_lint": "Passed",
+    "web_units": "5 passed",
+    "web_build": "Passed",
+    "typescript_sdk_lint": "Passed",
+    "typescript_sdk_tests": "5 passed",
+    "focused_sim_browser_tests": "Quote settings race, real Sim quote/lock/Prove flow, dataset deep-link navigation passed.",
+    "registered_methods": "All three exact byte hashes preserved",
+    "historical_phase6_receipt": "77 publishing hashes verified; historical Phase 6 status remains incomplete.",
+    "offline_model_replay": "900-canary report reconstructed byte-identically with no network/sends",
+    "source_ci": [
+      {
+        "commit": "a61b04ac5d9eb6b90d8cf030fdfc87c8ac773603",
+        "status": "PASS",
+        "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38282698468"
+      },
+      {
+        "commit": "15f9afc2f3461f3fd9819f456644be7d552b4f21",
+        "status": "PASS",
+        "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38283817034"
+      },
+      {
+        "commit": "21f0f92843965cf64c031ccb506933e845ce4172",
+        "status": "PASS",
+        "url": "https://github.com/hicksonhaziel/Alight/actions/runs/38285326601"
+      }
+    ]
+  },
+  "limitations": [
+    "A later Live browser recheck was blocked by browser permissions. Earlier permitted real Live screenshots were retained; the new dataset navigation was verified in isolated Sim.",
+    "The 48-hour stability window is still pending and retains prior failures; it is not a clean-window pass. The new binary has separate finite coverage.",
+    "The fresh owned Webhook recheck remains unverified after tunnel recovery.",
+    "This validates the tested RPC Memo configuration, not real-swap performance, route rankings, full observer agreement or broad calibration.",
+    "No new Prove or mainnet anchor was sent during this review. Existing 40-member held-out Prove and registered methods were preserved.",
+    "The actual recorded mainnet demo and submission remain owner actions; no demo script was created."
+  ],
+  "retained_stability_window": {
+    "started_at_utc": "2026-10-12T15:46:12.218902+00:00",
+    "required_seconds": 172800,
+    "status_at_review": "RUNNING",
+    "samples_at_review": 137,
+    "failed_samples_at_review": 62,
+    "history_reset": false
+  }
+}

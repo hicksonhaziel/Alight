@@ -112,6 +112,8 @@ Also inspect the [owned Webhook delivery](data/webhook-owned-validation.json),
 [human offline setup check](data/human-quickstart-validation.json), and
 [mainnet-anchored Sim ledger](data/anchors/sim-ledger-mainnet.json).
 The anchor and public sample dataset are **Sim**, not Live performance.
+The [final review receipt](data/final-review-validation.json) records a later
+30-minute Live check, finalized fee reconciliation, and remaining coverage gaps.
 
 These results validate a working measurement loop for the tested configuration.
 They do not establish swap performance, broad calibration, route rankings, or
