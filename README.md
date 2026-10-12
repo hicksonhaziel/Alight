@@ -12,6 +12,19 @@ distinguishes Live, Sim, and Replay evidence.
 [Public datasets](https://hicksonhaziel.github.io/Alight/) ·
 [Limitations](docs/limitations.md)
 
+## Run locally
+
+From the repository root:
+
+```sh
+./scripts/quickstart.sh
+```
+
+One command builds Alight and starts a populated **SIMULATED** Workbench at
+[localhost:5173](http://localhost:5173), with no provider key or SOL required.
+Press `Ctrl+C` to stop both local servers. See the [quick start](docs/quickstart.md)
+for prerequisites, operator access and your own Solami key.
+
 ![Alight Workbench showing real mainnet observations](docs/images/workbench-live.png)
 
 ## What it does
@@ -24,44 +37,6 @@ distinguishes Live, Sim, and Replay evidence.
   late outcomes and an honest verdict.
 - **Verify:** inspect the hash-chained forecast ledger, wallet receipts,
   downloadable datasets, and mainnet memo commitments.
-
-## Run locally, without keys
-
-Requires the pinned **Rust 1.96.1**, **Node 22.22+**, and **Python 3**.
-Run these commands from the repository root:
-
-```sh
-cargo build --locked -p alight -p alightd
-npm --prefix web ci --ignore-scripts --no-audit --no-fund
-mkdir -p .alight/local
-
-# Terminal 1: synthetic evidence and the API; no network or transaction sends.
-target/debug/alight run --mode sim --seed 42 --sim-canaries 900 \
-  --sim-regimes true --db .alight/local/workbench.db --bind 127.0.0.1:8080
-
-# Terminal 2: the Workbench.
-npm --prefix web run dev
-```
-
-Open [localhost:5173](http://localhost:5173). The badge reads **SIMULATED**.
-To lock forecasts and run synthetic Prove tests, configure a local API operator
-key as described in [operations](docs/operations.md). It is separate from a
-wallet key. [CLI and offline verification examples](docs/operations.md) cover
-deterministic model runs, Replay, and ledger checks.
-
-## Connect your own Solami key
-
-Copy [`.env.example`](.env.example) to `.env` if you do not already have one.
-Set your dashboard RPC/gRPC endpoints and read credentials. Start in Observe:
-
-```sh
-target/debug/alight doctor --mode observe
-target/debug/alight run --mode observe --db .alight/local/observe.db
-```
-
-Observe needs no funded wallet and sends no transactions. Mirage, Blur,
-Webhooks, and Data API permissions are configured separately; missing coverage
-stays visible. See [setup, environment variables, and live controls](docs/operations.md).
 
 | Mode | Evidence | Sends / cost |
 | --- | --- | --- |
@@ -125,7 +100,8 @@ retains failures and requires review.
 
 | Need | Read |
 | --- | --- |
-| Setup, commands, budgets, troubleshooting | [Operations](docs/operations.md) |
+| First run and your own Solami key | [Quick start](docs/quickstart.md) |
+| Commands, budgets, troubleshooting | [Operations](docs/operations.md) |
 | API payloads, units, SDKs | [Contracts](docs/contracts.md) |
 | Estimators, outcomes, registered analysis | [Methodology](docs/methodology.md) |
 | Frozen tests and regime changes | [Prove](docs/prove-methodology.md) · [Regimes](docs/regime-methodology.md) |
@@ -134,5 +110,4 @@ retains failures and requires review.
 
 CI checks Rust formatting, Clippy/tests, SDK and web checks, browser flows,
 dataset integrity, and publishable files. See [verification commands](docs/operations.md).
-Exported datasets use **CC BY 4.0**; no repository-wide software license has
-been declared.
+Software uses the [MIT license](LICENSE). Exported datasets use **CC BY 4.0**.

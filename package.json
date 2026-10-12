@@ -1,6 +1,7 @@
 {
   "name": "alight-phase0-probes",
   "version": "0.0.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.22.0" },

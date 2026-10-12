@@ -1,10 +1,11 @@
 # Documentation
 
-Start with the [project README](../README.md) for a quick start and an overview.
-Use these guides for the details:
+Start with the [project README](../README.md) for an overview and the
+[quick start](quickstart.md) for your first run. Use these guides for the details:
 
 | Guide | What it covers |
 | --- | --- |
+| [Quick start](quickstart.md) | Prerequisites, offline Workbench, synthetic Prove and own-key Observe |
 | [Architecture](architecture.md) | Data flow, Solami integrations, crate boundaries and operating modes |
 | [Operations](operations.md) | Local setup, safe live controls, SDK/CLI examples, deployment and troubleshooting |
 | [API and data contracts](contracts.md) | Endpoints, authentication, JSON types, storage and migration rules |
