@@ -4,24 +4,26 @@
 
 [![CI](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml/badge.svg)](https://github.com/hicksonhaziel/Alight/actions/workflows/ci.yml)
 
-An RPC can accept a Solana transaction that later misses an application's
-deadline. Developers still have to choose a route, priority fee and tip, but
-a submission acknowledgment cannot show whether that choice will work under
-current conditions.
+[**Watch the demo · 2 min 55 sec**](https://youtu.be/-jXC9uEXAwE)
 
-Alight is a self-hosted landing observatory that makes those choices measurable.
-It combines **Solami's live data** with small, budgeted test
-transactions called **canaries**, then estimates their chance of landing within
-a chosen number of slots. Each estimate carries uncertainty, sample count and
-freshness; sparse or stale evidence produces no recommendation.
+**Alight turns Solana transaction-landing claims into testable evidence.**
+Bots, wallets and trading backends must choose a route, priority fee and tip
+before knowing whether a transaction will arrive in time. An RPC acknowledgment
+cannot answer that question, and a successful landing can still miss the deadline.
 
-Its defining loop is **measure → forecast → freeze → test → verify**. Freeze
-a forecast, then let Prove test it on a separate batch of canaries. Those test
-outcomes stay out of training, and a hash-chained ledger keeps the claim
-inspectable afterward. Developers can follow the same loop in the Workbench,
-CLI, or Rust and TypeScript clients.
+Alight is a self-hosted observatory that sends small, budgeted test transactions
+called **canaries** through Solami Beam and RPC, observes their outcomes with
+**Solami's live data**, and estimates the chance of landing within a chosen
+number of slots. Quotes show uncertainty, sample count and freshness; sparse or
+stale evidence produces an explicit refusal.
+
+The loop is **measure → forecast → freeze → test → verify**. Freeze a claim
+before Prove tests it on new canaries whose outcomes never train the model.
+A hash-chained ledger retains the claim for inspection afterward. Use the
+Workbench, CLI, or repository-local Rust and TypeScript clients to follow the loop.
 
 [Documentation](docs/README.md) · [Architecture](docs/architecture.md) ·
+[Solami integrations](#built-with-solami) ·
 [Public datasets](https://hicksonhaziel.github.io/Alight/) ·
 [Limitations](docs/limitations.md)
 
@@ -81,9 +83,27 @@ flowchart LR
 ```
 
 Rust/Tokio runs the collector, models, and API; React/Vite serves the Workbench.
-Solami supplies gRPC, Mirage, RPC, Blur, Webhooks, Data API, and Beam's QUIC/HTTP
-submission routes. [Architecture and integration boundaries](docs/architecture.md)
-explain what each product does and what its evidence can establish.
+[Explore the architecture](docs/architecture.md) for crate boundaries and the
+forecast-to-Prove sequence.
+
+## Built with Solami
+
+Seven Solami products connect the measurement loop, from sending a canary to
+explaining its outcome and cost.
+
+| Product | Why Alight uses it | How it is used |
+| --- | --- | --- |
+| **gRPC** | Measure the network clock and capture landing evidence. | Yellowstone slot, block-metadata and transaction streams feed the collector, canary resolver and transfer/tip tape. |
+| **Mirage** | Compare observation paths and expose gaps or lag. | A saved WebSocket subscription delivers binary Yellowstone updates; Alight matches canary signatures and tracks each observer's receipt time. |
+| **RPC** | Provide an untipped send baseline and check chain state. | JSON-RPC submits baseline canaries, checks signatures and block heights, and retrieves finalized transactions for outcome and fee verification. |
+| **Beam — QUIC + HTTP** | Test tipped submission settings under the same budget controls. | QUIC uses the Solami SDK. HTTP sends a transaction with a Beam-recipient tip through the configured Solami RPC endpoint; plain RPC omits that tip. |
+| **Blur** | Estimate the market cost of waiting when evidence supports it. | REST trades/candles and WebSocket swap updates feed pool-specific, conditional delay-cost estimates. Sparse or stale market evidence leaves costs unavailable. |
+| **Data API** | Build bounded wallet receipts with fee and tip context. | A wallet trade index and venue-tip summary supply context; finalized RPC reads verify each distinct transaction's execution fees and known payments. Missing coverage stays visible. |
+| **Webhooks** | Capture pushed outcomes for owned transactions. | Alight verifies HMAC-SHA256 over the exact request body, then persists normalized signature, slot and result as observer evidence. |
+
+gRPC and Mirage are separate transports from the same provider; their agreement
+does not establish independent infrastructure or trust. See the
+[integration boundaries](docs/architecture.md) and [receipt scope](docs/receipts.md).
 
 ## Evidence you can inspect
 
